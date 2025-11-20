@@ -11,6 +11,17 @@ export const metadata = {
     { rel: "shortcut icon", url: "/logo.png" },
     { rel: "apple-touch-icon", url: "/logo.png" },
   ],
+  // --- Configuración Adicional para PWA y Manifiesto ---
+  manifest: "/manifest.json",
+  themeColor: "#000000",
+  other: {
+    // Necesario para que funcione correctamente la instalación PWA en iOS/Android
+    'viewport': 'width=device-width, initial-scale=1, viewport-fit=cover',
+    'apple-mobile-web-app-capable': 'yes',
+    'apple-mobile-web-app-status-bar-style': 'default',
+    'apple-mobile-web-app-title': 'CABAL CLM',
+  },
+  // --- Fin de Configuración PWA ---
 };
 
 const geistSans = Geist({ display: "swap", subsets: ["latin"] });
