@@ -24,23 +24,9 @@ export default function Dashboard() {
 
   return (
     <>
-      <motion.div
-        className="w-full flex flex-col sm:flex-row sm:justify-between gap-4 items-stretch sm:items-center"
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.2, delay: 0.2 }}
-      >
-
-        <h1 className="text-lg md:text-xl font-bold">
-          {rol === 'SUPER' ? `Dashboard de ${rol}` : 'Dashboard de Usuario'}
-        </h1>
-      </motion.div>
-
-      <section>
-        <Suspense fallback={<div className="text-center py-10">Cargando Afiliados...</div>}>
+        <Suspense fallback={<div className="text-center">Cargando Afiliados...</div>}>
           <VerAfiliados />
         </Suspense>
-      </section>
     </>
   );
 }

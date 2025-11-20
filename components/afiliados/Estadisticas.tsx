@@ -1,6 +1,6 @@
 'use client';
 
-import { Dialog } from '@headlessui/react'; // Corregido: @headlessui/react
+import { Dialog, Transition, TransitionChild, DialogPanel } from '@headlessui/react';
 import { Fragment } from 'react';
 import {
   BarChart,
@@ -17,7 +17,7 @@ import type { Afiliado } from './esquemas';
 
 interface Props {
   afiliados: Afiliado[];
-  onClose: () => void;
+  onClose?: () => void;
 }
 
 type RangoClave = 'jovenes' | 'adultos' | 'adultosMayores';
@@ -64,7 +64,7 @@ const CustomXAxisTick = ({ x, y, payload }: any) => {
   );
 };
 
-export default function Estadisticas({ afiliados, onClose }: Props) {
+const EstadisticasCore = ({ afiliados, onClose, isModal = false }: Props & { isModal?: boolean }) => {
   const conteoPorRango: Record<RangoClave, { hombres: number; mujeres: number; total: number }> = {
     jovenes: { hombres: 0, mujeres: 0, total: 0 },
     adultos: { hombres: 0, mujeres: 0, total: 0 },
@@ -122,21 +122,21 @@ export default function Estadisticas({ afiliados, onClose }: Props) {
   };
 
   return (
-    <Dialog open={true} onClose={onClose} as={Fragment}>
-      <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
-        <Dialog.Panel className="bg-white rounded-lg max-w-5xl w-full max-h-[90vh] overflow-y-auto p-6 shadow-lg">
-          <div className="flex justify-between items-center mb-4">
-            <Dialog.Title className="text-2xl font-semibold text-gray-800">
-              Estadísticas de Afiliados{' '}
-              <span className="font-bold text-base">
-                ({totalGeneral} Personas |{' '}
-                <span style={{ color: '#06c' }}>Hombres: {totalHombres}</span> |{' '}
-                <span style={{ color: '#f87171' }}>Mujeres: {totalMujeres}</span>)
-              </span>
-            </Dialog.Title>
-            <Button onClick={onClose} variant="ghost">Cerrar</Button>
-          </div>
-          <div className="w-full h-[450px]">
+    <div className={`w-full ${isModal ? '' : 'p-4 border rounded-lg bg-white'}`}>
+        <div className="flex justify-between items-center mb-4">
+            <h4 className={'font-semibold text-gray-800 text-xl'}>
+
+                {isModal ? 'Estadísticas de Afiliados' : 'Resumen de Célula'}
+                <span className={`font-bold ${isModal ? 'text-base' : 'text-sm'}`}>
+                    {' '}({totalGeneral} Personas |{' '}
+                    <span style={{ color: '#06c' }}>Hombres: {totalHombres}</span> |{' '}
+                    <span style={{ color: '#f87171' }}>Mujeres: {totalMujeres}</span>)
+                </span>
+            </h4>
+            {isModal && onClose && <Button onClick={onClose} variant="ghost">Cerrar</Button>}
+        </div>
+        
+        <div className="w-full h-[400px]">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={datosGrafica} margin={{ top: 30, right: 30, left: 0, bottom: 40 }}>
                 <XAxis dataKey="etiqueta" tick={<CustomXAxisTick />} interval={0} height={70} />
@@ -154,9 +154,38 @@ export default function Estadisticas({ afiliados, onClose }: Props) {
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
-          </div>
-        </Dialog.Panel>
-      </div>
-    </Dialog>
+        </div>
+    </div>
   );
+};
+
+
+export default function Estadisticas(props: Props) { 
+    if (props.onClose) {
+        return (
+            <Dialog open={true} onClose={props.onClose} as={Fragment}>
+              <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
+                <TransitionChild
+                    as={Fragment}
+                    enter="ease-out duration-300"
+                    enterFrom="opacity-0 scale-95"
+                    enterTo="opacity-100 scale-100"
+                    leave="ease-in duration-200"
+                    leaveFrom="opacity-100 scale-100"
+                    leaveTo="opacity-0 scale-95"
+                >
+                    <DialogPanel className="bg-white rounded-lg max-w-5xl w-full max-h-[90vh] overflow-y-auto p-6 shadow-lg">
+                        <EstadisticasCore 
+                            afiliados={props.afiliados} 
+                            onClose={props.onClose} 
+                            isModal={true} 
+                        />
+                    </DialogPanel>
+                </TransitionChild>
+              </div>
+            </Dialog>
+        );
+    }
+    
+    return <EstadisticasCore afiliados={props.afiliados} />;
 }

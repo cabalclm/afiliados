@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { signUpAction } from '@/app/actions';
+import { signUpAction } from '@/app/actions/usuarios';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
@@ -13,6 +13,11 @@ import useUserData from '@/hooks/sesion/useUserData';
 import { createClient } from '@/utils/supabase/client';
 
 interface RolDisponible {
+  id: number;
+  nombre: string;
+}
+
+interface LugarDisponible {
   id: number;
   nombre: string;
 }
@@ -37,9 +42,11 @@ export function SignupForm() {
   const searchParams = useSearchParams();
   const error = searchParams.get('error');
   const success = searchParams.get('success');
+  const prevData = searchParams.get('data');
 
   const { rol: rolUsuarioSesion } = useUserData();
   const [rolesDisponibles, setRolesDisponibles] = useState<RolDisponible[]>([]);
+  const [lugaresDisponibles, setLugaresDisponibles] = useState<LugarDisponible[]>([]);
 
   const [nombres, setNombres] = useState('');
   const [apellidos, setApellidos] = useState('');
@@ -51,30 +58,56 @@ export function SignupForm() {
   const [password, setPassword] = useState('');
   const [confirmar, setConfirmar] = useState('');
   const [rol_id, setRolId] = useState<string>('');
+  const [lugar_id, setLugarId] = useState<string>('');
 
   const cumpleRequisitos = /^.*(?=.{8,})(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W]).*$/.test(password);
   const contraseñasCoinciden = password === confirmar;
   
-  // Validaciones numéricas y de longitud
+  const nombresValido = nombres.trim() !== '';
+  const apellidosValido = apellidos.trim() !== '';
+  const emailValido = email.trim() !== '';
+  const nacimientoValido = nacimiento.trim() !== '';
+  const rolValido = rol_id !== '';
+  const lugarValido = lugar_id !== '';
   const telefonoValido = telefono.length === 8 && /^\d+$/.test(telefono);
   const dpiValido = dpi.length === 13 && /^\d+$/.test(dpi);
 
-  // VALIDACIÓN: Todos los campos nuevos incluidos
-  const camposCompletos = nombres && apellidos && telefonoValido && dpiValido && nacimiento && sexo && email && password && confirmar && rol_id;
+  const camposCompletos = nombresValido && apellidosValido && telefonoValido && dpiValido && nacimientoValido && sexo && emailValido && password && confirmar && rolValido && lugarValido;
   const formularioValido = camposCompletos && contraseñasCoinciden && cumpleRequisitos;
 
   useEffect(() => {
-    const fetchRoles = async () => {
+    const fetchDatosIniciales = async () => {
       const supabase = createClient();
-      const { data, error } = await supabase.from('roles').select('id, nombre');
-      if (data) {
-        setRolesDisponibles(data);
-      } else {
-        console.error("Error cargando roles:", error);
-      }
+
+      const { data: rolesData, error: rolesError } = await supabase.from('roles').select('id, nombre');
+      if (rolesData) setRolesDisponibles(rolesData);
+      else console.error("Error cargando roles:", rolesError);
+
+      const { data: lugaresData, error: lugaresError } = await supabase.from('lugares_clm').select('id, nombre');
+      if (lugaresData) setLugaresDisponibles(lugaresData);
+      else console.error("Error cargando lugares:", lugaresError);
     };
-    fetchRoles();
+    fetchDatosIniciales();
   }, []);
+
+  useEffect(() => {
+    if (error && prevData) {
+      try {
+        const decodedData = JSON.parse(decodeURIComponent(prevData));
+        setNombres(decodedData.nombres || '');
+        setApellidos(decodedData.apellidos || '');
+        setTelefono(decodedData.telefono || '');
+        setDpi(decodedData.dpi || '');
+        setNacimiento(decodedData.nacimiento || '');
+        setSexo(decodedData.sexo || 'M');
+        setEmail(decodedData.email || '');
+        setRolId(decodedData.rol_id || '');
+        setLugarId(decodedData.lugar_id || '');
+      } catch (e) {
+        console.error("Error al parsear datos previos:", e);
+      }
+    }
+  }, [error, prevData]);
 
   function traducirError(mensaje: string) {
     const errores: Record<string, string> = {
@@ -83,6 +116,8 @@ export function SignupForm() {
       'invalid login credentials': 'Credenciales incorrectas.',
       'signup requires a valid password': 'Contraseña inválida.',
       'user not found': 'Usuario no encontrado.',
+      'este dpi ya se encuentra registrado a un lider': 'Este DPI ya se encuentra registrado a un Líder.',
+      'este dpi ya se encuentra registrado a un afiliado': 'Este DPI ya se encuentra registrado a un Afiliado.',
     };
     return errores[mensaje.toLowerCase()] || mensaje;
   }
@@ -104,7 +139,7 @@ export function SignupForm() {
         text: decodeURIComponent(success),
         confirmButtonColor: '#3085d6',
       }).then(() => {
-        router.push('/protected/admin/users');
+        router.push('/protected/admin/sign-up');
       });
     }
   }, [error, success, router]);
@@ -143,7 +178,7 @@ export function SignupForm() {
   };
 
   return (
-    <div className="flex flex-col w-full  mx-auto md:max-w-xl  gap-6">
+    <div className="flex flex-col w-full mx-auto md:max-w-xl gap-6">
       <div className="flex justify-start">
         <Button
           variant="ghost"
@@ -169,6 +204,9 @@ export function SignupForm() {
               onChange={(e) => setNombres(e.target.value)}
               className="h-12 text-lg"
             />
+            <p className={`text-xs mt-1 ${nombresValido ? 'text-green-600' : 'text-amber-600'}`}>
+              Nombres requeridos.
+            </p>
           </div>
           <div className="w-full md:w-1/2">
             <Label htmlFor="apellidos" className="sr-only">Apellidos</Label>
@@ -180,10 +218,12 @@ export function SignupForm() {
               onChange={(e) => setApellidos(e.target.value)}
               className="h-12 text-lg"
             />
+             <p className={`text-xs mt-1 ${apellidosValido ? 'text-green-600' : 'text-amber-600'}`}>
+              Apellidos requeridos.
+            </p>
           </div>
         </div>
 
-        {/* Email */}
         <div>
           <Label htmlFor="email" className="sr-only">Correo electrónico</Label>
           <Input
@@ -195,6 +235,9 @@ export function SignupForm() {
             onBlur={handleEmailBlur}
             className="h-12 text-lg"
           />
+          <p className={`text-xs mt-1 ${emailValido ? 'text-green-600' : 'text-amber-600'}`}>
+            Correo requerido.
+          </p>
         </div>
 
         <div className="flex gap-4 w-full">
@@ -210,6 +253,9 @@ export function SignupForm() {
                     className="h-12 text-lg"
                     maxLength={8} 
                 />
+                <p className={`text-xs mt-1 ${telefonoValido ? 'text-green-600' : 'text-amber-600'}`}>
+                  Debe tener 8 dígitos.
+                </p>
             </div>
             <div className="w-1/2">
                 <Label htmlFor="dpi" className="sr-only">DPI</Label>
@@ -223,11 +269,13 @@ export function SignupForm() {
                     className="h-12 text-lg"
                     maxLength={13} 
                 />
+                <p className={`text-xs mt-1 ${dpiValido ? 'text-green-600' : 'text-amber-600'}`}>
+                  Debe tener 13 dígitos.
+                </p>
             </div>
         </div>
         
-        {/* Nacimiento y Sexo */}
-        <div className="flex gap-4 w-full items-center">
+        <div className="flex gap-4 w-full items-start">
             <div className="flex-1">
                 <Label htmlFor="nacimiento" className="text-lg mb-1 block">Fecha de Nacimiento</Label>
                 <Input
@@ -238,39 +286,74 @@ export function SignupForm() {
                     onChange={(e) => setNacimiento(e.target.value)}
                     className="h-12 text-lg"
                 />
+                <p className={`text-xs mt-1 ${nacimientoValido ? 'text-green-600' : 'text-amber-600'}`}>
+                  Fecha requerida.
+                </p>
             </div>
+            
             <div className="flex-1">
                 <Label htmlFor="sexo" className="text-lg mb-1 block">Sexo</Label>
-                <select
-                    id="sexo"
-                    name="sexo"
-                    value={sexo}
-                    onChange={(e) => setSexo(e.target.value)}
-                    className="w-full border rounded px-3 py-2 h-12 text-lg bg-white"
-                >
-                    <option value="M">Masculino</option>
-                    <option value="F">Femenino</option>
-                </select>
+                <div className="flex rounded-md border p-1 bg-gray-100 h-12 items-center">
+                    <button 
+                        type="button" 
+                        onClick={() => setSexo('M')} 
+                        className={`flex-1 rounded-md py-2 text-lg font-semibold transition-colors ${sexo === 'M' ? 'bg-blue-500 text-white shadow' : 'text-gray-600'}`}>
+                        Masculino
+                    </button>
+                    <button 
+                        type="button" 
+                        onClick={() => setSexo('F')} 
+                        className={`flex-1 rounded-md py-2 text-lg font-semibold transition-colors ${sexo === 'F' ? 'bg-pink-500 text-white shadow' : 'text-gray-600'}`}>
+                        Femenino
+                    </button>
+                </div>
             </div>
         </div>
 
-        <div className="flex flex-col gap-2">
-          <Label className="sr-only" htmlFor="rol-selector">Rol</Label>
-          <select
-            id="rol-selector"
-            name="rol_id"
-            value={rol_id}
-            onChange={(e) => setRolId(e.target.value)}
-            className="w-full border rounded px-3 py-2 h-12 text-lg bg-white"
-            disabled={rolesDisponibles.length === 0}
-          >
-            <option value="">-- Seleccione un rol --</option>
-            {rolesParaSelector.map((r) => (
-              <option key={r.id} value={r.id.toString()}>
-                {r.nombre}
-              </option>
-            ))}
-          </select>
+        <div className="flex gap-4 w-full">
+          <div className="flex-1 flex flex-col gap-2">
+            <Label className="sr-only" htmlFor="lugar-selector">Ubicación</Label>
+            <select
+              id="lugar-selector"
+              name="lugar_id"
+              value={lugar_id}
+              onChange={(e) => setLugarId(e.target.value)}
+              className="w-full border rounded px-3 py-2 h-12 text-lg bg-white"
+              disabled={lugaresDisponibles.length === 0}
+            >
+              <option value="">-- Seleccione una Ubicación --</option>
+              {lugaresDisponibles.map((l) => (
+                <option key={l.id} value={l.id.toString()}>
+                  {l.nombre}
+                </option>
+              ))}
+            </select>
+            <p className={`text-xs -mt-1 ${lugarValido ? 'text-green-600' : 'text-amber-600'}`}>
+              Debe seleccionar una ubicación.
+            </p>
+          </div>
+
+          <div className="flex-1 flex flex-col gap-2">
+            <Label className="sr-only" htmlFor="rol-selector">Rol</Label>
+            <select
+              id="rol-selector"
+              name="rol_id"
+              value={rol_id}
+              onChange={(e) => setRolId(e.target.value)}
+              className="w-full border rounded px-3 py-2 h-12 text-lg bg-white"
+              disabled={rolesDisponibles.length === 0}
+            >
+              <option value="">-- Seleccione un rol --</option>
+              {rolesParaSelector.map((r) => (
+                <option key={r.id} value={r.id.toString()}>
+                  {r.nombre}
+                </option>
+              ))}
+            </select>
+            <p className={`text-xs -mt-1 ${rolValido ? 'text-green-600' : 'text-amber-600'}`}>
+              Debe seleccionar un rol.
+            </p>
+          </div>
         </div>
 
         <PasswordSection
@@ -280,7 +363,7 @@ export function SignupForm() {
           onConfirmarChange={setConfirmar}
         />
 
-
+        <input type="hidden" name="sexo" value={sexo} />
 
         <FormSubmitButton disabled={!formularioValido} />
       </form>

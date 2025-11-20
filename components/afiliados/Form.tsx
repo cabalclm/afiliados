@@ -147,7 +147,7 @@ export default function Form({ isOpen, onClose, onSave, afiliadoAEditar, liderPr
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
       <motion.div
         className="bg-white rounded-lg shadow-xl w-full max-w-lg p-6"
         initial={{ opacity: 0, scale: 0.9 }}
@@ -157,9 +157,7 @@ export default function Form({ isOpen, onClose, onSave, afiliadoAEditar, liderPr
           <h2 className="text-xl font-bold">{isEditMode ? 'Editar Afiliado' : 'Nuevo Afiliado'}</h2>
           <Button size="icon" variant="ghost" onClick={onClose}><X className="h-5 w-5" /></Button>
         </div>
-        <div className="flex justify-center my-4">
-          <Image src="/gif/afiliados/gif0.gif" alt="Animación de afiliado" width={120} height={120} unoptimized />
-        </div>
+
         
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           
@@ -259,13 +257,25 @@ export default function Form({ isOpen, onClose, onSave, afiliadoAEditar, liderPr
             </div>
           )}
 
-
-          <div className="flex justify-end gap-2 pt-4">
-            <Button type="button" variant="outline" onClick={onClose}>Cancelar</Button>
-            <Button type="submit" disabled={isSubmitting}>
+        <div className="flex justify-between items-center">
+          
+          <div>
+            <Image src="/gif/afiliados/gif0.gif" alt="Animación de afiliado" width={100} height={100} unoptimized />
+          </div>
+          
+          <div className="flex gap-2">
+            <Button type="button" variant="outline" onClick={onClose}>
+              Cancelar
+            </Button>
+            <Button 
+              type="submit" 
+              disabled={isSubmitting}
+              className="bg-green-600 text-white hover:bg-green-700"
+            >
               {isSubmitting ? 'Guardando...' : (isEditMode ? 'Actualizar' : 'Crear')}
             </Button>
           </div>
+        </div>
         </form>
       </motion.div>
     </div>

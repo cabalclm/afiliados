@@ -1,7 +1,7 @@
 'use client';
 
 import { Suspense } from 'react';
-import { LoginForm } from '../(auth)/sign-in/loginForm';
+import { LoginForm } from './sign-in/loginForm';
 
 export default function SignInPage() {
   return (

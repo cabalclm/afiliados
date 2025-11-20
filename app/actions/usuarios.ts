@@ -5,6 +5,31 @@ import { createClient } from "@/utils/supabase/server";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import supabaseAdmin from '@/utils/supabase/admin';
+import { revalidatePath } from "next/cache";
+
+function encodeFormForRedirect(formData: FormData) {
+    const dataToKeep = {
+        nombres: formData.get("nombres")?.toString() || '',
+        apellidos: formData.get("apellidos")?.toString() || '',
+        telefono: formData.get("telefono")?.toString() || '',
+        dpi: formData.get("dpi")?.toString() || '',
+        nacimiento: formData.get("nacimiento")?.toString() || '',
+        sexo: formData.get("sexo")?.toString() || 'M',
+        email: formData.get("email")?.toString() || '',
+        rol_id: formData.get("rol_id")?.toString() || '',
+    };
+    return encodeURIComponent(JSON.stringify(dataToKeep));
+}
+
+function redirectWithErrorAndData(message: string, formData: FormData) {
+    const prevDataEncoded = encodeFormForRedirect(formData);
+    const errorMsgEncoded = encodeURIComponent(message);
+    
+    const redirectPath = `/protected/admin?error=${errorMsgEncoded}&data=${prevDataEncoded}`;
+    
+    redirect(redirectPath);
+}
+
 
 export const signUpAction = async (formData: FormData) => {
   const email = formData.get("email")?.toString();
@@ -20,9 +45,8 @@ export const signUpAction = async (formData: FormData) => {
   const supabase = await createClient();
   const origin = (await headers()).get("origin");
 
-  // Validación actualizada para incluir campos nuevos
   if (!email || !password || !rol_id || !nombres || !apellidos || !telefono || !dpi || !nacimiento || !sexo) {
-    return encodedRedirect("error", "/protected/admin/sign-up", "Todos los campos son obligatorios.");
+    redirectWithErrorAndData("Todos los campos son obligatorios.", formData);
   }
 
   const { data: yaExiste, error: errorVerificacion } = await supabase.rpc(
@@ -31,13 +55,38 @@ export const signUpAction = async (formData: FormData) => {
   );
 
   if (errorVerificacion) {
-    return encodedRedirect("error", "/protected/admin/sign-up", "Error al verificar el correo.");
+    redirectWithErrorAndData("Error al verificar el correo.", formData);
   }
 
   if (yaExiste) {
-    return encodedRedirect("error", "/protected/admin/sign-up", "Usuario ya registrado.");
+    redirectWithErrorAndData(` ${email} ya esta registrado, elija un usuario diferente`, formData);
   }
 
+  
+  const { data: dpiAfiliados, error: errorAfiliados } = await supabase
+    .from('afiliados')
+    .select('id')
+    .eq('dpi', dpi);
+
+  if (errorAfiliados || dpiAfiliados === null) {
+    redirectWithErrorAndData("Error al verificar DPI ya esta afiliado .", formData);
+  }
+  
+  const { data: dpiPerfiles, error: errorPerfiles } = await supabase
+    .from('info_perfil')
+    .select('user_id')
+    .eq('dpi', dpi);
+
+  if (errorPerfiles || dpiPerfiles === null) {
+    redirectWithErrorAndData("Error al verificar DPI en perfiles.", formData);
+  }
+
+  if (dpiPerfiles!.length > 0 ) {
+    redirectWithErrorAndData("Este DPI ya se encuentra registrado a un LIDER.", formData);
+  } else if(dpiAfiliados!.length > 0){
+    redirectWithErrorAndData("Este DPI ya se encuentra registrado a un AFILIADO.", formData);
+  }
+  
   const { data, error } = await supabaseAdmin.auth.admin.createUser({
     email,
     password,
@@ -45,12 +94,13 @@ export const signUpAction = async (formData: FormData) => {
   });
 
   if (error || !data?.user) {
-    return encodedRedirect("error", "/protected/admin/sign-up", error?.message || "No se pudo crear.");
+    redirectWithErrorAndData(error?.message || "No se pudo crear la cuenta de usuario.", formData);
   }
 
-  const user_id = data.user.id;
+  const user_id = data.user!.id;
 
-  // Inserción actualizada para incluir teléfono, dpi, nacimiento y sexo
+  const rolIdValue = rol_id ?? '';
+
   const { error: errorPerfil } = await supabase
     .from("info_perfil")
     .insert({ 
@@ -62,18 +112,18 @@ export const signUpAction = async (formData: FormData) => {
         nacimiento,
         sexo,
         activo: true, 
-        rol_id: parseInt(rol_id, 10) 
+        rol_id: parseInt(rolIdValue, 10) 
     });
 
   if (errorPerfil) {
     console.error('Error al insertar en info_perfil:', errorPerfil);
-    return encodedRedirect("error", "/protected/admin/sign-up", "Error al guardar perfil.");
+    redirectWithErrorAndData("Error al guardar perfil.", formData);
   }
 
-  return encodedRedirect("success", "/protected/admin/sign-up", "Usuario creado con éxito.");
+  return encodedRedirect("success", "/protected", "Usuario creado con éxito.");
 };
 
-export const signInAction = async (formData: FormData) => {
+export const signInAction = async (formData: FormData): Promise<{ error: string } | void> => {
   const email = formData.get('email') as string;
   const password = formData.get('password') as string;
   const supabase = await createClient();
@@ -91,7 +141,7 @@ export const signInAction = async (formData: FormData) => {
     };
 
     const mensaje = traduccionErrores[error.message] || error.message;
-    return encodedRedirect('error', '/', mensaje);
+    return { error: mensaje };
   }
 
   const user = data?.user;
@@ -105,16 +155,12 @@ export const signInAction = async (formData: FormData) => {
   if (errorPerfil) {
     console.error('Error al verificar estado del usuario:', errorPerfil);
     await supabase.auth.signOut();
-    return encodedRedirect(
-      'error',
-      '/',
-      'Error al iniciar sesión. Intenta más tarde, si el problema persiste contacta con Soporte Técnico.'
-    );
+    return { error: 'Error al iniciar sesión. Intenta más tarde, si el problema persiste contacta con Soporte Técnico.' };
   }
 
   if (!perfil?.activo) {
     await supabase.auth.signOut();
-    return encodedRedirect('error', '/', 'Tu cuenta está desactivada. Contacta con Soporte Técnico.');
+    return { error: 'Tu cuenta está desactivada. Contacta con Soporte Técnico.' };
   }
 
   return redirect('/protected');
@@ -150,3 +196,19 @@ export const signOutAction = async () => {
 
   return redirect("/");
 };
+
+export async function deleteUserAccountAction(userId: string) {
+  if (!userId) {
+    return { error: { message: "ID de usuario no proporcionado." } };
+  }
+
+  const { data, error } = await supabaseAdmin.auth.admin.deleteUser(userId);
+
+  if (error) {
+    console.error('Error al eliminar usuario (admin):', error.message);
+    return { error: { message: error.message } };
+  }
+
+  revalidatePath('/protected'); 
+  return { error: null };
+}
