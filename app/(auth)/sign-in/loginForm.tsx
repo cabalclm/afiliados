@@ -29,7 +29,7 @@ export function LoginForm() {
   
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  // Eliminado clientError ya que no se estaba usando para mostrar nada en UI
+  const [clientError, setClientError] = useState<string | null>(null);
 
   const [isPending, startTransition] = useTransition();
 
@@ -45,16 +45,25 @@ export function LoginForm() {
     return errores[mensaje.toLowerCase()] || mensaje;
   }
 
-  // Eliminado el useEffect del 'Enter' porque el submit nativo del formulario ya lo hace automáticamente
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        formRef.current?.requestSubmit();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
-  // CAMBIO: Ahora es un evento de submit normal, no una Server Action directa
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault(); // Evita la recarga de página
-    
-    const formData = new FormData(e.currentTarget);
+
+  const handleFormAction = async (formData: FormData) => {
     const finalEmail = email.trim(); 
+
+    
+    setClientError(null);
     formData.set('email', finalEmail);
-    // password ya va en el formData porque el input tiene name="password"
+    formData.set('password', password); 
 
     startTransition(async () => {
       const result = await signInAction(formData);
@@ -66,7 +75,6 @@ export function LoginForm() {
           icon: 'error',
         });
       }
-      // Si es exitoso, la acción hace redirect en el servidor, así que no necesitamos hacer nada aquí
     });
   };
 
@@ -86,11 +94,9 @@ export function LoginForm() {
           priority
         />
       </motion.div>
-      
-      {/* CAMBIO: Se usa onSubmit en lugar de action */}
       <form
         ref={formRef}
-        onSubmit={handleSubmit}
+        action={handleFormAction}
         className="w-full md:max-w-2xl flex flex-col gap-8 text-2xl bg-white md:rounded-xl px-5 py-5 border border-gray-300"
       >
         <motion.div
@@ -126,9 +132,13 @@ export function LoginForm() {
             </Label>
             <Input
               name="email"
-              type="email"
+              type="email" // Agregado para validación nativa básica
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                setClientError(null);
+              }}
+              // Se quitó el onBlur={handleEmailBlur}
               placeholder="correo@ejemplo.com"
               required
               className="text-2xl py-8 px-4"

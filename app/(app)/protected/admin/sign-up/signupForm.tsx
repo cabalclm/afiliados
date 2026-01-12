@@ -1,14 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { signUpAction } from '@/app/actions/usuarios';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import Swal from 'sweetalert2';
 import PasswordSection from '@/components/admin/sign-up/PasswordSection';
-import { useFormStatus } from 'react-dom';
 import useUserData from '@/hooks/sesion/useUserData';
 import { createClient } from '@/utils/supabase/client';
 
@@ -22,29 +21,11 @@ interface LugarDisponible {
   nombre: string;
 }
 
-function FormSubmitButton({ disabled }: { disabled: boolean }) {
-  const { pending } = useFormStatus();
-
-  return (
-    <Button
-      type="submit"
-      formAction={signUpAction}
-      disabled={disabled || pending}
-      className="h-12 text-lg"
-    >
-      {pending ? "Creando..." : "Crear Usuario"}
-    </Button>
-  );
-}
-
 export function SignupForm() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const error = searchParams.get('error');
-  const success = searchParams.get('success');
-  const prevData = searchParams.get('data');
-
   const { rol: rolUsuarioSesion } = useUserData();
+  
+  const [loading, setLoading] = useState(false);
   const [rolesDisponibles, setRolesDisponibles] = useState<RolDisponible[]>([]);
   const [lugaresDisponibles, setLugaresDisponibles] = useState<LugarDisponible[]>([]);
 
@@ -79,78 +60,22 @@ export function SignupForm() {
     const fetchDatosIniciales = async () => {
       const supabase = createClient();
 
-      const { data: rolesData, error: rolesError } = await supabase.from('roles').select('id, nombre');
+      const { data: rolesData } = await supabase.from('roles').select('id, nombre');
       if (rolesData) setRolesDisponibles(rolesData);
 
-      const { data: lugaresData, error: lugaresError } = await supabase.from('lugares_clm').select('id, nombre');
+      const { data: lugaresData } = await supabase.from('lugares_clm').select('id, nombre');
       if (lugaresData) setLugaresDisponibles(lugaresData);
     };
     fetchDatosIniciales();
   }, []);
 
-  useEffect(() => {
-    if (error && prevData) {
-      try {
-        const decodedData = JSON.parse(decodeURIComponent(prevData));
-        setNombres(decodedData.nombres || '');
-        setApellidos(decodedData.apellidos || '');
-        setTelefono(decodedData.telefono || '');
-        setDpi(decodedData.dpi || '');
-        setNacimiento(decodedData.nacimiento || '');
-        setSexo(decodedData.sexo || 'M');
-        setEmail(decodedData.email || '');
-        setRolId(decodedData.rol_id || '');
-        setLugarId(decodedData.lugar_id || '');
-      } catch (e) {
-        console.error(e);
-      }
-    }
-  }, [error, prevData]);
-
-  function traducirError(mensaje: string) {
-    const errores: Record<string, string> = {
-      'email rate limit exceeded': 'Demasiados intentos. Espere unos minutos.',
-      'user already registered': 'El usuario ya está registrado.',
-      'invalid login credentials': 'Credenciales incorrectas.',
-      'signup requires a valid password': 'Contraseña inválida.',
-      'user not found': 'Usuario no encontrado.',
-      'este dpi ya se encuentra registrado a un lider': 'Este DPI ya se encuentra registrado a un Líder.',
-      'este dpi ya se encuentra registrado a un afiliado': 'Este DPI ya se encuentra registrado a un Afiliado.',
-    };
-    return errores[mensaje.toLowerCase()] || mensaje;
-  }
-
-  useEffect(() => {
-    if (error) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Error al crear usuario',
-        text: traducirError(decodeURIComponent(error)),
-        confirmButtonColor: '#d33',
-      });
-    }
-
-    if (success) {
-      Swal.fire({
-        icon: 'success',
-        title: 'Usuario creado',
-        text: decodeURIComponent(success),
-        confirmButtonColor: '#3085d6',
-      }).then(() => {
-        router.push('/protected/admin/sign-up');
-      });
-    }
-  }, [error, success, router]);
-  
   const rolesParaSelector = rolesDisponibles.filter(
     (r) => rolUsuarioSesion === 'SUPER' || r.nombre !== 'SUPER'
   );
 
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let newValue = e.target.value.replace(/\s/g, '');
-    if ((newValue.match(/@/g) || []).length > 1) {
-      return; 
-    }
+    if ((newValue.match(/@/g) || []).length > 1) return; 
     setEmail(newValue);
   };
 
@@ -160,8 +85,46 @@ export function SignupForm() {
 
   const handleNumericChange = (e: React.ChangeEvent<HTMLInputElement>, setter: React.Dispatch<React.SetStateAction<string>>, maxLength: number) => {
     const value = e.target.value.replace(/\D/g, ''); 
-    if (value.length <= maxLength) {
-      setter(value);
+    if (value.length <= maxLength) setter(value);
+  };
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setLoading(true);
+
+    const formData = new FormData(e.currentTarget);
+    // Asegurar campos manuales si es necesario, aunque los inputs tienen name
+    if (!formData.get('sexo')) formData.append('sexo', sexo);
+
+    const result = await signUpAction(formData);
+
+    setLoading(false);
+
+    if (result?.error) {
+      const errorMsg = result.error.toLowerCase();
+      let displayMsg = result.error;
+
+      if (errorMsg.includes('dpi') && errorMsg.includes('lider')) displayMsg = 'Este DPI ya se encuentra registrado a un Líder.';
+      else if (errorMsg.includes('dpi') && errorMsg.includes('afiliado')) displayMsg = 'Este DPI ya se encuentra registrado a un Afiliado.';
+      else if (errorMsg.includes('email rate limit')) displayMsg = 'Demasiados intentos. Espere unos minutos.';
+      else if (errorMsg.includes('already registered')) displayMsg = 'El usuario ya está registrado.';
+
+      Swal.fire({
+        icon: 'error',
+        title: 'Error al crear usuario',
+        text: displayMsg,
+        confirmButtonColor: '#d33',
+      });
+    } else if (result?.success) {
+      Swal.fire({
+        icon: 'success',
+        title: 'Usuario creado',
+        text: result.success,
+        confirmButtonColor: '#3085d6',
+      }).then(() => {
+        router.push('/protected/admin/sign-up');
+        // Opcional: resetear formulario aquí si no rediriges
+      });
     }
   };
 
@@ -180,14 +143,13 @@ export function SignupForm() {
 
       <span className="text-gray-600">Ingresa los datos del nuevo Líder</span>
 
-      <form className="flex flex-col gap-4">
+      <form className="flex flex-col gap-4" onSubmit={handleSubmit} noValidate>
         <div className="flex flex-col md:flex-row gap-4 w-full">
           <div className="w-full md:w-1/2">
             <Label htmlFor="nombres" className="sr-only">Nombres</Label>
             <Input
               name="nombres"
               placeholder="Nombres"
-              required
               value={nombres}
               onChange={(e) => setNombres(e.target.value)}
               className="h-12 text-lg"
@@ -201,7 +163,6 @@ export function SignupForm() {
             <Input
               name="apellidos"
               placeholder="Apellidos"
-              required
               value={apellidos}
               onChange={(e) => setApellidos(e.target.value)}
               className="h-12 text-lg"
@@ -218,7 +179,6 @@ export function SignupForm() {
             name="email"
             type="email"
             placeholder="correo@ejemplo.com"
-            required
             value={email}
             onChange={handleEmailChange}
             onBlur={handleEmailBlur}
@@ -236,7 +196,6 @@ export function SignupForm() {
                     type="tel"
                     name="telefono"
                     placeholder="Teléfono (8 dígitos)"
-                    required
                     value={telefono}
                     onChange={(e) => handleNumericChange(e, setTelefono, 8)}
                     className="h-12 text-lg"
@@ -252,7 +211,6 @@ export function SignupForm() {
                     type="text"
                     name="dpi"
                     placeholder="DPI (13 dígitos)"
-                    required
                     value={dpi}
                     onChange={(e) => handleNumericChange(e, setDpi, 13)}
                     className="h-12 text-lg"
@@ -270,7 +228,6 @@ export function SignupForm() {
                 <Input
                     type="date"
                     name="nacimiento"
-                    required
                     value={nacimiento}
                     onChange={(e) => setNacimiento(e.target.value)}
                     className="h-12 text-lg"
@@ -354,7 +311,13 @@ export function SignupForm() {
 
         <input type="hidden" name="sexo" value={sexo} />
 
-        <FormSubmitButton disabled={!formularioValido} />
+        <Button
+          type="submit"
+          disabled={!formularioValido || loading}
+          className="h-12 text-lg"
+        >
+          {loading ? "Creando..." : "Crear Usuario"}
+        </Button>
       </form>
     </div>
   );
