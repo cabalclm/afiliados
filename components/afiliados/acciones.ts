@@ -1,5 +1,4 @@
 import Swal from 'sweetalert2';
-import { createClient } from '@/utils/supabase/client';
 import type { Afiliado, Lider } from './esquemas';
 import { toast } from 'react-toastify';
 import { deleteUserAccountAction } from '@/app/actions/usuarios';
@@ -25,26 +24,28 @@ export const eliminar = async (registro: Afiliado | Lider, onEliminado: () => vo
     });
 
     if (confirmacion.isConfirmed) {
-        let error: { message: string } | null = null;
-        let result: { error: { message: string } | null };
+        let mensajeError: string | undefined = undefined;
 
         if (esLider) {
-            result = await deleteUserAccountAction(registro.id);
+            const result = await deleteUserAccountAction(registro.id);
             if (result.error) {
-              error = result.error;
+                mensajeError = result.error;
             }
         } else {
-            result = await deleteAfiliadoAction(registro.id);
+            const result: any = await deleteAfiliadoAction(registro.id);
+            
             if (result.error) {
-              error = result.error;
+                mensajeError = typeof result.error === 'string' 
+                    ? result.error 
+                    : result.error.message;
             }
         }
 
-        if (error && error.message) {
+        if (mensajeError) {
             toast.error('No se pudo eliminar el registro.');
-            console.error('Error de eliminación:', error.message);
+            console.error('Error de eliminación:', mensajeError);
         } else {
-            toast.error(`"${nombreCompleto}" ha sido eliminado.`);
+            toast.success(`"${nombreCompleto}" ha sido eliminado.`); 
             onEliminado();
         }
     }
