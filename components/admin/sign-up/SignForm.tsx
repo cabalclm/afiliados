@@ -70,11 +70,10 @@ export function SignupForm({ onSuccess, onClose, isModal = false, initialData }:
   );
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault(); // IMPORTANTE: Previene el envío nativo
+    e.preventDefault();
     setLoading(true);
 
     const formData = new FormData(e.currentTarget);
-    // Agregamos manualmente campos que podrían no estar en inputs visibles
     if(isEdit) formData.append('id', initialData.user_id || initialData.id);
     if(!formData.get('sexo')) formData.append('sexo', sexo);
 
@@ -116,38 +115,47 @@ export function SignupForm({ onSuccess, onClose, isModal = false, initialData }:
           <Button onClick={onClose} variant="ghost" type="button">Cerrar</Button>
       </div>
 
-      {/* ERROR CORREGIDO AQUI: Se eliminó la prop 'action={...}' y se usa 'onSubmit' */}
       <form className="flex flex-col gap-4" onSubmit={handleSubmit} noValidate>
         
         <div className="flex flex-col md:flex-row gap-4">
           <div className="flex-1">
             <Label>Nombres</Label>
             <Input name="nombres" value={nombres} onChange={(e) => setNombres(e.target.value)} className="h-12" />
-            <p className={`text-xs mt-1 ${nombresValido ? 'text-green-600' : 'text-amber-600'}`}>Requerido</p>
+            <p className={`text-xs mt-1 ${nombresValido ? 'text-green-600' : 'text-amber-600'}`}>
+               {nombresValido ? 'Correcto' : 'Requerido'}
+            </p>
           </div>
           <div className="flex-1">
             <Label>Apellidos</Label>
             <Input name="apellidos" value={apellidos} onChange={(e) => setApellidos(e.target.value)} className="h-12" />
-            <p className={`text-xs mt-1 ${apellidosValido ? 'text-green-600' : 'text-amber-600'}`}>Requerido</p>
+            <p className={`text-xs mt-1 ${apellidosValido ? 'text-green-600' : 'text-amber-600'}`}>
+                {apellidosValido ? 'Correcto' : 'Requerido'}
+            </p>
           </div>
         </div>
 
         <div>
-            <Label>Correo</Label>
+            <Label>Correo electrónico</Label>
             <Input name="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="h-12" />
-            <p className={`text-xs mt-1 ${emailValido ? 'text-green-600' : 'text-amber-600'}`}>Válido</p>
+            <p className={`text-xs mt-1 ${emailValido ? 'text-green-600' : 'text-amber-600'}`}>
+                {emailValido ? 'Válido' : 'Correo inválido'}
+            </p>
         </div>
 
         <div className="flex flex-col md:flex-row gap-4">
           <div className="flex-1">
              <Label>Teléfono</Label>
              <Input name="telefono" value={telefono} onChange={(e) => setTelefono(e.target.value.replace(/\D/g, '').slice(0, 8))} className="h-12" />
-             <p className={`text-xs mt-1 ${telefonoValido ? 'text-green-600' : 'text-amber-600'}`}>8 dígitos</p>
+             <p className={`text-xs mt-1 ${telefonoValido ? 'text-green-600' : 'text-amber-600'}`}>
+                {telefonoValido ? 'Correcto' : '8 dígitos requeridos'}
+             </p>
           </div>
           <div className="flex-1">
              <Label>DPI</Label>
              <Input name="dpi" value={dpi} onChange={(e) => setDpi(e.target.value.replace(/\D/g, '').slice(0, 13))} className="h-12" />
-             <p className={`text-xs mt-1 ${dpiValido ? 'text-green-600' : 'text-amber-600'}`}>13 dígitos</p>
+             <p className={`text-xs mt-1 ${dpiValido ? 'text-green-600' : 'text-amber-600'}`}>
+                {dpiValido ? 'Correcto' : '13 dígitos requeridos'}
+             </p>
           </div>
         </div>
 
@@ -155,7 +163,9 @@ export function SignupForm({ onSuccess, onClose, isModal = false, initialData }:
           <div className="flex-1">
              <Label>Nacimiento</Label>
              <Input name="nacimiento" type="date" value={nacimiento} onChange={(e) => setNacimiento(e.target.value)} className="h-12" />
-             <p className={`text-xs mt-1 ${nacimientoValido ? 'text-green-600' : 'text-amber-600'}`}>Requerido</p>
+             <p className={`text-xs mt-1 ${nacimientoValido ? 'text-green-600' : 'text-amber-600'}`}>
+                {nacimientoValido ? 'Correcto' : 'Requerido'}
+             </p>
           </div>
           <div className="flex-1">
             <Label>Sexo</Label>
@@ -174,7 +184,9 @@ export function SignupForm({ onSuccess, onClose, isModal = false, initialData }:
               <option value="">Seleccione</option>
               {lugaresDisponibles.map(l => <option key={l.id} value={l.id.toString()}>{l.nombre}</option>)}
             </select>
-            <p className={`text-xs mt-1 ${lugarValido ? 'text-green-600' : 'text-amber-600'}`}>Seleccione</p>
+            <p className={`text-xs mt-1 ${lugarValido ? 'text-green-600' : 'text-amber-600'}`}>
+                {lugarValido ? 'Correcto' : 'Seleccione una opción'}
+            </p>
           </div>
           <div className="flex-1">
             <Label>Rol</Label>
@@ -182,7 +194,9 @@ export function SignupForm({ onSuccess, onClose, isModal = false, initialData }:
               <option value="">Seleccione</option>
               {rolesParaSelector.map(r => <option key={r.id} value={r.id.toString()}>{r.nombre}</option>)}
             </select>
-            <p className={`text-xs mt-1 ${rolValido ? 'text-green-600' : 'text-amber-600'}`}>Seleccione</p>
+            <p className={`text-xs mt-1 ${rolValido ? 'text-green-600' : 'text-amber-600'}`}>
+                {rolValido ? 'Correcto' : 'Seleccione una opción'}
+            </p>
           </div>
         </div>
 
@@ -199,7 +213,6 @@ export function SignupForm({ onSuccess, onClose, isModal = false, initialData }:
           </div>
         </div>
 
-        {/* ERROR CORREGIDO AQUI: Se eliminó el FormSubmitButton y se usa un Button normal */}
         <Button 
             type="submit" 
             disabled={!formularioValido || loading} 
