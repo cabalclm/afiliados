@@ -81,11 +81,9 @@ export function SignupForm() {
 
       const { data: rolesData, error: rolesError } = await supabase.from('roles').select('id, nombre');
       if (rolesData) setRolesDisponibles(rolesData);
-      else console.error("Error cargando roles:", rolesError);
 
       const { data: lugaresData, error: lugaresError } = await supabase.from('lugares_clm').select('id, nombre');
       if (lugaresData) setLugaresDisponibles(lugaresData);
-      else console.error("Error cargando lugares:", lugaresError);
     };
     fetchDatosIniciales();
   }, []);
@@ -104,7 +102,7 @@ export function SignupForm() {
         setRolId(decodedData.rol_id || '');
         setLugarId(decodedData.lugar_id || '');
       } catch (e) {
-        console.error("Error al parsear datos previos:", e);
+        console.error(e);
       }
     }
   }, [error, prevData]);
@@ -157,17 +155,7 @@ export function SignupForm() {
   };
 
   const handleEmailBlur = () => {
-    let currentEmail = email.trim();
-    if (currentEmail === '') return;
-
-    const atIndex = currentEmail.indexOf('@');
-
-    if (atIndex === -1) {
-      setEmail(currentEmail + '@clmcabal.com');
-    } else {
-      const username = currentEmail.substring(0, atIndex);
-      setEmail(username + '@clmcabal.com');
-    }
+    setEmail(email.trim());
   };
 
   const handleNumericChange = (e: React.ChangeEvent<HTMLInputElement>, setter: React.Dispatch<React.SetStateAction<string>>, maxLength: number) => {
@@ -228,7 +216,8 @@ export function SignupForm() {
           <Label htmlFor="email" className="sr-only">Correo electrónico</Label>
           <Input
             name="email"
-            placeholder="usuario@clmcabal.com"
+            type="email"
+            placeholder="correo@ejemplo.com"
             required
             value={email}
             onChange={handleEmailChange}

@@ -1,35 +1,68 @@
 "use server";
 
-import { encodedRedirect } from "@/utils/utils";
 import { createClient } from "@/utils/supabase/server";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import supabaseAdmin from '@/utils/supabase/admin';
 import { revalidatePath } from "next/cache";
 
-function encodeFormForRedirect(formData: FormData) {
-    const dataToKeep = {
-        nombres: formData.get("nombres")?.toString() || '',
-        apellidos: formData.get("apellidos")?.toString() || '',
-        telefono: formData.get("telefono")?.toString() || '',
-        dpi: formData.get("dpi")?.toString() || '',
-        nacimiento: formData.get("nacimiento")?.toString() || '',
-        sexo: formData.get("sexo")?.toString() || 'M',
-        email: formData.get("email")?.toString() || '',
-        rol_id: formData.get("rol_id")?.toString() || '',
-    };
-    return encodeURIComponent(JSON.stringify(dataToKeep));
-}
+export const deleteUserAccountAction = async (userId: string) => {
+  if (!userId) return { error: "ID de usuario no proporcionado." };
 
-function redirectWithErrorAndData(message: string, formData: FormData) {
-    const prevDataEncoded = encodeFormForRedirect(formData);
-    const errorMsgEncoded = encodeURIComponent(message);
-    
-    const redirectPath = `/protected/admin?error=${errorMsgEncoded}&data=${prevDataEncoded}`;
-    
-    redirect(redirectPath);
-}
+  const { error } = await supabaseAdmin.auth.admin.deleteUser(userId);
 
+  if (error) {
+    console.error('Error al eliminar usuario (admin):', error.message);
+    return { error: error.message };
+  }
+
+  revalidatePath('/dashboard/usuarios'); 
+  return { success: "Usuario eliminado correctamente." };
+};
+
+export const updateUsuarioAction = async (formData: FormData) => {
+  const supabase = await createClient();
+
+  const id = formData.get('id') as string;
+  const nombres = formData.get('nombres') as string;
+  const apellidos = formData.get('apellidos') as string;
+  const telefono = formData.get('telefono') as string;
+  const dpi = formData.get('dpi') as string;
+  const nacimiento = formData.get('nacimiento') as string;
+  const sexo = formData.get('sexo') as string;
+  const email = formData.get('email') as string;
+  const rol_id = formData.get('rol_id') as string;
+  const lugar_id = formData.get('lugar_id') as string;
+  const password = formData.get('password') as string;
+
+  const { error: updateError } = await supabase
+    .from('info_perfil')
+    .update({
+      nombres,
+      apellidos,
+      telefono,
+      dpi,
+      nacimiento,
+      sexo,
+      rol_id: parseInt(rol_id),
+      lugar_id: parseInt(lugar_id),
+    })
+    .eq('user_id', id);
+
+  if (updateError) return { error: updateError.message };
+
+  const authUpdateData: any = {};
+  if (email) authUpdateData.email = email;
+  if (password && password.trim() !== '') authUpdateData.password = password;
+
+  if (Object.keys(authUpdateData).length > 0) {
+    const { error: authError } = await supabaseAdmin.auth.admin.updateUserById(id, authUpdateData);
+    if (authError) return { error: authError.message };
+  }
+
+  revalidatePath('/dashboard/usuarios');
+  return { success: 'Usuario actualizado correctamente' };
+};
 
 export const signUpAction = async (formData: FormData) => {
   const email = formData.get("email")?.toString();
@@ -41,12 +74,12 @@ export const signUpAction = async (formData: FormData) => {
   const nacimiento = formData.get("nacimiento")?.toString();
   const sexo = formData.get("sexo")?.toString();
   const rol_id = formData.get("rol_id")?.toString(); 
+  const lugar_id = formData.get("lugar_id")?.toString(); 
 
   const supabase = await createClient();
-  const origin = (await headers()).get("origin");
 
   if (!email || !password || !rol_id || !nombres || !apellidos || !telefono || !dpi || !nacimiento || !sexo) {
-    redirectWithErrorAndData("Todos los campos son obligatorios.", formData);
+    return { error: "Todos los campos son obligatorios." };
   }
 
   const { data: yaExiste, error: errorVerificacion } = await supabase.rpc(
@@ -54,38 +87,17 @@ export const signUpAction = async (formData: FormData) => {
     { email_input: email }
   );
 
-  if (errorVerificacion) {
-    redirectWithErrorAndData("Error al verificar el correo.", formData);
-  }
+  if (errorVerificacion) return { error: "Error al verificar el correo." };
+  if (yaExiste) return { error: `${email} ya está registrado.` };
 
-  if (yaExiste) {
-    redirectWithErrorAndData(` ${email} ya esta registrado, elija un usuario diferente`, formData);
-  }
+  const { data: dpiAfiliados, error: errorAfiliados } = await supabase.from('afiliados').select('id').eq('dpi', dpi);
+  if (errorAfiliados) return { error: "Error al verificar DPI en afiliados." };
 
-  
-  const { data: dpiAfiliados, error: errorAfiliados } = await supabase
-    .from('afiliados')
-    .select('id')
-    .eq('dpi', dpi);
+  const { data: dpiPerfiles, error: errorPerfiles } = await supabase.from('info_perfil').select('user_id').eq('dpi', dpi);
+  if (errorPerfiles) return { error: "Error al verificar DPI en perfiles." };
 
-  if (errorAfiliados || dpiAfiliados === null) {
-    redirectWithErrorAndData("Error al verificar DPI ya esta afiliado .", formData);
-  }
-  
-  const { data: dpiPerfiles, error: errorPerfiles } = await supabase
-    .from('info_perfil')
-    .select('user_id')
-    .eq('dpi', dpi);
-
-  if (errorPerfiles || dpiPerfiles === null) {
-    redirectWithErrorAndData("Error al verificar DPI en perfiles.", formData);
-  }
-
-  if (dpiPerfiles!.length > 0 ) {
-    redirectWithErrorAndData("Este DPI ya se encuentra registrado a un LIDER.", formData);
-  } else if(dpiAfiliados!.length > 0){
-    redirectWithErrorAndData("Este DPI ya se encuentra registrado a un AFILIADO.", formData);
-  }
+  if (dpiPerfiles && dpiPerfiles.length > 0) return { error: "Este DPI ya se encuentra registrado a un LIDER." };
+  if (dpiAfiliados && dpiAfiliados.length > 0) return { error: "Este DPI ya se encuentra registrado a un AFILIADO." };
   
   const { data, error } = await supabaseAdmin.auth.admin.createUser({
     email,
@@ -93,12 +105,9 @@ export const signUpAction = async (formData: FormData) => {
     email_confirm: true,
   });
 
-  if (error || !data?.user) {
-    redirectWithErrorAndData(error?.message || "No se pudo crear la cuenta de usuario.", formData);
-  }
+  if (error || !data?.user) return { error: error?.message || "No se pudo crear la cuenta de usuario." };
 
-  const user_id = data.user!.id;
-
+  const user_id = data.user!.id; 
   const rolIdValue = rol_id ?? '';
 
   const { error: errorPerfil } = await supabase
@@ -112,18 +121,20 @@ export const signUpAction = async (formData: FormData) => {
         nacimiento,
         sexo,
         activo: true, 
-        rol_id: parseInt(rolIdValue, 10) 
+        rol_id: parseInt(rolIdValue, 10),
+        lugar_id: lugar_id ? parseInt(lugar_id, 10) : null
     });
 
   if (errorPerfil) {
     console.error('Error al insertar en info_perfil:', errorPerfil);
-    redirectWithErrorAndData("Error al guardar perfil.", formData);
+    return { error: "Error al guardar perfil." };
   }
 
-  return encodedRedirect("success", "/protected", "Usuario creado con éxito.");
+  revalidatePath('/dashboard/usuarios');
+  return { success: "Usuario creado con éxito." };
 };
 
-export const signInAction = async (formData: FormData): Promise<{ error: string } | void> => {
+export const signInAction = async (formData: FormData) => {
   const email = formData.get('email') as string;
   const password = formData.get('password') as string;
   const supabase = await createClient();
@@ -139,28 +150,23 @@ export const signInAction = async (formData: FormData): Promise<{ error: string 
       'Email not confirmed': 'Debe confirmar su correo antes de iniciar sesión.',
       'User is banned': 'Este usuario ha sido suspendido.',
     };
-
-    const mensaje = traduccionErrores[error.message] || error.message;
-    return { error: mensaje };
+    return { error: traduccionErrores[error.message] || error.message };
   }
-
-  const user = data?.user;
 
   const { data: perfil, error: errorPerfil } = await supabase
     .from('info_perfil')
     .select('activo') 
-    .eq('user_id', user?.id)
-    .single(); 
+    .eq('user_id', data.user?.id)
+    .maybeSingle(); 
 
-  if (errorPerfil) {
-    console.error('Error al verificar estado del usuario:', errorPerfil);
+  if (errorPerfil || !perfil) {
     await supabase.auth.signOut();
-    return { error: 'Error al iniciar sesión. Intenta más tarde, si el problema persiste contacta con Soporte Técnico.' };
+    return { error: perfil ? 'Error de base de datos.' : 'No se encontró un perfil asociado.' };
   }
 
-  if (!perfil?.activo) {
+  if (!perfil.activo) {
     await supabase.auth.signOut();
-    return { error: 'Tu cuenta está desactivada. Contacta con Soporte Técnico.' };
+    return { error: 'Tu cuenta está desactivada.' };
   }
 
   return redirect('/protected');
@@ -168,47 +174,20 @@ export const signInAction = async (formData: FormData): Promise<{ error: string 
 
 export const resetPasswordAction = async (formData: FormData) => {
   const supabase = await createClient();
-
   const password = formData.get("password") as string;
   const confirmPassword = formData.get("confirmPassword") as string;
 
-  if (!password || !confirmPassword) {
-    return encodedRedirect("error", "/reset-password", "La contraseña y la confirmación son requeridas");
-  }
-
-  if (password !== confirmPassword) {
-    return encodedRedirect("error", "/reset-password", "Las contraseñas no coinciden");
-  }
+  if (!password || !confirmPassword) return { error: "Campos requeridos." };
+  if (password !== confirmPassword) return { error: "Las contraseñas no coinciden." };
 
   const { error } = await supabase.auth.updateUser({ password });
+  if (error) return { error: "Error al actualizar." };
 
-  if (error) {
-    return encodedRedirect("error", "/reset-password", "La contraseña no pudo actualizarse");
-  }
-
-  return encodedRedirect("success", "/reset-password", "Contraseña restablecida");
+  return { success: "Contraseña restablecida." };
 };
 
 export const signOutAction = async () => {
   const supabase = await createClient();
- 
   await supabase.auth.signOut();
-
   return redirect("/");
 };
-
-export async function deleteUserAccountAction(userId: string) {
-  if (!userId) {
-    return { error: { message: "ID de usuario no proporcionado." } };
-  }
-
-  const { data, error } = await supabaseAdmin.auth.admin.deleteUser(userId);
-
-  if (error) {
-    console.error('Error al eliminar usuario (admin):', error.message);
-    return { error: { message: error.message } };
-  }
-
-  revalidatePath('/protected'); 
-  return { error: null };
-}

@@ -56,25 +56,10 @@ export function LoginForm() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  const handleEmailBlur = () => {
-    let finalEmail = email.trim();
-    if (finalEmail && !finalEmail.includes('@')) {
-      finalEmail += '@clmcabal.com';
-      setEmail(finalEmail);
-    }
-  };
 
   const handleFormAction = async (formData: FormData) => {
-    let finalEmail = email.trim(); 
+    const finalEmail = email.trim(); 
 
-    if (!finalEmail.endsWith('@clmcabal.com')) {
-      Swal.fire({
-        title: 'Error de validación',
-        text: 'El dominio del correo debe ser @clmcabal.com',
-        icon: 'error',
-      });
-      return;
-    }
     
     setClientError(null);
     formData.set('email', finalEmail);
@@ -101,10 +86,10 @@ export function LoginForm() {
         transition={{ duration: 2.0, ease: [0.25, 1, 0.5, 1] }}
       >
         <Image
-          src="/images/logo.png"
+          src="/svg/logo.svg"
           alt="Logo"
-          width={200}
-          height={100}
+          width={400}
+          height={200}
           className="object-contain"
           priority
         />
@@ -133,7 +118,6 @@ export function LoginForm() {
               />
             </h1>
           </div>
-
         </motion.div>
 
         <motion.div
@@ -148,13 +132,14 @@ export function LoginForm() {
             </Label>
             <Input
               name="email"
+              type="email" // Agregado para validación nativa básica
               value={email}
               onChange={(e) => {
                 setEmail(e.target.value);
                 setClientError(null);
               }}
-              onBlur={handleEmailBlur} 
-              placeholder="usuario@clmcabal.com"
+              // Se quitó el onBlur={handleEmailBlur}
+              placeholder="correo@ejemplo.com"
               required
               className="text-2xl py-8 px-4"
             />

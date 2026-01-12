@@ -10,7 +10,7 @@ export default function AppLayout({
   return (
     <>
       <nav className="w-full flex h-40">
-        <div className="w-full flex  items-center justify-between px-5 pt-3 text-sm">
+        <div className="w-full flex  items-center justify-between px-5  text-sm">
           <div className="flex items-center gap-3">
             <LogoLink />
           </div>

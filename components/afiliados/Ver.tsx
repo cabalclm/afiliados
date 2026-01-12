@@ -35,6 +35,7 @@ export default function Ver() {
     const [isSignupModalOpen, setIsSignupModalOpen] = useState(false);
 
     const [afiliadoParaEditar, setAfiliadoParaEditar] = useState<Afiliado | null>(null);
+    const [liderAEditar, setLiderAEditar] = useState<Lider | null>(null);
     const [liderParaCelula, setLiderParaCelula] = useState<Lider | null>(null);
     const [liderParaNuevoAfiliado, setLiderParaNuevoAfiliado] = useState<string | null>(null);
 
@@ -58,7 +59,6 @@ export default function Ver() {
                 .single();
 
             if (lideresError || afiliadosError || lugaresError) {
-                console.error('Error fetching data:', lideresError || afiliadosError || lugaresError);
                 toast.error('Error al cargar los datos.');
             } else {
                 const allLideres = (lideresResult || []) as Lider[];
@@ -80,7 +80,6 @@ export default function Ver() {
                 setLugares((lugaresResult || []) as Lugar[]);
             }
         } catch (e) {
-            console.error('Excepción en fetchData:', e);
             toast.error('Error inesperado al cargar los datos.');
         } finally {
             setLoading(false);
@@ -94,16 +93,24 @@ export default function Ver() {
     }, [rol, cargandoRol]);
 
     const handleOpenCreateLiderModal = () => {
+        setLiderAEditar(null);
+        setIsSignupModalOpen(true);
+    };
+
+    const handleOpenEditLiderModal = (lider: Lider) => {
+        setLiderAEditar(lider);
         setIsSignupModalOpen(true);
     };
 
     const handleSignupSuccess = () => {
         setIsSignupModalOpen(false);
+        setLiderAEditar(null);
         fetchData();
     };
 
     const handleCloseSignupModal = () => {
         setIsSignupModalOpen(false);
+        setLiderAEditar(null);
     };
 
     const handleOpenAnadirAfiliadoModal = (liderId: string) => {
@@ -216,6 +223,7 @@ export default function Ver() {
                     <Lideres
                         lideres={lideres}
                         onVerCelula={handleOpenCelulaModal}
+                        onEditar={handleOpenEditLiderModal}
                         rolUsuarioSesion={rol}
                         onDataChange={fetchData}
                         searchTerm={searchTerm}
@@ -262,7 +270,6 @@ export default function Ver() {
                 lideres={lideres}
             />
 
-            {/* Modal para Crear Líder (SignupForm) */}
             <Transition show={isSignupModalOpen} as={Fragment}>
                 <Dialog as="div" className="relative z-50" onClose={handleCloseSignupModal}>
                     <TransitionChild
@@ -290,7 +297,12 @@ export default function Ver() {
                             >
                                 <DialogPanel className="bg-white rounded-lg shadow-xl w-full max-w-2xl transform transition-all">
                                     <div className="p-4 md:p-8">
-                                        <SignupForm onSuccess={handleSignupSuccess} isModal={true} />
+                                        <SignupForm 
+                                            initialData={liderAEditar}
+                                            onSuccess={handleSignupSuccess} 
+                                            onClose={handleCloseSignupModal} 
+                                            isModal={true} 
+                                        />
                                     </div>
                                 </DialogPanel>
                             </TransitionChild>

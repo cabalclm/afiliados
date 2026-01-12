@@ -10,15 +10,14 @@ export default function AuthButton() {
 
   if (cargando) {
     return (
-      <div className="flex gap-2">
-        <div className="h-8 w-24 rounded animate-pulse"></div>
+      <div className="flex gap-2 pt-5">
+        <div className="h-8 w-24 rounded animate-pulse bg-gray-200"></div>
       </div>
     );
   }
 
   return email ? (
-
-    <div className="flex flex-col items-end gap-1"> 
+    <div className="flex flex-col items-end gap-1 pt-5"> 
       <div className="flex flex-col items-end text-right leading-tight">
         <span className="text-sm font-bold">
           {nombres} {apellidos}

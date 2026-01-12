@@ -4,12 +4,12 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 export const metadata = {
-  title: "CABAL CLM",
+  title: "Afiliados CLM - Sistema de Afiliación",
   description: "Sistema de Afiliación de votantes para Concepción Las Minas",
   icons: [
-    { rel: "icon", url: "/logo.png" },
-    { rel: "shortcut icon", url: "/logo.png" },
-    { rel: "apple-touch-icon", url: "/logo.png" },
+    { rel: "icon", url: "/svg/logo.svg"  },
+    { rel: "shortcut icon", url: "/svg/logo.svg" },
+    { rel: "apple-touch-icon", url: "/svg/logo.svg"  },
   ],
   // --- Configuración Adicional para PWA y Manifiesto ---
   manifest: "/manifest.json",
@@ -19,7 +19,7 @@ export const metadata = {
     'viewport': 'width=device-width, initial-scale=1, viewport-fit=cover',
     'apple-mobile-web-app-capable': 'yes',
     'apple-mobile-web-app-status-bar-style': 'default',
-    'apple-mobile-web-app-title': 'CABAL CLM',
+    'apple-mobile-web-app-title': 'Afiliados CLM - Sistema de Afiliación',
   },
   // --- Fin de Configuración PWA ---
 };
