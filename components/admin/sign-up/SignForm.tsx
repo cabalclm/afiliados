@@ -38,7 +38,6 @@ export function SignupForm({ onSuccess, onClose, isModal = false, initialData }:
   const [rol_id, setRolId] = useState<string>(initialData?.rol_id?.toString() || '');
   const [lugar_id, setLugarId] = useState<string>(initialData?.lugar_id?.toString() || '');
 
-  // Validaciones
   const nombresValido = nombres.trim() !== '';
   const apellidosValido = apellidos.trim() !== '';
   const emailValido = email.trim() !== '' && email.includes('@');
@@ -101,8 +100,11 @@ export function SignupForm({ onSuccess, onClose, isModal = false, initialData }:
             confirmButtonColor: '#3085d6',
         }).then(() => {
             if (isModal) {
-                if (!isEdit) onSuccess(); 
-                else router.refresh();
+                if (!isEdit) {
+                    onSuccess(); 
+                } else {
+                    router.refresh();
+                }
             }
         });
     }
@@ -121,41 +123,31 @@ export function SignupForm({ onSuccess, onClose, isModal = false, initialData }:
           <div className="flex-1">
             <Label>Nombres</Label>
             <Input name="nombres" value={nombres} onChange={(e) => setNombres(e.target.value)} className="h-12" />
-            <p className={`text-xs mt-1 ${nombresValido ? 'text-green-600' : 'text-amber-600'}`}>
-               {nombresValido ? 'Correcto' : 'Requerido'}
-            </p>
+            <p className={`text-xs mt-1 ${nombresValido ? 'text-green-600' : 'text-amber-600'}`}>Requerido</p>
           </div>
           <div className="flex-1">
             <Label>Apellidos</Label>
             <Input name="apellidos" value={apellidos} onChange={(e) => setApellidos(e.target.value)} className="h-12" />
-            <p className={`text-xs mt-1 ${apellidosValido ? 'text-green-600' : 'text-amber-600'}`}>
-                {apellidosValido ? 'Correcto' : 'Requerido'}
-            </p>
+            <p className={`text-xs mt-1 ${apellidosValido ? 'text-green-600' : 'text-amber-600'}`}>Requerido</p>
           </div>
         </div>
 
         <div>
-            <Label>Correo electrónico</Label>
+            <Label>Correo</Label>
             <Input name="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="h-12" />
-            <p className={`text-xs mt-1 ${emailValido ? 'text-green-600' : 'text-amber-600'}`}>
-                {emailValido ? 'Válido' : 'Correo inválido'}
-            </p>
+            <p className={`text-xs mt-1 ${emailValido ? 'text-green-600' : 'text-amber-600'}`}>Válido</p>
         </div>
 
         <div className="flex flex-col md:flex-row gap-4">
           <div className="flex-1">
              <Label>Teléfono</Label>
              <Input name="telefono" value={telefono} onChange={(e) => setTelefono(e.target.value.replace(/\D/g, '').slice(0, 8))} className="h-12" />
-             <p className={`text-xs mt-1 ${telefonoValido ? 'text-green-600' : 'text-amber-600'}`}>
-                {telefonoValido ? 'Correcto' : '8 dígitos requeridos'}
-             </p>
+             <p className={`text-xs mt-1 ${telefonoValido ? 'text-green-600' : 'text-amber-600'}`}>8 dígitos</p>
           </div>
           <div className="flex-1">
              <Label>DPI</Label>
              <Input name="dpi" value={dpi} onChange={(e) => setDpi(e.target.value.replace(/\D/g, '').slice(0, 13))} className="h-12" />
-             <p className={`text-xs mt-1 ${dpiValido ? 'text-green-600' : 'text-amber-600'}`}>
-                {dpiValido ? 'Correcto' : '13 dígitos requeridos'}
-             </p>
+             <p className={`text-xs mt-1 ${dpiValido ? 'text-green-600' : 'text-amber-600'}`}>13 dígitos</p>
           </div>
         </div>
 
@@ -163,9 +155,7 @@ export function SignupForm({ onSuccess, onClose, isModal = false, initialData }:
           <div className="flex-1">
              <Label>Nacimiento</Label>
              <Input name="nacimiento" type="date" value={nacimiento} onChange={(e) => setNacimiento(e.target.value)} className="h-12" />
-             <p className={`text-xs mt-1 ${nacimientoValido ? 'text-green-600' : 'text-amber-600'}`}>
-                {nacimientoValido ? 'Correcto' : 'Requerido'}
-             </p>
+             <p className={`text-xs mt-1 ${nacimientoValido ? 'text-green-600' : 'text-amber-600'}`}>Requerido</p>
           </div>
           <div className="flex-1">
             <Label>Sexo</Label>
@@ -184,9 +174,7 @@ export function SignupForm({ onSuccess, onClose, isModal = false, initialData }:
               <option value="">Seleccione</option>
               {lugaresDisponibles.map(l => <option key={l.id} value={l.id.toString()}>{l.nombre}</option>)}
             </select>
-            <p className={`text-xs mt-1 ${lugarValido ? 'text-green-600' : 'text-amber-600'}`}>
-                {lugarValido ? 'Correcto' : 'Seleccione una opción'}
-            </p>
+            <p className={`text-xs mt-1 ${lugarValido ? 'text-green-600' : 'text-amber-600'}`}>Seleccione</p>
           </div>
           <div className="flex-1">
             <Label>Rol</Label>
@@ -194,9 +182,7 @@ export function SignupForm({ onSuccess, onClose, isModal = false, initialData }:
               <option value="">Seleccione</option>
               {rolesParaSelector.map(r => <option key={r.id} value={r.id.toString()}>{r.nombre}</option>)}
             </select>
-            <p className={`text-xs mt-1 ${rolValido ? 'text-green-600' : 'text-amber-600'}`}>
-                {rolValido ? 'Correcto' : 'Seleccione una opción'}
-            </p>
+            <p className={`text-xs mt-1 ${rolValido ? 'text-green-600' : 'text-amber-600'}`}>Seleccione</p>
           </div>
         </div>
 
@@ -213,11 +199,7 @@ export function SignupForm({ onSuccess, onClose, isModal = false, initialData }:
           </div>
         </div>
 
-        <Button 
-            type="submit" 
-            disabled={!formularioValido || loading} 
-            className="h-12 text-lg w-full"
-        >
+        <Button type="submit" disabled={!formularioValido || loading} className="h-12 text-lg w-full">
           {loading ? (isEdit ? "Guardando..." : "Creando...") : (isEdit ? "Guardar Cambios" : "Crear Usuario")}
         </Button>
       </form>
