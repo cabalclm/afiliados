@@ -109,7 +109,6 @@ export default function Lideres({ lideres, onVerCelula, onEditar, rolUsuarioSesi
           const totalEnGrupo = (lider.conteoAfiliados || 0) + 1;
           const objetivo = 15;
           const progreso = Math.min((totalEnGrupo / objetivo) * 100, 100);
-          
           let colorBarra = 'bg-blue-600';
           if (totalEnGrupo <= 5) colorBarra = 'bg-blue-300';
           else if (totalEnGrupo <= 10) colorBarra = 'bg-yellow-600';
