@@ -1,68 +1,32 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { createClient } from '@/utils/supabase/client';
-
-interface UserData {
-  id: string;
-  email: string;
-  nombres: string | null;
-  apellidos: string | null;
-  telefono: string | null;
-  dpi: string | null;
-  nacimiento: string | null;
-  sexo: string | null;
-  rol: string | null;
-  rol_id: number | null;
-}
+import { useEffect, useState } from "react";
+import { getUserDataAction } from "./actions";
 
 export default function useUserData() {
-  const [userId, setUserId] = useState('');
-  const [email, setEmail] = useState('');
-  const [nombres, setNombres] = useState('');
-  const [apellidos, setApellidos] = useState('');
-  const [telefono, setTelefono] = useState('');
-  const [dpi, setDpi] = useState('');
-  const [nacimiento, setNacimiento] = useState('');
-  const [sexo, setSexo] = useState('');
-  const [rol, setRol] = useState('');
+  const [userId, setUserId] = useState("");
+  const [email, setEmail] = useState("");
+  const [nombres, setNombres] = useState("");
+  const [apellidos, setApellidos] = useState("");
+  const [rol, setRol] = useState("");
   const [rol_id, setRolId] = useState<number | null>(null);
   const [cargando, setCargando] = useState(true);
 
   useEffect(() => {
     const obtenerUsuario = async () => {
-      const supabase = createClient();
-      
       try {
-        const { data: { user } } = await supabase.auth.getUser();
+        const data = await getUserDataAction();
 
-        if (!user) {
-          setCargando(false);
-          return;
+        if (data) {
+          setUserId(data.id || "");
+          setEmail(data.email || "");
+          setNombres(data.nombres || "");
+          setApellidos(data.apellidos || "");
+          setRol(data.rol || "");
+          setRolId(data.rol_id || null);
         }
-
-        const { data, error } = await supabase
-          .rpc('get_userdata')
-          .single<UserData>();
-
-        if (error) {
-          throw new Error("Error al llamar RPC: " + error.message);
-        }
-
-        console.log("useUserData: Datos recibidos de RPC:", data);
-
-        setUserId(data.id || '');
-        setEmail(data.email || '');
-        setNombres(data.nombres || '');
-        setApellidos(data.apellidos || '');
-        setTelefono(data.telefono || '');
-        setDpi(data.dpi || '');
-        setNacimiento(data.nacimiento || '');
-        setSexo(data.sexo || '');
-        setRol(data.rol || '');
-        setRolId(data.rol_id || null);
       } catch (error) {
-        console.error('Error al obtener sesión:', error);
+        console.error("Error al obtener sesión:", error);
       } finally {
         setCargando(false);
       }
@@ -71,5 +35,13 @@ export default function useUserData() {
     obtenerUsuario();
   }, []);
 
-  return { userId, email, nombres, apellidos, telefono, dpi, nacimiento, sexo, rol, rol_id, cargando };
+  return {
+    userId,
+    email,
+    nombres,
+    apellidos,
+    rol,
+    rol_id,
+    cargando,
+  };
 }

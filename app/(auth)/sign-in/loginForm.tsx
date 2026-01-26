@@ -1,15 +1,15 @@
-'use client';
+"use client";
 
-import { useState, useRef, useEffect, useTransition } from 'react';
-import { signInAction } from '@/app/actions/usuarios';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Eye, EyeOff } from 'lucide-react';
-import { motion } from 'framer-motion';
-import Image from 'next/image';
-import { Typewriter } from 'react-simple-typewriter';
-import { Button } from '@/components/ui/button';
-import Swal from 'sweetalert2';
+import { useState, useRef, useEffect, useTransition } from "react";
+import { signInAction } from "@/app/actions/usuarios";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Eye, EyeOff } from "lucide-react";
+import { motion } from "framer-motion";
+import Image from "next/image";
+import { Typewriter } from "react-simple-typewriter";
+import { Button } from "@/components/ui/button";
+import Swal from "sweetalert2";
 
 function PendingSignInButton({ isPending }: { isPending: boolean }) {
   return (
@@ -18,7 +18,7 @@ function PendingSignInButton({ isPending }: { isPending: boolean }) {
       disabled={isPending}
       className="text-2xl py-8 flex-1 bg-blue-700"
     >
-      {isPending ? 'Iniciando...' : 'Iniciar Sesión'}
+      {isPending ? "Iniciando..." : "Iniciar Sesión"}
     </Button>
   );
 }
@@ -26,53 +26,51 @@ function PendingSignInButton({ isPending }: { isPending: boolean }) {
 export function LoginForm() {
   const [verPassword, setVerPassword] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
-  
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [clientError, setClientError] = useState<string | null>(null);
 
   const [isPending, startTransition] = useTransition();
 
   function traducirError(mensaje: string) {
     const errores: Record<string, string> = {
-      'email rate limit exceeded': 'Demasiados intentos. Espere unos minutos.',
-      'user already registered': 'El usuario ya está registrado.',
-      'invalid login credentials': 'Credenciales incorrectas.',
-      'signup requires a valid password': 'Contraseña inválida.',
-      'user not found': 'Usuario no encontrado.',
-      'correo o contraseña incorrectos': 'Correo o contraseña incorrectos.',
+      "email rate limit exceeded": "Demasiados intentos. Espere unos minutos.",
+      "user already registered": "El usuario ya está registrado.",
+      "invalid login credentials": "Credenciales incorrectas.",
+      "signup requires a valid password": "Contraseña inválida.",
+      "user not found": "Usuario no encontrado.",
+      "correo o contraseña incorrectos": "Correo o contraseña incorrectos.",
     };
     return errores[mensaje.toLowerCase()] || mensaje;
   }
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Enter') {
+      if (e.key === "Enter") {
         e.preventDefault();
         formRef.current?.requestSubmit();
       }
     };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
-
   const handleFormAction = async (formData: FormData) => {
-    const finalEmail = email.trim(); 
+    const finalEmail = email.trim();
 
-    
     setClientError(null);
-    formData.set('email', finalEmail);
-    formData.set('password', password); 
+    formData.set("email", finalEmail);
+    formData.set("password", password);
 
     startTransition(async () => {
       const result = await signInAction(formData);
 
       if (result && result.error) {
         Swal.fire({
-          title: 'Error al iniciar sesión',
+          title: "Error al iniciar sesión",
           text: traducirError(result.error),
-          icon: 'error',
+          icon: "error",
         });
       }
     });
@@ -108,7 +106,7 @@ export function LoginForm() {
           <div className="flex justify-center w-full">
             <h1 className="text-2xl font-bold text-blue-600 md:text-3xl">
               <Typewriter
-                words={['Iniciar sesión']}
+                words={["Iniciar sesión"]}
                 loop={1}
                 cursor
                 cursorStyle=""
@@ -127,7 +125,10 @@ export function LoginForm() {
           className="flex flex-col gap-6"
         >
           <div>
-            <Label htmlFor="email" className="text-2xl text-blue-600 mb-2 block">
+            <Label
+              htmlFor="email"
+              className="text-2xl text-blue-600 mb-2 block"
+            >
               Email
             </Label>
             <Input
@@ -146,12 +147,15 @@ export function LoginForm() {
           </div>
 
           <div>
-            <Label htmlFor="password" className="text-2xl text-blue-600 mb-2 block">
+            <Label
+              htmlFor="password"
+              className="text-2xl text-blue-600 mb-2 block"
+            >
               Contraseña
             </Label>
             <div className="relative">
               <Input
-                type={verPassword ? 'text' : 'password'}
+                type={verPassword ? "text" : "password"}
                 name="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}

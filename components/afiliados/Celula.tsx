@@ -1,170 +1,245 @@
-'use client';
+"use client";
 
-import { useEffect, Fragment, useState } from 'react';
-import { Button } from '@/components/ui/button';
-import type { Afiliado, Lider } from './esquemas';
-import Tabla from './Tabla';
-import Estadisticas from './Estadisticas';
-import TextoAnimado from '@/components/ui/Typeanimation';
-import Image from 'next/image';
-import { Dialog, Transition, TransitionChild, DialogPanel } from '@headlessui/react';
+import { useState, Fragment } from "react";
+import { Button } from "@/components/ui/button";
+import type { Afiliado, Lider } from "./esquemas";
+import Tabla from "./Tabla";
+import EstadisticasEdades from "./estadisticas/Edades";
+import EstadisticasEmpadronados from "./estadisticas/Empadronados";
+import EstadisticasLugares from "./estadisticas/Lugares";
+import EstadisticasPoliticas from "./estadisticas/Politicas";
+import TextoAnimado from "@/components/ui/Typeanimation";
+import Image from "next/image";
+import { Dialog, TransitionChild, DialogPanel } from "@headlessui/react";
+import {
+  Users,
+  PieChart,
+  BarChart3,
+  MapPin,
+  Target,
+  X,
+  UserPlus,
+} from "lucide-react";
 
 interface Props {
-    isOpen: boolean;
-    onClose: () => void;
-    lider: Lider | null;
-    afiliados: Afiliado[];
-    onEditar: (afiliado: Afiliado) => void;
-    onAnadirAfiliado: (liderId: string) => void;
-    onDataChange: () => void;
-    rolUsuarioSesion: string;
+  isOpen: boolean;
+  onClose: () => void;
+  lider: Lider | null;
+  afiliados: Afiliado[];
+  onEditar: (afiliado: Afiliado) => void;
+  onAnadirAfiliado: (liderId: string, isFirstMember?: boolean) => void;
+  onDataChange: () => void;
+  rolUsuarioSesion: string;
 }
 
-export default function Celula({ isOpen, onClose, lider, afiliados, onEditar, onAnadirAfiliado, onDataChange, rolUsuarioSesion }: Props) {
-    const [activeTab, setActiveTab] = useState<'Celula' | 'Estadisticas'>('Celula');
+type Vista = "miembros" | "padron" | "edades" | "lugares" | "politicas";
 
-    if (!lider) return null;
+export default function Celula({
+  isOpen,
+  onClose,
+  lider,
+  afiliados,
+  onEditar,
+  onAnadirAfiliado,
+  onDataChange,
+  rolUsuarioSesion,
+}: Props) {
+  const [vistaActual, setVistaActual] = useState<Vista>("miembros");
 
-    const afiliadosDelLider = afiliados?.filter(a => a.lider_id === lider.id) || [];
-    
-    const totalEnGrupo = afiliadosDelLider.length + 1; 
-    const objetivo = 15;
-    const progreso = Math.min((totalEnGrupo / objetivo) * 100, 100);
+  if (!lider) return null;
 
-    let mensaje = '';
-    let colorBarra = 'bg-blue-600';
-    let gifUrl = '';
+  const afiliadosDelLider =
+    afiliados?.filter((a) => a.lider_id === lider.id) || [];
+  const totalEnGrupo = afiliadosDelLider.length;
+  const objetivo = 15;
+  const progreso = Math.min((totalEnGrupo / objetivo) * 100, 100);
 
-    if (totalEnGrupo === 1) {
-        mensaje = `🎉 ¡El líder ha iniciado su grupo! 🎉 `;
-        gifUrl = '/gif/afiliados/gif1.gif';
-    } else if (totalEnGrupo <= 5) {
-        mensaje = `🎉 ¡El grupo está creciendo con ${totalEnGrupo} miembros! 🎉 `;
-        colorBarra = 'bg-blue-300';
-        gifUrl = '/gif/afiliados/gif1.gif';
-    } else if (totalEnGrupo <= 10) {
-        mensaje = `🚀 ¡Vamos muy bien! Somos ${totalEnGrupo} de ${objetivo}. 🚀`;
-        colorBarra = 'bg-yellow-600';
-        gifUrl = '/gif/afiliados/gif2.gif';
-    } else if (totalEnGrupo < 15) {
-        mensaje = `😎 ¡Ya pasamos los 10! Somos ${totalEnGrupo} de ${objetivo}. 😎`;
-        colorBarra = 'bg-purple-600';
-        gifUrl = '/gif/afiliados/gif3.gif';
-    } else if (totalEnGrupo === 15) {
-        mensaje = `🏆 ¡Felicidades! Haz alcanzado el objetivo de ${objetivo} afiliados. 🏆`;
-        colorBarra = 'bg-green-500';
-        gifUrl = '/gif/afiliados/gif5.gif';
-    } else {
-        mensaje = `🔥 ¡Woow! Haz superado el objetivo con ${totalEnGrupo} afiliados! ¡Bien Hecho! 🔥`;
-        colorBarra = 'bg-red-600';
-        gifUrl = '/gif/afiliados/fire.gif';
-    }
+  let mensaje = "";
+  let colorBarra = "bg-blue-600";
+  let gifUrl = "/gif/afiliados/gif1.gif";
 
-    const liderPuedeSerEliminado = afiliadosDelLider.length === 0;
+  if (totalEnGrupo === 0) {
+    mensaje = `👋 ¡Hola ${lider.nombres}! Inicia tu grupo registrándote a ti mismo.`;
+    colorBarra = "bg-gray-300";
+  } else if (totalEnGrupo === 1) {
+    mensaje = `🎉 ¡Líder registrado! Añade a tus familiares y amigos.`;
+  } else if (totalEnGrupo <= 10) {
+    mensaje = `🚀 ¡Vamos por buen camino! Somos ${totalEnGrupo} de ${objetivo}.`;
+    colorBarra = "bg-yellow-600";
+    gifUrl = "/gif/afiliados/gif2.gif";
+  } else if (totalEnGrupo < 15) {
+    mensaje = `😎 ¡Casi llegamos a la meta! Somos ${totalEnGrupo} de ${objetivo}.`;
+    colorBarra = "bg-purple-600";
+    gifUrl = "/gif/afiliados/gif3.gif";
+  } else {
+    mensaje = `🏆 ¡Objetivo alcanzado! ${totalEnGrupo} afiliados. ¡Excelente trabajo!`;
+    colorBarra = "bg-green-500";
+    gifUrl = "/gif/afiliados/gif5.gif";
+  }
 
-    const TabButton = ({ tabName, active }: { tabName: 'Celula' | 'Estadisticas', active: boolean }) => (
-        <button
-            onClick={() => setActiveTab(tabName)}
-            className={`px-4 py-2 text-sm font-medium transition-colors duration-200 ${
-                active 
-                    ? 'border-b-2 border-blue-600 text-blue-600' 
-                    : 'text-gray-500 hover:text-gray-700'
-            }`}
-        >
-            {tabName === 'Celula' ? 'Célula' : '📊 Estadísticas'}
-        </button>
-    );
+  const TABS = [
+    { id: "miembros", label: "Miembros", icon: Users },
+    { id: "padron", label: "Padrón", icon: PieChart },
+    { id: "edades", label: "Demografía", icon: BarChart3 },
+    { id: "lugares", label: "Ubicación", icon: MapPin },
+    { id: "politicas", label: "Intereses", icon: Target },
+  ];
 
-    return (
-        <Transition show={isOpen} as={Fragment}>
-            <Dialog as="div" className="relative z-50" onClose={() => {}}>
-                <TransitionChild
-                    as={Fragment}
-                    enter="ease-out duration-300"
-                    enterFrom="opacity-0"
-                    enterTo="opacity-100"
-                    leave="ease-in duration-200"
-                    leaveFrom="opacity-100"
-                    leaveTo="opacity-0"
-                >
-                    <div className="fixed inset-0 bg-black/50" />
-                </TransitionChild>
-
-                <div className="fixed inset-0 overflow-y-auto">
-                    <div className="flex min-h-full items-center justify-center text-center">
-                        <TransitionChild
-                            as={Fragment}
-                            enter="ease-out duration-300"
-                            enterFrom="opacity-0 scale-95"
-                            enterTo="opacity-100 scale-100"
-                            leave="ease-in duration-200"
-                            leaveFrom="opacity-100 scale-100"
-                            leaveTo="opacity-0 scale-95"
-                        >
-                            <DialogPanel className="bg-white rounded-lg shadow-xl w-full max-w-full md:max-w-7xl p-6 transform transition-all">
-                                
-                                <div className="flex justify-between items-center mb-4">
-                                    <h3 className="text-lg text-left md:text-xl font-bold">
-                                        Célula de: {lider.nombres} {lider.apellidos}
-                                    </h3>
-                                    <Button onClick={onClose} variant="ghost">Cerrar</Button>
-                                </div>
-                                
-                                <div className="flex border-b mb-4">
-                                    <TabButton tabName="Celula" active={activeTab === 'Celula'} />
-                                    <TabButton tabName="Estadisticas" active={activeTab === 'Estadisticas'} />
-                                </div>
-
-                                {activeTab === 'Celula' ? (
-                                    <>
-                                        <div className="mb-4 p-4 border rounded-lg bg-slate-50">
-                                            <div className="flex items-center gap-6">
-                                                <div className="flex-1">
-                                                    <div className="flex justify-between items-center mb-1">
-                                                        <span className="text-sm font-semibold">{totalEnGrupo} / {objetivo}</span>
-                                                    </div>
-                                                    <div className="w-full bg-gray-200 rounded-full h-2.5">
-                                                        <div className={`${colorBarra} h-2.5 rounded-full`} style={{ width: `${progreso}%` }}></div>
-                                                    </div>
-                                                    <div className="text-center text-sm text-gray-600 mt-2">
-                                                        <TextoAnimado textos={[mensaje]} />
-                                                    </div>
-                                                </div>
-                                                {gifUrl && <Image
-                                                    src={gifUrl}
-                                                    alt="Animación"
-                                                    width={100}
-                                                    height={100}
-                                                    unoptimized
-                                                    className="w-[75px] h-[75px] md:w-[100px] md:h-[100px] flex-shrink-0"
-                                                />}
-                                            </div>
-                                        </div>
-                                        <div className="flex justify-center mb-4">
-                                            <Button size="lg" className='text-xl' variant="outline" onClick={() => onAnadirAfiliado(lider.id)}>
-                                                🙋 Añadir Afiliados
-                                            </Button>
-                                        </div>
-
-                                        <Tabla
-                                            lider={lider}
-                                            afiliados={afiliadosDelLider}
-                                            onEditar={onEditar}      
-                                            onDataChange={onDataChange} 
-                                            liderPuedeSerEliminado={liderPuedeSerEliminado}
-                                            rolUsuarioSesion={rolUsuarioSesion}
-                                        />
-                                    </>
-                                ) : (
-                                    <Estadisticas
-                                        afiliados={afiliadosDelLider}
-                                    />
-                                )}
-                            </DialogPanel>
-                        </TransitionChild>
-                    </div>
+  return (
+    <Fragment>
+      <Dialog open={isOpen} onClose={() => {}} className="relative z-50">
+        <div
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm"
+          aria-hidden="true"
+        />
+        <div className="fixed inset-0 flex items-center justify-center p-0">
+          <TransitionChild
+            as={Fragment}
+            enter="ease-out duration-300"
+            enterFrom="opacity-0 translate-y-10 scale-95"
+            enterTo="opacity-100 translate-y-0 scale-100"
+            leave="ease-in duration-200"
+            leaveFrom="opacity-100 translate-y-0 scale-100"
+            leaveTo="opacity-0 translate-y-10 scale-95"
+          >
+            <DialogPanel className="w-screen h-screen bg-white flex flex-col">
+              {/* HEADER */}
+              <div className="flex flex-col md:flex-row justify-between items-center px-6 py-3 border-b shrink-0 gap-4 bg-white z-10">
+                <div className="text-center md:text-left">
+                  <h3 className="text-xl font-bold uppercase">
+                    {lider.nombres} {lider.apellidos}
+                  </h3>
+                  <p className="text-xs text-gray-500 font-bold uppercase">
+                    Gestión de Célula
+                  </p>
                 </div>
-            </Dialog>
-        </Transition>
-    );
+
+                <div className="flex bg-gray-100 p-1 rounded-lg gap-1 overflow-x-auto max-w-full">
+                  {TABS.map((tab) => (
+                    <button
+                      key={tab.id}
+                      onClick={() => setVistaActual(tab.id as Vista)}
+                      className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-bold transition-all whitespace-nowrap ${
+                        vistaActual === tab.id
+                          ? "bg-white text-blue-600 shadow-sm"
+                          : "text-gray-500 hover:bg-gray-200"
+                      }`}
+                    >
+                      <tab.icon className="w-4 h-4" />
+                      {tab.label}
+                    </button>
+                  ))}
+                </div>
+
+                <Button
+                  onClick={onClose}
+                  variant="ghost"
+                  size="icon"
+                  className="rounded-full shrink-0"
+                >
+                  <X className="w-6 h-6 text-gray-500" />
+                </Button>
+              </div>
+
+              {/* CONTENIDO */}
+              <div className="flex-1 overflow-y-auto bg-gray-50/30 p-4 md:p-8">
+                <div className="max-w-[1600px] mx-auto">
+                  {vistaActual === "miembros" ? (
+                    <>
+                      {/* BARRA DE PROGRESO */}
+                      <div className="mb-6 p-5 border rounded-xl bg-white shadow-sm flex items-center gap-6">
+                        <div className="flex-1">
+                          <div className="flex justify-between items-center mb-2">
+                            <span className="text-sm font-bold text-gray-700">
+                              Progreso de Célula
+                            </span>
+                            <span className="text-sm font-bold text-gray-900">
+                              {totalEnGrupo} / {objetivo}
+                            </span>
+                          </div>
+                          <div className="w-full bg-gray-100 rounded-full h-3 mb-3 overflow-hidden">
+                            <div
+                              className={`${colorBarra} h-full transition-all duration-1000`}
+                              style={{ width: `${progreso}%` }}
+                            ></div>
+                          </div>
+                          <div className="text-center">
+                            <span className="text-sm text-gray-600 font-bold bg-gray-50 px-4 py-1 rounded-full border inline-block">
+                              <TextoAnimado textos={[mensaje]} />
+                            </span>
+                          </div>
+                        </div>
+                        <div className="bg-gray-50 p-2 rounded-lg border hidden sm:block">
+                          <Image
+                            src={gifUrl}
+                            alt="Status"
+                            width={80}
+                            height={80}
+                            unoptimized
+                            className="object-contain"
+                          />
+                        </div>
+                      </div>
+
+                      {/* BOTÓN ÚNICO ACCIÓN */}
+                      <div className="flex justify-end mb-4">
+                        <Button
+                          className={`font-bold h-12 px-6 shadow-md transition-transform hover:scale-105 ${
+                            totalEnGrupo === 0
+                              ? "bg-green-600 animate-pulse"
+                              : "bg-blue-700"
+                          }`}
+                          onClick={() =>
+                            onAnadirAfiliado(lider.id, totalEnGrupo === 0)
+                          }
+                        >
+                          {totalEnGrupo === 0 ? (
+                            <>
+                              <UserPlus className="w-5 h-5 mr-2" /> Iniciar mi
+                              Grupo (Soy el Líder)
+                            </>
+                          ) : (
+                            <>
+                              <UserPlus className="w-5 h-5 mr-2" /> Añadir Nuevo
+                              Integrante
+                            </>
+                          )}
+                        </Button>
+                      </div>
+
+                      {/* TABLA: Ella misma maneja el estado vacío */}
+                      <Tabla
+                        lider={lider}
+                        afiliados={afiliadosDelLider}
+                        onEditar={onEditar}
+                        onDataChange={onDataChange}
+                        rolUsuarioSesion={rolUsuarioSesion}
+                      />
+                    </>
+                  ) : (
+                    <div className="bg-white border rounded-2xl p-6 shadow-sm">
+                      {vistaActual === "padron" && (
+                        <EstadisticasEmpadronados
+                          afiliados={afiliadosDelLider}
+                        />
+                      )}
+                      {vistaActual === "edades" && (
+                        <EstadisticasEdades afiliados={afiliadosDelLider} />
+                      )}
+                      {vistaActual === "lugares" && (
+                        <EstadisticasLugares afiliados={afiliadosDelLider} />
+                      )}
+                      {vistaActual === "politicas" && (
+                        <EstadisticasPoliticas afiliados={afiliadosDelLider} />
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </DialogPanel>
+          </TransitionChild>
+        </div>
+      </Dialog>
+    </Fragment>
+  );
 }
