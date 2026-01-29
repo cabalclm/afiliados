@@ -60,8 +60,8 @@ export default function AfiliadosForm({
   } = form;
 
   const sexoActual = watch("sexo");
-  const isEmpadronado = watch("empadronado");
   const buscador = useBuscadorLider(lideres, setValue);
+
   const liderInputRef = useClickOutside(() =>
     buscador.setShowLiderSuggestions(false),
   );
@@ -210,46 +210,20 @@ export default function AfiliadosForm({
             </select>
           </div>
 
-          <div className="grid grid-cols-2 gap-4 items-end">
-            <div>
-              <label className="text-sm font-medium text-gray-700 block mb-1">
-                Empadronado
-              </label>
-              <div className="flex rounded-md border p-1 bg-gray-100">
-                <button
-                  type="button"
-                  onClick={() => setValue("empadronado", true)}
-                  className={`flex-1 rounded py-2 text-sm font-semibold ${isEmpadronado ? "bg-blue-500 text-white shadow" : "text-gray-600"}`}
-                >
-                  Sí
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setValue("empadronado", false);
-                    setValue("no_padron", "");
-                  }}
-                  className={`flex-1 rounded py-2 text-sm font-semibold ${!isEmpadronado ? "bg-gray-500 text-white shadow" : "text-gray-600"}`}
-                >
-                  No
-                </button>
-              </div>
-            </div>
-            <div className="h-[42px] flex items-end">
-              {isEmpadronado && (
-                <motion.div
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  className="w-full relative"
-                >
-                  <Input
-                    {...register("no_padron")}
-                    placeholder="No. Padrón"
-                    className={errors.no_padron ? "border-red-500" : ""}
-                  />
-                </motion.div>
-              )}
-            </div>
+          <div>
+            <label className="text-sm font-medium text-gray-700 block mb-1">
+              No. Padrón
+            </label>
+            <Input
+              {...register("no_padron")}
+              placeholder="Ingrese No. Padrón"
+              className={errors.no_padron ? "border-red-500" : ""}
+            />
+            {errors.no_padron && (
+              <span className="text-xs text-red-500">
+                {errors.no_padron.message}
+              </span>
+            )}
           </div>
 
           <input

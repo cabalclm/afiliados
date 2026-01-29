@@ -11,40 +11,23 @@ export const POLITICAS = [
   "Salud",
 ];
 
-export const afiliadoSchema = z
-  .object({
-    nombres: z.string().min(2, "Requerido"),
-    apellidos: z.string().min(2, "Requerido"),
-    telefono: z
-      .string()
-      .length(8, "Debe tener 8 dígitos")
-      .regex(/^\d+$/, "Solo números"),
-    dpi: z
-      .string()
-      .length(13, "Debe tener 13 dígitos")
-      .regex(/^\d+$/, "Solo números"),
-    nacimiento: z.string().min(1, "Requerido"),
-    sexo: z.enum(["M", "F"]),
-    lugar_id: z.number().min(1, "Seleccione un lugar"),
-    lider_id: z.string().uuid().nullable(),
-    empadronado: z.boolean(),
-    politica: z.string().optional(),
-    no_padron: z.string().optional(),
-  })
-  .refine(
-    (data) => {
-      if (
-        data.empadronado &&
-        (!data.no_padron || data.no_padron.trim() === "")
-      ) {
-        return false;
-      }
-      return true;
-    },
-    {
-      message: "El No. de Padrón es obligatorio",
-      path: ["no_padron"],
-    },
-  );
+export const afiliadoSchema = z.object({
+  nombres: z.string().min(2, "Requerido"),
+  apellidos: z.string().min(2, "Requerido"),
+  telefono: z
+    .string()
+    .length(8, "Debe tener 8 dígitos")
+    .regex(/^\d+$/, "Solo números"),
+  dpi: z
+    .string()
+    .length(13, "Debe tener 13 dígitos")
+    .regex(/^\d+$/, "Solo números"),
+  nacimiento: z.string().min(1, "Requerido"),
+  sexo: z.enum(["M", "F"]),
+  lugar_id: z.number().min(1, "Seleccione un lugar"),
+  lider_id: z.string().uuid().nullable(),
+  politica: z.string().optional(),
+  no_padron: z.string().min(1, "El No. de Padrón es obligatorio"),
+});
 
 export type AfiliadoFormData = z.infer<typeof afiliadoSchema>;

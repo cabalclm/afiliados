@@ -67,17 +67,15 @@ export default function Tabla({
           className="bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 flex flex-col overflow-hidden"
         >
           <div className="p-4 flex-1 space-y-4">
-            {/* LÍNEA 1: NÚMERO + NOMBRE */}
             <div className="flex items-center gap-2 border-b border-gray-100 pb-3">
               <span className="flex items-center justify-center bg-blue-100 text-blue-700 font-bold text-xs h-6 w-6 rounded-md shrink-0">
-                {index + 1}
+                {index}
               </span>
               <h3 className="text-xs font-bold text-gray-900 uppercase leading-tight truncate">
                 {afiliado.nombres} {afiliado.apellidos}
               </h3>
             </div>
 
-            {/* LÍNEA 2: DPI + EDAD + GÉNERO */}
             <div className="flex items-center justify-between text-xs text-gray-600 gap-2">
               <div className="flex items-center gap-1.5 min-w-0 flex-1">
                 <Hash className="w-3.5 h-3.5 text-gray-400 shrink-0" />

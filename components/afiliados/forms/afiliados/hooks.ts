@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useForm, UseFormReturn } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { afiliadoSchema, AfiliadoFormData } from "./schemas";
+import { afiliadoSchema, type AfiliadoFormData } from "./schemas";
 
 type Lider = {
   id: string;
@@ -15,9 +15,14 @@ export function useAfiliadosForm() {
   return useForm<AfiliadoFormData>({
     resolver: zodResolver(afiliadoSchema),
     defaultValues: {
+      nombres: "",
+      apellidos: "",
+      telefono: "",
+      dpi: "",
+      nacimiento: "",
       sexo: "M",
       lugar_id: 0,
-      empadronado: false,
+      lider_id: null,
       politica: "",
       no_padron: "",
     },
@@ -46,7 +51,6 @@ export function useInicializarFormulario(
           lugar_id: afiliadoAEditar.lugar_id,
           no_padron: afiliadoAEditar.no_padron || "",
           politica: afiliadoAEditar.politica || "",
-          empadronado: afiliadoAEditar.empadronado || false,
         } as AfiliadoFormData);
 
         const currentLider = lideres.find(
@@ -76,7 +80,6 @@ export function useInicializarFormulario(
           lugar_id: 0,
           no_padron: "",
           politica: "",
-          empadronado: false,
         });
 
         if (liderPredefinidoId) {
