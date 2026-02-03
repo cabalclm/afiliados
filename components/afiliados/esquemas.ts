@@ -47,7 +47,7 @@ export const afiliadoSchema = z.object({
 
   empadronado: z.boolean().optional(),
   politica: z.string().min(1, { message: "La política es obligatoria." }),
-  no_padron: z.string().optional().nullable(), // <--- Este campo existe aquí
+  no_padron: z.string().min(1, { message: "El No. de Padrón es obligatorio." }),
 });
 
 // Definimos AfiliadoFormData directamente desde Zod

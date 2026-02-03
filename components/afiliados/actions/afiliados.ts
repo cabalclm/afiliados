@@ -51,7 +51,7 @@ export async function obtenerAfiliadosAction() {
 
     return {
       ...afiliado,
-      no_padron: afiliado.no_patron,
+      no_padron: afiliado.no_padron,
 
       lugar_nombre: afiliado.lugar_id
         ? lugarMap.get(afiliado.lugar_id) || null
