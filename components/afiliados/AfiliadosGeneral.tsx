@@ -148,7 +148,7 @@ export default function AfiliadosGeneral({
                   <tbody className="divide-y divide-gray-200">
                     {list.map((afiliado, index) => (
                       <tr
-                        key={afiliado.id}
+                        key={afiliado.id + 1}
                         className="hover:bg-gray-50 uppercase"
                       >
                         <td className="px-4 py-2 whitespace-nowrap text-gray-500">

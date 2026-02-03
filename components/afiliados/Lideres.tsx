@@ -20,7 +20,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-// Interfaz actualizada: Solo datos de cuenta
 export interface Lider {
   id: string;
   email: string;
@@ -107,10 +106,9 @@ export default function Lideres({
 
   return (
     <>
-      {/* VISTA MÓVIL */}
       <div className="md:hidden space-y-2">
         {lideresPaginados.map((lider, index) => {
-          const totalEnGrupo = (lider.conteoAfiliados || 0) + 1;
+          const totalEnGrupo = lider.conteoAfiliados || 0;
           const progreso = Math.min((totalEnGrupo / 15) * 100, 100);
 
           return (
@@ -180,7 +178,6 @@ export default function Lideres({
         })}
       </div>
 
-      {/* VISTA ESCRITORIO */}
       <div className="hidden md:block border border-gray-300 rounded-lg overflow-hidden">
         <table className="min-w-full bg-white text-xs">
           <thead className="bg-gray-50 text-gray-600">
@@ -209,9 +206,9 @@ export default function Lideres({
           </thead>
           <tbody className="divide-y divide-gray-200">
             {lideresPaginados.map((lider, index) => {
-              const totalEnGrupo = (lider.conteoAfiliados || 0) + 1;
+              const totalEnGrupo = lider.conteoAfiliados || 0;
               const progreso = Math.min((totalEnGrupo / 15) * 100, 100);
-              const tieneAfiliados = totalEnGrupo > 1;
+              const tieneAfiliados = totalEnGrupo > 0;
 
               return (
                 <tr
@@ -275,7 +272,6 @@ export default function Lideres({
         </table>
       </div>
 
-      {/* PAGINACIÓN */}
       {totalPages > 1 && (
         <div className="flex items-center justify-end gap-2 mt-4">
           <Button

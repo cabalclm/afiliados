@@ -69,7 +69,7 @@ export default function Tabla({
           <div className="p-4 flex-1 space-y-4">
             <div className="flex items-center gap-2 border-b border-gray-100 pb-3">
               <span className="flex items-center justify-center bg-blue-100 text-blue-700 font-bold text-xs h-6 w-6 rounded-md shrink-0">
-                {index}
+                {index + 1}
               </span>
               <h3 className="text-xs font-bold text-gray-900 uppercase leading-tight truncate">
                 {afiliado.nombres} {afiliado.apellidos}
