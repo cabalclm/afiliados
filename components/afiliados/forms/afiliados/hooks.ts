@@ -48,6 +48,8 @@ export function useInicializarFormulario(
           nacimiento: afiliadoAEditar.nacimiento
             ? new Date(afiliadoAEditar.nacimiento).toISOString().split("T")[0]
             : "",
+          religion: afiliadoAEditar.religion || "",
+          religion_otra: "",
           lugar_id: afiliadoAEditar.lugar_id,
           no_padron: afiliadoAEditar.no_padron || "",
           politica: afiliadoAEditar.politica || "",
@@ -62,12 +64,9 @@ export function useInicializarFormulario(
             : "",
         );
       } else {
-        const nombresIniciales =
-          isFirstMember && datosLider ? datosLider.nombres : "";
-        const apellidosIniciales =
-          isFirstMember && datosLider ? datosLider.apellidos : "";
-        const telefonoInicial =
-          isFirstMember && datosLider?.telefono ? datosLider.telefono : "";
+        const nombresIniciales = isFirstMember && datosLider ? datosLider.nombres : "";
+        const apellidosIniciales = isFirstMember && datosLider ? datosLider.apellidos : "";
+        const telefonoInicial = isFirstMember && datosLider?.telefono ? datosLider.telefono : "";
 
         methods.reset({
           nombres: nombresIniciales,
@@ -80,30 +79,20 @@ export function useInicializarFormulario(
           lugar_id: 0,
           no_padron: "",
           politica: "",
+          religion: "",
+          religion_otra: "",
         });
 
         if (liderPredefinidoId) {
           const preLider = lideres.find((l) => l.id === liderPredefinidoId);
-          setLiderSearch(
-            preLider ? `${preLider.nombres} ${preLider.apellidos}` : "",
-          );
+          setLiderSearch(preLider ? `${preLider.nombres} ${preLider.apellidos}` : "");
         } else {
           setLiderSearch("");
         }
       }
       setShowLiderSuggestions(false);
     }
-  }, [
-    isOpen,
-    afiliadoAEditar,
-    liderPredefinidoId,
-    methods,
-    lideres,
-    setLiderSearch,
-    setShowLiderSuggestions,
-    isFirstMember,
-    datosLider,
-  ]);
+  }, [isOpen, afiliadoAEditar, liderPredefinidoId, methods, lideres, setLiderSearch, setShowLiderSuggestions, isFirstMember, datosLider]);
 }
 
 export function useBuscadorLider(lideres: Lider[], setValue: any) {

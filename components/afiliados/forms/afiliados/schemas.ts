@@ -33,4 +33,13 @@ export const afiliadoSchema = z.object({
   religion_otra: z.string().optional(),
 });
 
+export interface Afiliado extends AfiliadoFormData {
+  id: string;
+  created_at: string;
+  lider_nombre: string | null;
+  lider_email: string | null;
+  lugar_nombre: string | null;
+  conteoAfiliados?: number;
+}
+
 export type AfiliadoFormData = z.infer<typeof afiliadoSchema>;

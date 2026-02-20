@@ -319,6 +319,7 @@ export default function Ver() {
         liderPredefinidoId={liderParaNuevoAfiliado}
         lugares={lugares}
         lideres={lideres}
+        afiliados={afiliados} // AGREGUE ESTA LÍNEA AQUÍ
         isFirstMember={isFirstMemberAddition}
         datosLider={lideres.find((l) => l.id === liderParaNuevoAfiliado)}
       />

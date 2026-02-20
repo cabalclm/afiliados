@@ -50,44 +50,50 @@ export default function Lideres({
   idUsuarioSesion,
 }: Props) {
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+  const [itemsPerPage, setItemsPerPage] = useState<number | "all">(10);
   const [liderAbiertoId, setLiderAbiertoId] = useState<string | null>(null);
 
   const isLider = rolUsuarioSesion === "LIDER";
+  const OBJETIVO_GENERAL = 2250;
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm]);
+  }, [searchTerm, itemsPerPage]);
 
-  const filteredLideres = lideres.filter((lider) => {
+  const totalAfiliadosGeneral = lideres.reduce(
+    (acc, curr) => acc + (curr.conteoAfiliados || 0),
+    0,
+  );
+
+  const progresoGeneral = Math.min(
+    (totalAfiliadosGeneral / OBJETIVO_GENERAL) * 100,
+    100,
+  );
+
+  const sortedLideres = [...lideres].sort(
+    (a, b) => (b.conteoAfiliados || 0) - (a.conteoAfiliados || 0),
+  );
+
+  const filteredLideres = sortedLideres.filter((lider) => {
     const term = searchTerm.toLowerCase();
     const fullName = `${lider.nombres} ${lider.apellidos}`.toLowerCase();
     const email = lider.email.toLowerCase();
     return fullName.includes(term) || email.includes(term);
   });
 
-  if (lideres.length === 0) {
-    return (
-      <div className="text-center text-gray-500 mt-8 border rounded-lg p-4">
-        No hay líderes registrados.
-      </div>
-    );
-  }
-
-  if (filteredLideres.length === 0 && searchTerm) {
-    return (
-      <div className="text-center text-gray-500 mt-8 border rounded-lg p-4">
-        No se encontraron resultados.
-      </div>
-    );
-  }
-
-  const totalPages = Math.ceil(filteredLideres.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const lideresPaginados = filteredLideres.slice(
-    startIndex,
-    startIndex + itemsPerPage,
+  const effectiveItemsPerPage =
+    itemsPerPage === "all" ? filteredLideres.length : itemsPerPage;
+  const totalPages = Math.ceil(
+    filteredLideres.length / (effectiveItemsPerPage || 1),
   );
+  const startIndex = (currentPage - 1) * (effectiveItemsPerPage || 0);
+  const lideresPaginados =
+    itemsPerPage === "all"
+      ? filteredLideres
+      : filteredLideres.slice(
+          startIndex,
+          startIndex + (effectiveItemsPerPage as number),
+        );
 
   const handleRowClick = (lider: Lider) => {
     if (!isLider || lider.id === idUsuarioSesion) onVerCelula(lider);
@@ -104,8 +110,36 @@ export default function Lideres({
     return baseClass;
   };
 
+  if (lideres.length === 0) {
+    return (
+      <div className="text-center text-gray-500 mt-8 border rounded-lg p-4">
+        No hay líderes registrados.
+      </div>
+    );
+  }
+
   return (
     <>
+      <div className="mb-6 w-full">
+        <div className="flex justify-between items-end mb-2">
+          <span className="text-xs font-bold uppercase text-gray-600">
+            Meta General de Afiliación
+          </span>
+          <span className="text-sm font-black text-blue-700">
+            {totalAfiliadosGeneral.toLocaleString()} /{" "}
+            {OBJETIVO_GENERAL.toLocaleString()}
+          </span>
+        </div>
+        <div className="w-full bg-gray-200 rounded-full h-6 border-2 border-white shadow-inner overflow-hidden flex items-center relative">
+          <motion.div
+            initial={{ width: 0 }}
+            animate={{ width: `${progresoGeneral}%` }}
+            transition={{ duration: 1, ease: "easeOut" }}
+            className="bg-blue-600 h-full shadow-[inset_0px_0px_10px_rgba(0,0,0,0.2)]"
+          />
+        </div>
+      </div>
+
       <div className="md:hidden space-y-2">
         {lideresPaginados.map((lider, index) => {
           const totalEnGrupo = lider.conteoAfiliados || 0;
@@ -223,7 +257,7 @@ export default function Lideres({
                     {lider.nombres} {lider.apellidos}
                   </td>
                   <td className="px-4 py-3 text-gray-600">{lider.email}</td>
-                  <td className="px-4 py-3 text-center font-bold text-lg">
+                  <td className="px-4 py-3 text-center font-bold text-lg text-blue-800">
                     {totalEnGrupo}
                   </td>
                   <td className="px-4 py-3">
@@ -272,29 +306,44 @@ export default function Lideres({
         </table>
       </div>
 
-      {totalPages > 1 && (
-        <div className="flex items-center justify-end gap-2 mt-4">
+      <div className="flex flex-col md:flex-row items-center justify-end gap-4 mt-4">
+        <div className="flex items-center gap-2">
           <Button
             size="sm"
             variant="outline"
             onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-            disabled={currentPage === 1}
+            disabled={currentPage === 1 || itemsPerPage === "all"}
           >
-            <ChevronLeft />
+            <ChevronLeft className="h-4 w-4" />
           </Button>
-          <span className="text-sm font-bold px-4">
-            Página {currentPage} de {totalPages}
+          <span className="text-xs font-bold px-2">
+            Página {currentPage} de {totalPages || 1}
           </span>
           <Button
             size="sm"
             variant="outline"
             onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-            disabled={currentPage === totalPages}
+            disabled={currentPage === totalPages || itemsPerPage === "all"}
           >
-            <ChevronRight />
+            <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
-      )}
+
+        <div className="flex items-center gap-2 border rounded-md px-2 py-1 bg-white">
+          <select
+            value={itemsPerPage}
+            onChange={(e) => {
+              const val = e.target.value;
+              setItemsPerPage(val === "all" ? "all" : parseInt(val));
+            }}
+            className="text-xs font-bold outline-none bg-transparent cursor-pointer"
+          >
+            <option value={10}>10</option>
+            <option value={50}>50</option>
+            <option value="all">Todos</option>
+          </select>
+        </div>
+      </div>
     </>
   );
 }
