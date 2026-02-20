@@ -30,7 +30,7 @@ export async function listarUsuariosAction(rol_filtro?: string) {
   const {
     data: { users },
     error: authError,
-  } = await supabaseAdmin.auth.admin.listUsers({ perPage: 1000 });
+  } = await supabaseAdmin.auth.admin.listUsers();
   if (authError) throw new Error(authError.message);
 
   const { data: conteoRaw, error: countError } = await supabase

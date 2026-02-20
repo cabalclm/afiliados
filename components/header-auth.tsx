@@ -1,41 +1,65 @@
-'use client';
+"use client";
 
 import { signOutAction } from "@/app/actions/usuarios";
 import Link from "next/link";
 import { Button } from "./ui/button";
 import useUserData from "@/hooks/sesion/useUserData";
+import { RefreshCw } from "lucide-react";
 
 export default function AuthButton() {
   const { email, nombres, apellidos, cargando } = useUserData();
 
   if (cargando) {
     return (
-      <div className="flex gap-2 pt-5">
-        <div className="h-8 w-24 rounded animate-pulse bg-gray-200"></div>
+      <div className="flex flex-col items-end gap-1 pt-5">
+        <div className="flex flex-col items-end text-right leading-tight mb-1">
+          <div className="h-4 w-32 bg-gray-200 rounded animate-pulse mb-1"></div>
+          <div className="h-3 w-40 bg-gray-200 rounded animate-pulse"></div>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="h-9 w-28 bg-gray-200 rounded animate-pulse"></div>
+          <div className="h-9 w-9 bg-gray-200 rounded animate-pulse"></div>
+        </div>
       </div>
     );
   }
 
   return email ? (
-    <div className="flex flex-col items-end gap-1 pt-5"> 
+    <div className="flex flex-col items-end gap-1 pt-5">
       <div className="flex flex-col items-end text-right leading-tight">
         <span className="text-sm font-bold">
           {nombres} {apellidos}
         </span>
-        <span className="text-xs text-gray-500 mb-1">
-          {email}
-        </span>
+        <span className="text-xs text-gray-500 mb-1">{email}</span>
       </div>
 
-      <form action={signOutAction}>
-        <Button type="submit" variant="outline" className="h-7 px-3 text-xs">
-          Cerrar Sesión
+      <div className="flex items-center gap-2">
+        <form action={signOutAction}>
+          <Button
+            type="submit"
+            variant="outline"
+            className="h-9 px-4 text-sm font-medium"
+          >
+            Cerrar Sesión
+          </Button>
+        </form>
+        <Button
+          type="button"
+          variant="outline"
+          className="h-9 w-9 p-0 shrink-0"
+          onClick={() => window.location.reload()}
+        >
+          <RefreshCw className="h-4 w-4 text-gray-600 transition-transform hover:rotate-180" />
         </Button>
-      </form>
+      </div>
     </div>
   ) : (
-    <div className="flex gap-2">
-      <Button asChild size="sm" variant="outline">
+    <div className="flex gap-2 pt-5">
+      <Button
+        asChild
+        variant="outline"
+        className="h-9 px-4 text-sm font-medium"
+      >
         <Link href="/sign-in">Iniciar Sesión</Link>
       </Button>
     </div>

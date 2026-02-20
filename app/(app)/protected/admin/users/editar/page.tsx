@@ -23,7 +23,7 @@ export default function EditarUsuarioPage() {
           <h1 className="text-3xl font-semibold ml-4">Editar Usuario</h1>
         </div>
 
-        <Suspense fallback={<div>Cargando...</div>}>
+        <Suspense>
           <EditarUsuarioForm />
         </Suspense>
       </div>

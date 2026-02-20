@@ -15,7 +15,6 @@ export function UsuarioPageContent() {
     }
   }, [cargando]);
 
-  if (cargando) return <p className="text-center mt-10">Cargando usuario...</p>;
   if (!email) return <p className="text-center mt-10 text-red-500">No se pudo cargar el usuario actual.</p>;
 
   return (

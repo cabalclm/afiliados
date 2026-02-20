@@ -63,12 +63,19 @@ export default function Ver() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [lideresData, afiliadosData, lugaresData] = await Promise.all([
-        listarUsuariosAction("LIDER"),
-        obtenerAfiliadosAction(),
-        obtenerLugaresAction(),
+      const pLideres = listarUsuariosAction("LIDER");
+      const pLugares = obtenerLugaresAction();
+
+      const [lideresData, lugaresData] = await Promise.all([
+        pLideres,
+        pLugares,
       ]);
-      const allLideres = (lideresData || []) as Lider[];
+
+      const allLideres = (
+        Array.isArray(lideresData)
+          ? lideresData
+          : (lideresData as any)?.data || []
+      ) as Lider[];
       if (rol === "LIDER" && userId) {
         const myLider = allLideres.find((l) => l.id === userId);
         const otherLideres = allLideres.filter((l) => l.id !== userId);
@@ -76,12 +83,23 @@ export default function Ver() {
       } else {
         setLideres(allLideres);
       }
-      setAfiliados((afiliadosData || []) as Afiliado[]);
-      setLugares((lugaresData || []) as Lugar[]);
+      setLugares(
+        (Array.isArray(lugaresData)
+          ? lugaresData
+          : (lugaresData as any)?.data || []) as Lugar[],
+      );
+
+      setLoading(false);
+
+      const afiliadosData = await obtenerAfiliadosAction();
+      setAfiliados(
+        (Array.isArray(afiliadosData)
+          ? afiliadosData
+          : (afiliadosData as any)?.data || []) as Afiliado[],
+      );
     } catch (e) {
       console.error(e);
       toast.error("Error al cargar los datos.");
-    } finally {
       setLoading(false);
     }
   };
@@ -158,9 +176,6 @@ export default function Ver() {
     }
   };
 
-  if (loading || cargandoRol)
-    return <div className="text-center py-10">Cargando...</div>;
-
   return (
     <>
       <div className="p-2 md:px-6 md:py-2">
@@ -225,6 +240,7 @@ export default function Ver() {
             onDataChange={fetchData}
             searchTerm={searchTerm}
             idUsuarioSesion={userId}
+            isLoading={loading}
           />
         )}
         {activeTab === "Afiliados" && (
@@ -247,7 +263,6 @@ export default function Ver() {
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" />
           <div className="fixed inset-0 flex items-center justify-center p-0 md:p-4">
             <DialogPanel className="w-screen h-screen bg-white flex flex-col">
-              {/* HEADER */}
               <div className="flex justify-between items-center px-6 py-3 border-b shrink-0 bg-white z-10">
                 <div className="flex flex-col">
                   <h3 className="text-base md:text-xl font-bold uppercase leading-none">
@@ -269,9 +284,7 @@ export default function Ver() {
               </div>
               <div className="flex-1 overflow-y-auto bg-gray-50/30 p-4 md:p-8">
                 <div className="max-w-[1600px] mx-auto">
-                  {/* Grid: 1 columna en móvil, 6 columnas en escritorio XL */}
                   <div className="grid grid-cols-1 xl:grid-cols-6 gap-6 w-full pt-4">
-                    {/* Fila Superior: 3 gráficas (Cada una ocupa 2 de 6 columnas = 33%) */}
                     <div className="bg-white border rounded-2xl p-6 shadow-sm xl:col-span-2 min-h-[500px] flex flex-col">
                       <EstadisticasEdades afiliados={afiliados} />
                     </div>
@@ -284,7 +297,6 @@ export default function Ver() {
                       <EstadisticasReligiones afiliados={afiliados} />
                     </div>
 
-                    {/* Fila Inferior: 2 gráficas (Cada una ocupa 3 de 6 columnas = 50%) */}
                     <div className="bg-white border rounded-2xl p-6 shadow-sm xl:col-span-3 min-h-[500px] flex flex-col">
                       <EstadisticasPoliticas afiliados={afiliados} />
                     </div>
@@ -319,7 +331,7 @@ export default function Ver() {
         liderPredefinidoId={liderParaNuevoAfiliado}
         lugares={lugares}
         lideres={lideres}
-        afiliados={afiliados} // AGREGUE ESTA LÍNEA AQUÍ
+        afiliados={afiliados}
         isFirstMember={isFirstMemberAddition}
         datosLider={lideres.find((l) => l.id === liderParaNuevoAfiliado)}
       />

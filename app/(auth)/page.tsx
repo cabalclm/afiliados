@@ -5,7 +5,7 @@ import { LoginForm } from './sign-in/loginForm';
 
 export default function SignInPage() {
   return (
-    <Suspense fallback={<div>Cargando...</div>}>
+    <Suspense>
       <LoginForm />
     </Suspense>
   );

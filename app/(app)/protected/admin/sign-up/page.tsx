@@ -5,7 +5,7 @@ import { SignupForm } from './signupForm';
 
 export default function SignupPage() {
   return (
-    <Suspense fallback={<div>Cargando...</div>}>
+    <Suspense >
       <SignupForm />
     </Suspense>
   );
