@@ -60,6 +60,7 @@ export default function AfiliadosForm({
   } = form;
 
   const sexoActual = watch("sexo");
+  const religionActual = watch("religion");
   const buscador = useBuscadorLider(lideres, setValue);
 
   const liderInputRef = useClickOutside(() =>
@@ -210,21 +211,81 @@ export default function AfiliadosForm({
             </select>
           </div>
 
-          <div>
-            <label className="text-sm font-medium text-gray-700 block mb-1">
-              No. Padrón
-            </label>
-            <Input
-              {...register("no_padron")}
-              placeholder="Ingrese No. Padrón"
-              className={errors.no_padron ? "border-red-500" : ""}
-            />
-            {errors.no_padron && (
-              <span className="text-xs text-red-500">
-                {errors.no_padron.message}
-              </span>
-            )}
+          <div className="w-full">
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full border-blue-500 text-blue-600 hover:bg-blue-50 transition-colors gap-2 font-semibold"
+              onClick={() =>
+                window.open(
+                  "https://tse.org.gt/reg-ciudadanos/sistema-de-estadisticas/consulta-de-afiliacion",
+                  "_blank",
+                )
+              }
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M15 3h6v6" />
+                <path d="M10 14 21 3" />
+                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+              </svg>
+              Verificar Empadronamiento en TSE
+            </Button>
           </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="text-sm font-medium text-gray-700 block mb-1">
+                No. Padrón
+              </label>
+              <Input
+                {...register("no_padron")}
+                placeholder="Ingrese No. Padrón"
+                className={errors.no_padron ? "border-red-500" : ""}
+              />
+              {errors.no_padron && (
+                <span className="text-xs text-red-500">
+                  {errors.no_padron.message as string}
+                </span>
+              )}
+            </div>
+
+            <div>
+              <label className="text-sm font-medium text-gray-700 block mb-1">
+                Religión
+              </label>
+              <select
+                {...register("religion")}
+                className="w-full h-10 px-3 border rounded-md border-gray-300"
+              >
+                <option value="">Seleccione religión...</option>
+                <option value="Católico">Católico</option>
+                <option value="Evangélico">Evangélico</option>
+                <option value="Otro">Otro</option>
+              </select>
+            </div>
+          </div>
+
+          {religionActual === "Otro" && (
+            <div>
+              <label className="text-sm font-medium text-gray-700 block mb-1">
+                Especifique su religión
+              </label>
+              <Input
+                {...register("religion_otra")}
+                placeholder="Ingrese su religión"
+              />
+            </div>
+          )}
 
           <input
             type="hidden"

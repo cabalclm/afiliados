@@ -69,7 +69,7 @@ export default function Politicas({ afiliados }: Props) {
   return (
     <div className="w-full h-full flex flex-col p-2">
       <div className="flex flex-col items-start mb-4 shrink-0">
-        <h4 className="text-xl md:text-2xl font-bold text-gray-800 uppercase">
+        <h4 className="text-xl md:text-xl font-bold text-gray-800 uppercase">
           Intereses Políticos Prioritarios
         </h4>
         <p className="text-sm text-gray-500 italic">
@@ -77,17 +77,16 @@ export default function Politicas({ afiliados }: Props) {
         </p>
       </div>
 
-      {/* Contenedor adaptativo: Sin scroll en móvil, con scroll en pantallas grandes si es necesario */}
       <div className="flex-1 w-full md:overflow-x-auto md:overflow-y-hidden pb-4 scrollbar-thin scrollbar-thumb-gray-300">
         <div
           className="w-full md:min-w-[550px]"
-          style={{ height: datosGrafica.length * 50 + 50 }}
+          style={{ height: datosGrafica.length * 60 + 50 }}
         >
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
               layout="vertical"
               data={datosGrafica}
-              margin={{ top: 10, right: 10, left: -35, bottom: 10 }}
+              margin={{ top: 10, right: 20, left: 0, bottom: 10 }}
             >
               <CartesianGrid
                 strokeDasharray="3 3"
@@ -112,25 +111,37 @@ export default function Politicas({ afiliados }: Props) {
                 name="Personas"
                 fill="#0066CC"
                 radius={[0, 8, 8, 0]}
-                barSize={42}
+                barSize={20}
               >
                 <LabelList
                   dataKey="name"
-                  position="insideLeft"
-                  offset={45}
-                  fill="#FFFFFF"
-                  fontSize={10}
-                  fontWeight="bold"
-                  style={{ pointerEvents: "none", textTransform: "uppercase" }}
-                />
-                <LabelList
-                  dataKey="value"
-                  position="insideRight"
-                  offset={20}
-                  fill="#FFFFFF"
-                  fontSize={14}
-                  fontWeight="bold"
-                  style={{ pointerEvents: "none" }}
+                  content={(props: any) => {
+                    const { x, y, height, index } = props;
+                    const item = datosGrafica[index];
+
+                    if (!item) return null;
+
+                    return (
+                      <text
+                        x={x}
+                        // Ajustamos un poco la posición Y para el texto más grande
+                        y={y + height + 18}
+                        fill="#6b7280"
+                        // Tamaño base para la parte del nombre
+                        fontSize={9}
+                        fontWeight="bold"
+                        className="uppercase"
+                        textAnchor="start"
+                      >
+                        {/* Parte del número: Más grande (13px), extra negrita y color azul */}
+                        <tspan fontSize={13} fontWeight="900" fill="#0066CC">
+                          ({item.value})
+                        </tspan>
+                        {/* Parte del nombre: Hereda el tamaño base (9px) con un pequeño espacio (dx) */}
+                        <tspan dx={5}> {item.name}</tspan>
+                      </text>
+                    );
+                  }}
                 />
               </Bar>
             </BarChart>

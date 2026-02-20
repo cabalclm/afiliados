@@ -21,33 +21,25 @@ export const POLITICAS = [
 ] as const;
 
 export const afiliadoSchema = z.object({
-  nombres: z.string().min(1, { message: "Los nombres son obligatorios." }),
-  apellidos: z.string().min(1, { message: "Los apellidos son obligatorios." }),
-
+  nombres: z.string().min(2, "Requerido"),
+  apellidos: z.string().min(2, "Requerido"),
   telefono: z
     .string()
-    .length(8, { message: "El teléfono debe tener 8 dígitos." })
-    .nullable()
-    .optional(),
-
-  dpi: z.string().length(13, { message: "El DPI debe tener 13 dígitos." }),
-  nacimiento: z
+    .length(8, "Debe tener 8 dígitos")
+    .regex(/^\d+$/, "Solo números"),
+  dpi: z
     .string()
-    .min(1, { message: "La fecha es obligatoria." })
-    .refine((date) => new Date(date) <= new Date(), {
-      message: "La fecha no puede ser en el futuro.",
-    })
-    .refine((date) => new Date(date) >= new Date("1900-01-01"), {
-      message: "El año no puede ser anterior a 1900.",
-    }),
-  sexo: z.enum(["F", "M"]),
-
-  lider_id: z.string().uuid().nullable().optional(),
-  lugar_id: z.number().int().min(1, { message: "Debe seleccionar un lugar." }),
-
+    .length(13, "Debe tener 13 dígitos")
+    .regex(/^\d+$/, "Solo números"),
+  nacimiento: z.string().min(1, "Requerido"),
+  sexo: z.enum(["M", "F"]),
+  lugar_id: z.number().min(1, "Seleccione un lugar"),
+  lider_id: z.string().uuid().nullable(),
+  politica: z.string().optional(),
   empadronado: z.boolean().optional(),
-  politica: z.string().min(1, { message: "La política es obligatoria." }),
-  no_padron: z.string().min(1, { message: "El No. de Padrón es obligatorio." }),
+  no_padron: z.string().min(1, "El No. de Padrón es obligatorio"),
+  religion: z.string().optional(),
+  religion_otra: z.string().optional(),
 });
 
 // Definimos AfiliadoFormData directamente desde Zod

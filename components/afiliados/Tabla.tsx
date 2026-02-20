@@ -28,8 +28,7 @@ export default function Tabla({
   onDataChange,
   rolUsuarioSesion,
 }: Props) {
-  const puedeVerAcciones =
-    rolUsuarioSesion === "ADMINISTRADOR" || rolUsuarioSesion === "SUPER";
+  const puedeVerAcciones = true;
 
   if (afiliados.length === 0) {
     return (

@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { createClient } from '@/utils/supabase/client';
+import { createClient } from "@/utils/supabase/client";
 
 export async function registrarLog({
   accion,
@@ -23,14 +23,14 @@ export async function registrarLog({
   if (!finalUserId) return;
 
   const { data: modulo, error: modError } = await supabase
-    .from('modulos')
-    .select('id')
-    .eq('nombre', nombreModulo)
+    .from("modulos")
+    .select("id")
+    .eq("nombre", nombreModulo)
     .maybeSingle();
 
   if (!modulo || modError) return;
 
-  await supabase.from('logs').insert({
+  await supabase.from("logs").insert({
     user_id: finalUserId,
     modulo_id: modulo.id,
     accion,

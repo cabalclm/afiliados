@@ -4,12 +4,13 @@ import { useState, useEffect, Fragment } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { toast } from "react-toastify";
-import { Search, X, PieChart, BarChart3, MapPin, Target } from "lucide-react";
+import { Search, X } from "lucide-react";
 
 import EstadisticasEdades from "./estadisticas/Edades";
 import EstadisticasEmpadronados from "./estadisticas/Empadronados";
 import EstadisticasLugares from "./estadisticas/Lugares";
 import EstadisticasPoliticas from "./estadisticas/Politicas";
+import EstadisticasReligiones from "./estadisticas/Religion";
 
 import Lideres from "./Lideres";
 import AfiliadosGeneral from "./AfiliadosGeneral";
@@ -31,7 +32,6 @@ import { obtenerLugaresAction } from "./actions/lugares";
 
 type Lugar = { id: number; nombre: string };
 type Tab = "Lideres" | "Afiliados";
-type VistaEstadistica = "padron" | "edades" | "lugares" | "politicas";
 
 export default function Ver() {
   const { rol, cargando: cargandoRol, userId } = useUserData();
@@ -48,9 +48,6 @@ export default function Ver() {
   const [isEstadisticasOpen, setIsEstadisticasOpen] = useState(false);
   const [isSignupModalOpen, setIsSignupModalOpen] = useState(false);
 
-  const [vistaEstadisticaActual, setVistaEstadisticaActual] =
-    useState<VistaEstadistica>("padron");
-
   const [afiliadoParaEditar, setAfiliadoParaEditar] = useState<Afiliado | null>(
     null,
   );
@@ -61,15 +58,7 @@ export default function Ver() {
   >(null);
 
   const [isFirstMemberAddition, setIsFirstMemberAddition] = useState(false);
-
   const [searchTerm, setSearchTerm] = useState("");
-
-  const STATS_TABS = [
-    { id: "padron", label: "Padrón", icon: PieChart },
-    { id: "edades", label: "Demografía", icon: BarChart3 },
-    { id: "lugares", label: "Ubicación", icon: MapPin },
-    { id: "politicas", label: "Intereses", icon: Target },
-  ];
 
   const fetchData = async () => {
     setLoading(true);
@@ -197,7 +186,7 @@ export default function Ver() {
             <Button
               onClick={() => setIsEstadisticasOpen(true)}
               variant="outline"
-              className="gap-2 w-full text-xl"
+              className="gap-2 w-full text-xs md:text-xl"
             >
               📊 Estadísticas Generales
             </Button>
@@ -256,54 +245,54 @@ export default function Ver() {
           onClose={() => setIsEstadisticasOpen(false)}
         >
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" />
-          <div className="fixed inset-0 overflow-hidden flex flex-col">
-            <DialogPanel className="w-screen h-screen bg-white flex flex-col shadow-none max-w-none">
-              <div className="flex flex-col md:flex-row justify-between items-center px-6 py-4 border-b border-gray-100 shrink-0 gap-4 bg-white z-10">
-                <div>
-                  <h3 className="text-xl font-bold text-gray-900">
+          <div className="fixed inset-0 flex items-center justify-center p-0 md:p-4">
+            <DialogPanel className="w-screen h-screen bg-white flex flex-col">
+              {/* HEADER */}
+              <div className="flex justify-between items-center px-6 py-3 border-b shrink-0 bg-white z-10">
+                <div className="flex flex-col">
+                  <h3 className="text-base md:text-xl font-bold uppercase leading-none">
                     Estadísticas Generales 📊
                   </h3>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-[9px] text-gray-500 font-bold uppercase mt-1">
                     Análisis global de {afiliados.length} registros
                   </p>
                 </div>
-                <div className="flex bg-gray-100 p-1 rounded-lg gap-1 overflow-x-auto max-w-full scrollbar-hide">
-                  {STATS_TABS.map((tab) => (
-                    <button
-                      key={tab.id}
-                      onClick={() =>
-                        setVistaEstadisticaActual(tab.id as VistaEstadistica)
-                      }
-                      className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${vistaEstadisticaActual === tab.id ? "bg-white text-blue-600 shadow-sm ring-1 ring-black/5" : "text-gray-500 hover:text-gray-900 hover:bg-gray-200/50"}`}
-                    >
-                      <tab.icon className="w-4 h-4" />
-                      <span>{tab.label}</span>
-                    </button>
-                  ))}
-                </div>
+
                 <Button
                   onClick={() => setIsEstadisticasOpen(false)}
                   variant="ghost"
                   size="icon"
-                  className="h-10 w-10 rounded-full hover:bg-gray-100 shrink-0"
+                  className="rounded-full shrink-0 h-8 w-8"
                 >
-                  <X className="w-6 h-6 text-gray-500" />
+                  <X className="w-5 h-5 text-gray-500" />
                 </Button>
               </div>
-              <div className="flex-1 p-4 md:p-6 flex flex-col h-full overflow-hidden bg-gray-50/30">
-                <div className="flex-1 bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden flex flex-col relative p-4 md:p-6">
-                  {vistaEstadisticaActual === "padron" && (
-                    <EstadisticasEmpadronados afiliados={afiliados} />
-                  )}
-                  {vistaEstadisticaActual === "edades" && (
-                    <EstadisticasEdades afiliados={afiliados} />
-                  )}
-                  {vistaEstadisticaActual === "lugares" && (
-                    <EstadisticasLugares afiliados={afiliados} />
-                  )}
-                  {vistaEstadisticaActual === "politicas" && (
-                    <EstadisticasPoliticas afiliados={afiliados} />
-                  )}
+              <div className="flex-1 overflow-y-auto bg-gray-50/30 p-4 md:p-8">
+                <div className="max-w-[1600px] mx-auto">
+                  {/* Grid: 1 columna en móvil, 6 columnas en escritorio XL */}
+                  <div className="grid grid-cols-1 xl:grid-cols-6 gap-6 w-full pt-4">
+                    {/* Fila Superior: 3 gráficas (Cada una ocupa 2 de 6 columnas = 33%) */}
+                    <div className="bg-white border rounded-2xl p-6 shadow-sm xl:col-span-2 min-h-[500px] flex flex-col">
+                      <EstadisticasEdades afiliados={afiliados} />
+                    </div>
+
+                    <div className="bg-white border rounded-2xl p-6 shadow-sm xl:col-span-2 min-h-[500px] flex flex-col">
+                      <EstadisticasEmpadronados afiliados={afiliados} />
+                    </div>
+
+                    <div className="bg-white border rounded-2xl p-6 shadow-sm xl:col-span-2 min-h-[500px] flex flex-col">
+                      <EstadisticasReligiones afiliados={afiliados} />
+                    </div>
+
+                    {/* Fila Inferior: 2 gráficas (Cada una ocupa 3 de 6 columnas = 50%) */}
+                    <div className="bg-white border rounded-2xl p-6 shadow-sm xl:col-span-3 min-h-[500px] flex flex-col">
+                      <EstadisticasPoliticas afiliados={afiliados} />
+                    </div>
+
+                    <div className="bg-white border rounded-2xl p-6 shadow-sm xl:col-span-3 min-h-[500px] flex flex-col">
+                      <EstadisticasLugares afiliados={afiliados} />
+                    </div>
+                  </div>
                 </div>
               </div>
             </DialogPanel>

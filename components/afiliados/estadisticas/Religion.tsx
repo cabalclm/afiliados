@@ -14,25 +14,33 @@ interface Props {
   afiliados: Afiliado[];
 }
 
-export default function Empadronados({ afiliados }: Props) {
-  let totalEmpadronados = 0;
-  let totalNoEmpadronados = 0;
+const COLORES = [
+  "#3b82f6",
+  "#f59e0b",
+  "#10b981",
+  "#8b5cf6",
+  "#ec4899",
+  "#6366f1",
+];
+
+export default function Religiones({ afiliados }: Props) {
+  const conteo: Record<string, number> = {};
 
   afiliados.forEach((afiliado) => {
-    if (afiliado.empadronado) {
-      totalEmpadronados++;
-    } else {
-      totalNoEmpadronados++;
-    }
+    const rel = afiliado.religion || "Sin especificar";
+    conteo[rel] = (conteo[rel] || 0) + 1;
   });
 
-  const datosPadron = [
-    { name: "Empadronados", value: totalEmpadronados, color: "#16a34a" },
-    { name: "No Empadronados", value: totalNoEmpadronados, color: "#dc2626" },
-  ];
+  const datosPadron = Object.entries(conteo)
+    .sort((a, b) => b[1] - a[1])
+    .map(([name, value], index) => ({
+      name,
+      value,
+      color: COLORES[index % COLORES.length],
+    }));
 
   const datosGrafica =
-    totalEmpadronados === 0 && totalNoEmpadronados === 0
+    afiliados.length === 0
       ? [{ name: "Sin registros", value: 1, color: "#e5e7eb" }]
       : datosPadron.filter((d) => d.value > 0);
 
@@ -97,12 +105,13 @@ export default function Empadronados({ afiliados }: Props) {
     <div className="w-full h-full flex flex-col min-h-[400px]">
       <div className="flex flex-col items-start mb-4 shrink-0">
         <h4 className="text-xs md:text-xl font-bold text-gray-800 uppercase">
-          Estatus de empadronamiento
+          Estadística de Religión
         </h4>
         <p className="text-sm text-gray-500 italic">
           Distribución porcentual del grupo
         </p>
       </div>
+
       <div className="flex-1 min-h-[250px] w-full relative">
         <ResponsiveContainer width="100%" height={280}>
           <PieChart>
@@ -137,24 +146,22 @@ export default function Empadronados({ afiliados }: Props) {
         </ResponsiveContainer>
       </div>
 
-      <div className="flex justify-center gap-12 mt-4 pt-4 border-t border-gray-100 shrink-0">
-        <div className="text-center">
-          <p className="text-xl font-bold text-green-600">
-            {totalEmpadronados}
-          </p>
-          <p className="text-[9px] uppercase text-gray-500 font-bold tracking-wider mt-1">
-            Empadronados
-          </p>
-        </div>
-        <div className="w-px bg-gray-200 h-10"></div>
-        <div className="text-center">
-          <p className="text-xl font-bold text-red-600">
-            {totalNoEmpadronados}
-          </p>
-          <p className="text-[9px] uppercase text-gray-500 font-bold tracking-wider mt-1">
-            No Empadronados
-          </p>
-        </div>
+      <div className="flex justify-center gap-6 mt-4 pt-4 border-t border-gray-100 shrink-0 flex-wrap">
+        {datosPadron.map((item, index) => (
+          <div key={item.name} className="flex items-center gap-4">
+            {index > 0 && (
+              <div className="w-px bg-gray-200 h-10 hidden sm:block"></div>
+            )}
+            <div className="text-center">
+              <p className="text-xl font-bold" style={{ color: item.color }}>
+                {item.value}
+              </p>
+              <p className="text-[9px] uppercase text-gray-500 font-bold tracking-wider mt-1">
+                {item.name}
+              </p>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );

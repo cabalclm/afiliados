@@ -8,6 +8,7 @@ import EstadisticasEdades from "./estadisticas/Edades";
 import EstadisticasEmpadronados from "./estadisticas/Empadronados";
 import EstadisticasLugares from "./estadisticas/Lugares";
 import EstadisticasPoliticas from "./estadisticas/Politicas";
+import EstadisticasReligiones from "./estadisticas/Religion";
 import TextoAnimado from "@/components/ui/Typeanimation";
 import Image from "next/image";
 import { Dialog, TransitionChild, DialogPanel } from "@headlessui/react";
@@ -19,6 +20,7 @@ import {
   Target,
   X,
   UserPlus,
+  Search,
 } from "lucide-react";
 
 interface Props {
@@ -32,7 +34,7 @@ interface Props {
   rolUsuarioSesion: string;
 }
 
-type Vista = "miembros" | "padron" | "edades" | "lugares" | "politicas";
+type Vista = "miembros" | "estadisticas";
 
 export default function Celula({
   isOpen,
@@ -45,11 +47,23 @@ export default function Celula({
   rolUsuarioSesion,
 }: Props) {
   const [vistaActual, setVistaActual] = useState<Vista>("miembros");
+  const [busqueda, setBusqueda] = useState("");
 
   if (!lider) return null;
 
   const afiliadosDelLider =
     afiliados?.filter((a) => a.lider_id === lider.id) || [];
+
+  const afiliadosFiltrados =
+    busqueda.length >= 2
+      ? afiliadosDelLider.filter(
+          (a) =>
+            a.nombres.toLowerCase().includes(busqueda.toLowerCase()) ||
+            a.apellidos.toLowerCase().includes(busqueda.toLowerCase()) ||
+            a.dpi.includes(busqueda),
+        )
+      : afiliadosDelLider;
+
   const totalEnGrupo = afiliadosDelLider.length;
   const objetivo = 15;
   const progreso = Math.min((totalEnGrupo / objetivo) * 100, 100);
@@ -79,10 +93,7 @@ export default function Celula({
 
   const TABS = [
     { id: "miembros", label: "Miembros", icon: Users },
-    { id: "padron", label: "Padrón", icon: PieChart },
-    { id: "edades", label: "Demografía", icon: BarChart3 },
-    { id: "lugares", label: "Ubicación", icon: MapPin },
-    { id: "politicas", label: "Intereses", icon: Target },
+    { id: "estadisticas", label: "Estadísticas Generales", icon: BarChart3 },
   ];
 
   return (
@@ -92,7 +103,7 @@ export default function Celula({
           className="fixed inset-0 bg-black/60 backdrop-blur-sm"
           aria-hidden="true"
         />
-        <div className="fixed inset-0 flex items-center justify-center p-0">
+        <div className="fixed inset-0 flex items-center justify-center p-4">
           <TransitionChild
             as={Fragment}
             enter="ease-out duration-300"
@@ -109,7 +120,7 @@ export default function Celula({
                   <h3 className="text-xl font-bold uppercase">
                     {lider.nombres} {lider.apellidos}
                   </h3>
-                  <p className="text-xs text-gray-500 font-bold uppercase">
+                  <p className="text-[9px] text-gray-500 font-bold uppercase">
                     Gestión de Célula
                   </p>
                 </div>
@@ -119,7 +130,7 @@ export default function Celula({
                     <button
                       key={tab.id}
                       onClick={() => setVistaActual(tab.id as Vista)}
-                      className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-bold transition-all whitespace-nowrap ${
+                      className={`flex items-center gap-2 px-4 py-2 rounded-md text-[9px] font-bold transition-all whitespace-nowrap ${
                         vistaActual === tab.id
                           ? "bg-white text-blue-600 shadow-sm"
                           : "text-gray-500 hover:bg-gray-200"
@@ -140,100 +151,117 @@ export default function Celula({
                   <X className="w-6 h-6 text-gray-500" />
                 </Button>
               </div>
-
               {/* CONTENIDO */}
               <div className="flex-1 overflow-y-auto bg-gray-50/30 p-4 md:p-8">
-                <div className="max-w-[1600px] mx-auto">
-                  {vistaActual === "miembros" ? (
-                    <>
-                      {/* BARRA DE PROGRESO */}
-                      <div className="mb-6 p-5 border rounded-xl bg-white shadow-sm flex items-center gap-6">
-                        <div className="flex-1">
-                          <div className="flex justify-between items-center mb-2">
-                            <span className="text-sm font-bold text-gray-700">
-                              Progreso de Célula
-                            </span>
-                            <span className="text-sm font-bold text-gray-900">
-                              {totalEnGrupo} / {objetivo}
-                            </span>
+                <div className="flex-1 overflow-y-auto bg-gray-50/30 p-4 md:p-8">
+                  <div className="max-w-[1600px] mx-auto">
+                    {vistaActual === "miembros" ? (
+                      <>
+                        <div className="mb-6 p-5 border rounded-xl bg-white shadow-sm flex items-center gap-6">
+                          <div className="flex-1">
+                            <div className="flex justify-between items-center mb-2">
+                              <span className="text-sm font-bold text-gray-700">
+                                Progreso de Célula
+                              </span>
+                              <span className="text-sm font-bold text-gray-900">
+                                {totalEnGrupo} / {objetivo}
+                              </span>
+                            </div>
+                            <div className="w-full bg-gray-100 rounded-full h-3 mb-3 overflow-hidden">
+                              <div
+                                className={`${colorBarra} h-full transition-all duration-1000`}
+                                style={{ width: `${progreso}%` }}
+                              ></div>
+                            </div>
+                            <div className="text-center">
+                              <span className="text-xs text-gray-600 font-bold bg-gray-50 px-4 py-1 rounded-full border inline-block">
+                                <TextoAnimado textos={[mensaje]} />
+                              </span>
+                            </div>
                           </div>
-                          <div className="w-full bg-gray-100 rounded-full h-3 mb-3 overflow-hidden">
-                            <div
-                              className={`${colorBarra} h-full transition-all duration-1000`}
-                              style={{ width: `${progreso}%` }}
-                            ></div>
-                          </div>
-                          <div className="text-center">
-                            <span className="text-sm text-gray-600 font-bold bg-gray-50 px-4 py-1 rounded-full border inline-block">
-                              <TextoAnimado textos={[mensaje]} />
-                            </span>
+                          <div className="bg-gray-50 p-2 rounded-lg border hidden sm:block">
+                            <Image
+                              src={gifUrl}
+                              alt="Status"
+                              width={80}
+                              height={80}
+                              unoptimized
+                              className="object-contain"
+                            />
                           </div>
                         </div>
-                        <div className="bg-gray-50 p-2 rounded-lg border hidden sm:block">
-                          <Image
-                            src={gifUrl}
-                            alt="Status"
-                            width={80}
-                            height={80}
-                            unoptimized
-                            className="object-contain"
+
+                        <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-4">
+                          <div className="relative w-full md:w-96">
+                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                              <Search className="h-5 w-5 text-gray-400" />
+                            </div>
+                            <input
+                              type="text"
+                              placeholder="Buscar por nombre o DPI..."
+                              className="pl-10 pr-4 py-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              value={busqueda}
+                              onChange={(e) => setBusqueda(e.target.value)}
+                            />
+                          </div>
+                          <Button
+                            className={`font-bold h-12 px-6 shadow-md transition-transform hover:scale-105 w-full md:w-auto ${
+                              totalEnGrupo === 0
+                                ? "bg-green-600 animate-pulse"
+                                : "bg-blue-700"
+                            }`}
+                            onClick={() =>
+                              onAnadirAfiliado(lider.id, totalEnGrupo === 0)
+                            }
+                          >
+                            {totalEnGrupo === 0 ? (
+                              <>
+                                <UserPlus className="w-5 h-5 mr-2" /> Iniciar mi
+                                Grupo (Soy el Líder)
+                              </>
+                            ) : (
+                              <>
+                                <UserPlus className="w-5 h-5 mr-2" /> Añadir
+                                Nuevo Integrante
+                              </>
+                            )}
+                          </Button>
+                        </div>
+
+                        <Tabla
+                          lider={lider}
+                          afiliados={afiliadosFiltrados}
+                          onEditar={onEditar}
+                          onDataChange={onDataChange}
+                          rolUsuarioSesion={rolUsuarioSesion}
+                        />
+                      </>
+                    ) : (
+                      <div className="flex flex-wrap justify-center gap-6 w-full pt-4">
+                        <div className="bg-white border rounded-2xl p-6 shadow-sm w-full max-w-[500px] min-h-[500px] flex flex-col">
+                          <EstadisticasEmpadronados
+                            afiliados={afiliadosDelLider}
                           />
                         </div>
+                        <div className="bg-white border rounded-2xl p-6 shadow-sm w-full max-w-[500px] min-h-[500px] flex flex-col">
+                          <EstadisticasReligiones
+                            afiliados={afiliadosDelLider}
+                          />
+                        </div>
+                        <div className="bg-white border rounded-2xl p-6 shadow-sm w-full max-w-[500px] min-h-[500px] flex flex-col">
+                          <EstadisticasEdades afiliados={afiliadosDelLider} />
+                        </div>
+                        <div className="bg-white border rounded-2xl p-6 shadow-sm w-full max-w-[500px] min-h-[500px] flex flex-col">
+                          <EstadisticasPoliticas
+                            afiliados={afiliadosDelLider}
+                          />
+                        </div>
+                        <div className="bg-white border rounded-2xl p-6 shadow-sm w-full max-w-[1000px] min-h-[500px] flex flex-col">
+                          <EstadisticasLugares afiliados={afiliadosDelLider} />
+                        </div>
                       </div>
-
-                      {/* BOTÓN ÚNICO ACCIÓN */}
-                      <div className="flex justify-end mb-4">
-                        <Button
-                          className={`font-bold h-12 px-6 shadow-md transition-transform hover:scale-105 ${
-                            totalEnGrupo === 0
-                              ? "bg-green-600 animate-pulse"
-                              : "bg-blue-700"
-                          }`}
-                          onClick={() =>
-                            onAnadirAfiliado(lider.id, totalEnGrupo === 0)
-                          }
-                        >
-                          {totalEnGrupo === 0 ? (
-                            <>
-                              <UserPlus className="w-5 h-5 mr-2" /> Iniciar mi
-                              Grupo (Soy el Líder)
-                            </>
-                          ) : (
-                            <>
-                              <UserPlus className="w-5 h-5 mr-2" /> Añadir Nuevo
-                              Integrante
-                            </>
-                          )}
-                        </Button>
-                      </div>
-
-                      {/* TABLA: Ella misma maneja el estado vacío */}
-                      <Tabla
-                        lider={lider}
-                        afiliados={afiliadosDelLider}
-                        onEditar={onEditar}
-                        onDataChange={onDataChange}
-                        rolUsuarioSesion={rolUsuarioSesion}
-                      />
-                    </>
-                  ) : (
-                    <div className="bg-white border rounded-2xl p-6 shadow-sm">
-                      {vistaActual === "padron" && (
-                        <EstadisticasEmpadronados
-                          afiliados={afiliadosDelLider}
-                        />
-                      )}
-                      {vistaActual === "edades" && (
-                        <EstadisticasEdades afiliados={afiliadosDelLider} />
-                      )}
-                      {vistaActual === "lugares" && (
-                        <EstadisticasLugares afiliados={afiliadosDelLider} />
-                      )}
-                      {vistaActual === "politicas" && (
-                        <EstadisticasPoliticas afiliados={afiliadosDelLider} />
-                      )}
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
               </div>
             </DialogPanel>

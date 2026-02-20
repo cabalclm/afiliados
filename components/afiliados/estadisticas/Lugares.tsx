@@ -24,21 +24,28 @@ export default function Lugares({ afiliados }: Props) {
     conteoLugares[lugar] = (conteoLugares[lugar] || 0) + 1;
   });
 
-  const datosLugares = Object.entries(conteoLugares)
+  const datosLugaresRaw = Object.entries(conteoLugares)
     .map(([name, value]) => ({ name, value }))
     .sort((a, b) => b.value - a.value)
     .slice(0, 15);
 
+  const datosLugares =
+    datosLugaresRaw.length > 0
+      ? datosLugaresRaw
+      : [{ name: "Sin registros", value: 1 }];
+
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
+      if (payload[0].payload.name === "Sin registros") return null;
+
       return (
-        <div className="bg-white border border-gray-200 rounded-lg px-4 py-3 shadow-xl text-sm z-50">
+        <div className="bg-white border border-gray-200 rounded-lg px-4 py-3 shadow-xl text-[9px] z-50">
           <p className="font-bold text-gray-800 mb-2 border-b pb-1 uppercase">
             {label}
           </p>
           <p className="flex items-center gap-2">
             <span className="text-gray-600">Personas:</span>
-            <strong className="text-[#6366f1] text-lg">
+            <strong className="text-[#6366f1] text-xl">
               {payload[0].value}
             </strong>
           </p>
@@ -51,24 +58,24 @@ export default function Lugares({ afiliados }: Props) {
   return (
     <div className="w-full h-full flex flex-col p-2">
       <div className="flex flex-col items-start mb-4 shrink-0">
-        <h4 className="text-xl md:text-2xl font-bold text-gray-800 uppercase">
+        <h4 className="text-xl font-bold text-gray-800 uppercase">
           Ubicación de los Afiliados
         </h4>
-        <p className="text-sm text-gray-500 italic">
+        <p className="text-[9px] text-gray-500 italic">
           Lugares con mayor presencia
         </p>
       </div>
 
       <div className="flex-1 w-full overflow-x-auto overflow-y-hidden pb-4 scrollbar-thin scrollbar-thumb-gray-300">
         <div
-          className="min-w-[550px]"
-          style={{ height: datosLugares.length * 50 + 50 }}
+          className="w-full md:min-w-[550px]"
+          style={{ height: Math.max(datosLugares.length * 60 + 50, 100) }}
         >
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
               layout="vertical"
               data={datosLugares}
-              margin={{ top: 10, right: 30, left: -20, bottom: 10 }}
+              margin={{ top: 10, right: 20, left: 0, bottom: 10 }}
             >
               <CartesianGrid
                 strokeDasharray="3 3"
@@ -90,27 +97,39 @@ export default function Lugares({ afiliados }: Props) {
               />
               <Bar
                 dataKey="value"
-                fill="#6366f1"
+                fill={datosLugaresRaw.length > 0 ? "#6366f1" : "#e5e7eb"}
                 radius={[0, 8, 8, 0]}
-                barSize={42}
+                barSize={20}
               >
                 <LabelList
                   dataKey="name"
-                  position="insideLeft"
-                  offset={25}
-                  fill="#FFFFFF"
-                  fontSize={11}
-                  fontWeight="bold"
-                  style={{ pointerEvents: "none", textTransform: "uppercase" }}
-                />
-                <LabelList
-                  dataKey="value"
-                  position="insideRight"
-                  offset={25}
-                  fill="#FFFFFF"
-                  fontSize={14}
-                  fontWeight="bold"
-                  style={{ pointerEvents: "none" }}
+                  content={(props: any) => {
+                    const { x, y, height, index } = props;
+                    const item = datosLugares[index];
+
+                    if (!item) return null;
+
+                    const hasData = datosLugaresRaw.length > 0;
+
+                    return (
+                      <text
+                        x={x}
+                        y={y + height + 18}
+                        fill={hasData ? "#6b7280" : "#9ca3af"}
+                        fontSize={9}
+                        fontWeight="bold"
+                        className="uppercase"
+                        textAnchor="start"
+                      >
+                        {hasData && (
+                          <tspan fontSize={13} fontWeight="900" fill="#6366f1">
+                            ({item.value})
+                          </tspan>
+                        )}
+                        <tspan dx={hasData ? 5 : 0}> {item.name}</tspan>
+                      </text>
+                    );
+                  }}
                 />
               </Bar>
             </BarChart>

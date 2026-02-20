@@ -27,7 +27,10 @@ export const afiliadoSchema = z.object({
   lugar_id: z.number().min(1, "Seleccione un lugar"),
   lider_id: z.string().uuid().nullable(),
   politica: z.string().optional(),
+  empadronado: z.boolean().optional(),
   no_padron: z.string().min(1, "El No. de Padrón es obligatorio"),
+  religion: z.string().optional(),
+  religion_otra: z.string().optional(),
 });
 
 export type AfiliadoFormData = z.infer<typeof afiliadoSchema>;
