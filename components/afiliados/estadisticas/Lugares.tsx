@@ -9,6 +9,7 @@ import {
   ResponsiveContainer,
   LabelList,
   CartesianGrid,
+  Rectangle,
 } from "recharts";
 import type { Afiliado } from "../esquemas";
 
@@ -61,7 +62,7 @@ export default function Lugares({ afiliados }: Props) {
         <h4 className="text-xl font-bold text-gray-800 uppercase">
           Ubicación de los Afiliados
         </h4>
-        <p className="text-[9px] text-gray-500 italic">
+        <p className="text-sm text-gray-500 italic">
           Lugares con mayor presencia
         </p>
       </div>
@@ -69,7 +70,7 @@ export default function Lugares({ afiliados }: Props) {
       <div className="flex-1 w-full overflow-x-auto overflow-y-hidden pb-4 scrollbar-thin scrollbar-thumb-gray-300">
         <div
           className="w-full md:min-w-[550px]"
-          style={{ height: Math.max(datosLugares.length * 60 + 50, 100) }}
+          style={{ height: Math.max(datosLugares.length * 55 + 30, 100) }}
         >
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
@@ -97,14 +98,25 @@ export default function Lugares({ afiliados }: Props) {
               />
               <Bar
                 dataKey="value"
-                fill={datosLugaresRaw.length > 0 ? "#6366f1" : "#e5e7eb"}
-                radius={[0, 8, 8, 0]}
                 barSize={20}
+                shape={(props: any) => {
+                  const { x, y, width, height } = props;
+                  return (
+                    <Rectangle
+                      x={x}
+                      y={y - 12}
+                      width={width}
+                      height={height}
+                      fill={datosLugaresRaw.length > 0 ? "#6366f1" : "#e5e7eb"}
+                      radius={[0, 8, 8, 0]}
+                    />
+                  );
+                }}
               >
                 <LabelList
                   dataKey="name"
                   content={(props: any) => {
-                    const { x, y, height, index } = props;
+                    const { x, y, index } = props;
                     const item = datosLugares[index];
 
                     if (!item) return null;
@@ -114,7 +126,7 @@ export default function Lugares({ afiliados }: Props) {
                     return (
                       <text
                         x={x}
-                        y={y + height + 18}
+                        y={y + 22}
                         fill={hasData ? "#6b7280" : "#9ca3af"}
                         fontSize={9}
                         fontWeight="bold"

@@ -9,6 +9,7 @@ import {
   ResponsiveContainer,
   LabelList,
   CartesianGrid,
+  Rectangle,
 } from "recharts";
 import type { Afiliado } from "../esquemas";
 
@@ -80,7 +81,7 @@ export default function Politicas({ afiliados }: Props) {
       <div className="flex-1 w-full md:overflow-x-auto md:overflow-y-hidden pb-4 scrollbar-thin scrollbar-thumb-gray-300">
         <div
           className="w-full md:min-w-[550px]"
-          style={{ height: datosGrafica.length * 60 + 50 }}
+          style={{ height: datosGrafica.length * 55 + 30 }}
         >
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
@@ -109,14 +110,25 @@ export default function Politicas({ afiliados }: Props) {
               <Bar
                 dataKey="value"
                 name="Personas"
-                fill="#0066CC"
-                radius={[0, 8, 8, 0]}
                 barSize={20}
+                shape={(props: any) => {
+                  const { x, y, width, height } = props;
+                  return (
+                    <Rectangle
+                      x={x}
+                      y={y - 12}
+                      width={width}
+                      height={height}
+                      fill="#0066CC"
+                      radius={[0, 8, 8, 0]}
+                    />
+                  );
+                }}
               >
                 <LabelList
                   dataKey="name"
                   content={(props: any) => {
-                    const { x, y, height, index } = props;
+                    const { x, y, index } = props;
                     const item = datosGrafica[index];
 
                     if (!item) return null;
@@ -124,20 +136,16 @@ export default function Politicas({ afiliados }: Props) {
                     return (
                       <text
                         x={x}
-                        // Ajustamos un poco la posición Y para el texto más grande
-                        y={y + height + 18}
+                        y={y + 22}
                         fill="#6b7280"
-                        // Tamaño base para la parte del nombre
                         fontSize={9}
                         fontWeight="bold"
                         className="uppercase"
                         textAnchor="start"
                       >
-                        {/* Parte del número: Más grande (13px), extra negrita y color azul */}
                         <tspan fontSize={13} fontWeight="900" fill="#0066CC">
                           ({item.value})
                         </tspan>
-                        {/* Parte del nombre: Hereda el tamaño base (9px) con un pequeño espacio (dx) */}
                         <tspan dx={5}> {item.name}</tspan>
                       </text>
                     );
