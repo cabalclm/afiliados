@@ -107,14 +107,9 @@ export default function Celula({
             <DialogPanel className="w-screen h-screen bg-white flex flex-col overflow-hidden">
               {/* HEADER */}
               <div className="flex justify-between items-center px-4 py-3 border-b shrink-0 bg-white sticky top-0 z-20">
-                <div className="flex flex-col max-w-[60%]">
-                  <h3 className="text-sm md:text-xl font-bold uppercase truncate">
-                    {lider.nombres} {lider.apellidos}
-                  </h3>
-                  <p className="text-[9px] text-gray-500 font-bold uppercase">
-                    Gestión de Célula
-                  </p>
-                </div>
+                <h3 className="text-sm md:text-xl font-bold uppercase truncate">
+                  {lider.nombres} {lider.apellidos}
+                </h3>
 
                 <Button
                   onClick={onClose}
