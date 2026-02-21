@@ -161,25 +161,32 @@ export default function AfiliadosForm({
           </div>
 
           <div className="grid grid-cols-2 gap-4 items-end">
-            <div>
-              <label className="text-[10px] font-bold text-gray-400 uppercase">
+            <div className="space-y-1">
+              <label className="text-[10px] font-bold text-gray-400 uppercase block leading-none">
                 Nacimiento
               </label>
-              <Input type="date" {...register("nacimiento")} />
+              <Input
+                type="date"
+                {...register("nacimiento")}
+                className="h-9 text-xs"
+              />
             </div>
-            <div>
-              <div className="flex rounded-md border p-1 bg-gray-100 h-10">
+            <div className="space-y-1">
+              <label className="text-[10px] font-bold text-gray-400 uppercase block leading-none">
+                Sexo
+              </label>
+              <div className="flex rounded-md border p-1 bg-gray-50 h-9">
                 <button
                   type="button"
                   onClick={() => setValue("sexo", "M")}
-                  className={`flex-1 rounded py-1 text-xs font-bold transition-colors ${sexoActual === "M" ? "bg-blue-600 text-white shadow-sm" : "text-gray-500"}`}
+                  className={`flex-1 rounded text-[10px] font-black transition-all ${sexoActual === "M" ? "bg-blue-600 text-white shadow-sm" : "text-gray-400 hover:bg-gray-200"}`}
                 >
                   M
                 </button>
                 <button
                   type="button"
                   onClick={() => setValue("sexo", "F")}
-                  className={`flex-1 rounded py-1 text-xs font-bold transition-colors ${sexoActual === "F" ? "bg-pink-600 text-white shadow-sm" : "text-gray-500"}`}
+                  className={`flex-1 rounded text-[10px] font-black transition-all ${sexoActual === "F" ? "bg-pink-600 text-white shadow-sm" : "text-gray-400 hover:bg-gray-200"}`}
                 >
                   F
                 </button>

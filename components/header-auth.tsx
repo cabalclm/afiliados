@@ -5,9 +5,18 @@ import Link from "next/link";
 import { Button } from "./ui/button";
 import useUserData from "@/hooks/sesion/useUserData";
 import { RefreshCw } from "lucide-react";
+import { useState } from "react";
 
 export default function AuthButton() {
   const { email, nombres, apellidos, cargando } = useUserData();
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const handleRefresh = () => {
+    setIsRefreshing(true);
+    setTimeout(() => {
+      window.location.reload();
+    }, 500);
+  };
 
   if (cargando) {
     return (
@@ -47,9 +56,14 @@ export default function AuthButton() {
           type="button"
           variant="outline"
           className="h-9 w-9 p-0 shrink-0"
-          onClick={() => window.location.reload()}
+          onClick={handleRefresh}
+          disabled={isRefreshing}
         >
-          <RefreshCw className="h-4 w-4 text-gray-600 transition-transform hover:rotate-180" />
+          <RefreshCw
+            className={`h-4 w-4 text-gray-600 transition-all duration-500 ${
+              isRefreshing ? "animate-spin" : "hover:rotate-180"
+            }`}
+          />
         </Button>
       </div>
     </div>

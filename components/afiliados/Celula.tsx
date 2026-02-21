@@ -12,16 +12,7 @@ import EstadisticasReligiones from "./estadisticas/Religion";
 import TextoAnimado from "@/components/ui/Typeanimation";
 import Image from "next/image";
 import { Dialog, TransitionChild, DialogPanel } from "@headlessui/react";
-import {
-  Users,
-  PieChart,
-  BarChart3,
-  MapPin,
-  Target,
-  X,
-  UserPlus,
-  Search,
-} from "lucide-react";
+import { Users, BarChart3, X, UserPlus, Search } from "lucide-react";
 
 interface Props {
   isOpen: boolean;
@@ -103,7 +94,7 @@ export default function Celula({
           className="fixed inset-0 bg-black/60 backdrop-blur-sm"
           aria-hidden="true"
         />
-        <div className="fixed inset-0 flex items-center justify-center p-4">
+        <div className="fixed inset-0 flex items-center justify-center p-0 md:p-4">
           <TransitionChild
             as={Fragment}
             enter="ease-out duration-300"
@@ -113,11 +104,11 @@ export default function Celula({
             leaveFrom="opacity-100 translate-y-0 scale-100"
             leaveTo="opacity-0 translate-y-10 scale-95"
           >
-            <DialogPanel className="w-screen h-screen bg-white flex flex-col">
+            <DialogPanel className="w-screen h-screen bg-white flex flex-col overflow-hidden">
               {/* HEADER */}
-              <div className="flex flex-col md:flex-row justify-between items-center px-6 py-3 border-b shrink-0 gap-4 bg-white z-10">
-                <div className="text-center md:text-left">
-                  <h3 className="text-xl font-bold uppercase">
+              <div className="flex justify-between items-center px-4 py-3 border-b shrink-0 bg-white sticky top-0 z-20">
+                <div className="flex flex-col max-w-[60%]">
+                  <h3 className="text-sm md:text-xl font-bold uppercase truncate">
                     {lider.nombres} {lider.apellidos}
                   </h3>
                   <p className="text-[9px] text-gray-500 font-bold uppercase">
@@ -125,15 +116,27 @@ export default function Celula({
                   </p>
                 </div>
 
-                <div className="flex bg-gray-100 p-1 rounded-lg gap-1 overflow-x-auto max-w-full">
+                <Button
+                  onClick={onClose}
+                  variant="ghost"
+                  size="icon"
+                  className="rounded-full shrink-0 h-10 w-10 hover:bg-gray-100"
+                >
+                  <X className="w-6 h-6 text-gray-700" />
+                </Button>
+              </div>
+
+              {/* TABS SELECTOR */}
+              <div className="px-4 py-2 border-b bg-gray-50 flex justify-center">
+                <div className="flex bg-gray-200 p-1 rounded-lg gap-1 w-full max-w-md">
                   {TABS.map((tab) => (
                     <button
                       key={tab.id}
                       onClick={() => setVistaActual(tab.id as Vista)}
-                      className={`flex items-center gap-2 px-4 py-2 rounded-md text-[9px] font-bold transition-all whitespace-nowrap ${
+                      className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-md text-[10px] font-bold transition-all ${
                         vistaActual === tab.id
                           ? "bg-white text-blue-600 shadow-sm"
-                          : "text-gray-500 hover:bg-gray-200"
+                          : "text-gray-500 hover:bg-gray-300"
                       }`}
                     >
                       <tab.icon className="w-4 h-4" />
@@ -141,127 +144,128 @@ export default function Celula({
                     </button>
                   ))}
                 </div>
-
-                <Button
-                  onClick={onClose}
-                  variant="ghost"
-                  size="icon"
-                  className="rounded-full shrink-0"
-                >
-                  <X className="w-6 h-6 text-gray-500" />
-                </Button>
               </div>
+
               {/* CONTENIDO */}
-              <div className="flex-1 overflow-y-auto bg-gray-50/30 p-4 md:p-8">
-                <div className="flex-1 overflow-y-auto bg-gray-50/30 p-4 md:p-8">
-                  <div className="max-w-[1600px] mx-auto">
-                    {vistaActual === "miembros" ? (
-                      <>
-                        <div className="mb-6 p-5 border rounded-xl bg-white shadow-sm flex items-center gap-6">
-                          <div className="flex-1">
-                            <div className="flex justify-between items-center mb-2">
-                              <span className="text-sm font-bold text-gray-700">
-                                Progreso de Célula
-                              </span>
-                              <span className="text-sm font-bold text-gray-900">
-                                {totalEnGrupo} / {objetivo}
-                              </span>
-                            </div>
-                            <div className="w-full bg-gray-100 rounded-full h-3 mb-3 overflow-hidden">
-                              <div
-                                className={`${colorBarra} h-full transition-all duration-1000`}
-                                style={{ width: `${progreso}%` }}
-                              ></div>
-                            </div>
-                            <div className="text-center">
-                              <span className="text-xs text-gray-600 font-bold bg-gray-50 px-4 py-1 rounded-full border inline-block">
-                                <TextoAnimado textos={[mensaje]} />
-                              </span>
-                            </div>
+              <div className="flex-1 overflow-y-auto p-4 md:p-8">
+                <div className="max-w-[1600px] mx-auto">
+                  {vistaActual === "miembros" ? (
+                    <>
+                      <div className="mb-6 p-4 border rounded-xl bg-white shadow-sm flex flex-col md:flex-row items-center gap-4">
+                        {/* Barra de Progreso: Ancho completo en móvil, flexible en escritorio */}
+                        <div className="w-full md:flex-1">
+                          <div className="flex justify-between items-center mb-2">
+                            <span className="text-xs font-bold text-gray-700 uppercase">
+                              Progreso de Célula
+                            </span>
+                            <span className="text-sm font-black text-blue-700">
+                              {totalEnGrupo} / {objetivo}
+                            </span>
                           </div>
-                          <div className="bg-gray-50 p-2 rounded-lg border hidden sm:block">
+                          <div className="w-full bg-gray-100 rounded-full h-4 overflow-hidden shadow-inner border">
+                            <div
+                              className={`${colorBarra} h-full transition-all duration-1000`}
+                              style={{ width: `${progreso}%` }}
+                            ></div>
+                          </div>
+
+                          {/* Mensaje de texto en escritorio: Debajo de la barra */}
+                          <div className="hidden md:block text-center mt-2">
+                            <span className="text-xs text-gray-600 font-bold bg-gray-50 px-4 py-1 rounded-full border inline-block">
+                              <TextoAnimado textos={[mensaje]} />
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Contenedor inferior (Móvil) / Lateral (Escritorio) */}
+                        <div className="flex items-center gap-3 bg-gray-50 p-2 rounded-lg border w-full md:w-auto shrink-0">
+                          {/* Texto animado en móvil: A la izquierda del GIF */}
+                          <div className="md:hidden flex-1">
+                            <span className="text-[10px] text-gray-700 font-bold leading-tight uppercase">
+                              <TextoAnimado textos={[mensaje]} />
+                            </span>
+                          </div>
+
+                          {/* GIF: A la derecha en móvil y al lado de la barra en escritorio */}
+                          <div className="shrink-0">
                             <Image
                               src={gifUrl}
                               alt="Status"
-                              width={80}
-                              height={80}
+                              width={100}
+                              height={100}
                               unoptimized
                               className="object-contain"
                             />
                           </div>
                         </div>
-
-                        <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-4">
-                          <div className="relative w-full md:w-96">
-                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                              <Search className="h-5 w-5 text-gray-400" />
-                            </div>
-                            <input
-                              type="text"
-                              placeholder="Buscar por nombre o DPI..."
-                              className="pl-10 pr-4 py-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
-                              value={busqueda}
-                              onChange={(e) => setBusqueda(e.target.value)}
-                            />
-                          </div>
-                          <Button
-                            className={`font-bold h-12 px-6 shadow-md transition-transform hover:scale-105 w-full md:w-auto ${
-                              totalEnGrupo === 0
-                                ? "bg-green-600 animate-pulse"
-                                : "bg-blue-700"
-                            }`}
-                            onClick={() =>
-                              onAnadirAfiliado(lider.id, totalEnGrupo === 0)
-                            }
-                          >
-                            {totalEnGrupo === 0 ? (
-                              <>
-                                <UserPlus className="w-5 h-5 mr-2" /> Iniciar mi
-                                Grupo (Soy el Líder)
-                              </>
-                            ) : (
-                              <>
-                                <UserPlus className="w-5 h-5 mr-2" /> Añadir
-                                Nuevo Integrante
-                              </>
-                            )}
-                          </Button>
-                        </div>
-
-                        <Tabla
-                          lider={lider}
-                          afiliados={afiliadosFiltrados}
-                          onEditar={onEditar}
-                          onDataChange={onDataChange}
-                          rolUsuarioSesion={rolUsuarioSesion}
-                        />
-                      </>
-                    ) : (
-                      <div className="flex flex-wrap justify-center gap-6 w-full pt-4">
-                        <div className="bg-white border rounded-2xl p-6 shadow-sm w-full max-w-[500px] min-h-[500px] flex flex-col">
-                          <EstadisticasEmpadronados
-                            afiliados={afiliadosDelLider}
-                          />
-                        </div>
-                        <div className="bg-white border rounded-2xl p-6 shadow-sm w-full max-w-[500px] min-h-[500px] flex flex-col">
-                          <EstadisticasReligiones
-                            afiliados={afiliadosDelLider}
-                          />
-                        </div>
-                        <div className="bg-white border rounded-2xl p-6 shadow-sm w-full max-w-[500px] min-h-[500px] flex flex-col">
-                          <EstadisticasEdades afiliados={afiliadosDelLider} />
-                        </div>
-                        <div className="bg-white border rounded-2xl p-6 shadow-sm w-full max-w-[500px] min-h-[500px] flex flex-col">
-                          <EstadisticasPoliticas
-                            afiliados={afiliadosDelLider}
-                          />
-                        </div>
-                        <div className="bg-white border rounded-2xl p-6 shadow-sm w-full max-w-[1000px] min-h-[500px] flex flex-col">
-                          <EstadisticasLugares afiliados={afiliadosDelLider} />
-                        </div>
                       </div>
-                    )}
-                  </div>
+
+                      <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-4">
+                        <div className="relative w-full md:w-96">
+                          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <Search className="h-5 w-5 text-gray-400" />
+                          </div>
+                          <input
+                            type="text"
+                            placeholder="Buscar por nombre o DPI..."
+                            className="pl-10 pr-4 py-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                            value={busqueda}
+                            onChange={(e) => setBusqueda(e.target.value)}
+                          />
+                        </div>
+                        <Button
+                          className={`font-bold h-12 px-6 shadow-md transition-transform hover:scale-105 w-full md:w-auto uppercase text-xs ${
+                            totalEnGrupo === 0
+                              ? "bg-green-600 animate-pulse"
+                              : "bg-blue-700"
+                          }`}
+                          onClick={() =>
+                            onAnadirAfiliado(lider.id, totalEnGrupo === 0)
+                          }
+                        >
+                          {totalEnGrupo === 0 ? (
+                            <>
+                              <UserPlus className="w-5 h-5 mr-2" /> Registrarme
+                              como Líder
+                            </>
+                          ) : (
+                            <>
+                              <UserPlus className="w-5 h-5 mr-2" /> Añadir
+                              Integrante
+                            </>
+                          )}
+                        </Button>
+                      </div>
+
+                      <Tabla
+                        lider={lider}
+                        afiliados={afiliadosFiltrados}
+                        onEditar={onEditar}
+                        onDataChange={onDataChange}
+                        rolUsuarioSesion={rolUsuarioSesion}
+                      />
+                    </>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 w-full pt-4">
+                      <div className="bg-white border rounded-2xl p-6 shadow-sm min-h-[400px] flex flex-col">
+                        <EstadisticasEmpadronados
+                          afiliados={afiliadosDelLider}
+                        />
+                      </div>
+                      <div className="bg-white border rounded-2xl p-6 shadow-sm min-h-[400px] flex flex-col">
+                        <EstadisticasReligiones afiliados={afiliadosDelLider} />
+                      </div>
+                      <div className="bg-white border rounded-2xl p-6 shadow-sm min-h-[400px] flex flex-col">
+                        <EstadisticasEdades afiliados={afiliadosDelLider} />
+                      </div>
+                      <div className="bg-white border rounded-2xl p-6 shadow-sm min-h-[400px] flex flex-col">
+                        <EstadisticasPoliticas afiliados={afiliadosDelLider} />
+                      </div>
+                      <div className="bg-white border rounded-2xl p-6 shadow-sm min-h-[400px] flex flex-col md:col-span-2">
+                        <EstadisticasLugares afiliados={afiliadosDelLider} />
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </DialogPanel>
