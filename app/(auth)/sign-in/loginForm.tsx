@@ -138,7 +138,7 @@ export function LoginForm() {
                 setEmail(e.target.value.replace(/@.*$/, ""));
                 setClientError(null);
               }}
-              placeholder="Ej. juan.perez"
+              placeholder="Ingrese su usuario"
               required
               className="text-2xl py-8 px-4"
             />

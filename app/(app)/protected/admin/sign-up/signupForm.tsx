@@ -127,7 +127,7 @@ export function SignupForm() {
             <Label htmlFor="nombres">Nombres</Label>
             <Input
               name="nombres"
-              placeholder="Ej. Juan"
+              placeholder="Ingrese sus nombres"
               value={nombres}
               onChange={(e) => setNombres(e.target.value)}
               className="h-12 text-lg mt-1"
@@ -137,7 +137,7 @@ export function SignupForm() {
             <Label htmlFor="apellidos">Apellidos</Label>
             <Input
               name="apellidos"
-              placeholder="Ej. Pérez"
+              placeholder="Ingrese sus apellidos"
               value={apellidos}
               onChange={(e) => setApellidos(e.target.value)}
               className="h-12 text-lg mt-1"
@@ -150,7 +150,7 @@ export function SignupForm() {
           <Input
             name="email"
             type="text"
-            placeholder="Ej. juan.perez"
+            placeholder="Igrese el usuario"
             value={email}
             onChange={(e) =>
               setEmail(e.target.value.replace(/@.*$/, "").replace(/\s/g, ""))

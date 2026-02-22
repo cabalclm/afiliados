@@ -176,7 +176,7 @@ export function SignupForm({
             onChange={(e) =>
               setEmail(e.target.value.replace(/@.*$/, "").replace(/\s/g, ""))
             }
-            placeholder="Ej. juan.perez"
+            placeholder="Ingrese su usuario"
             className="h-12 text-lg"
           />
         </div>
