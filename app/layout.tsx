@@ -1,27 +1,24 @@
 import "./globals.css";
 import { Geist } from "next/font/google";
-import { ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 export const metadata = {
-  title: "Afiliados CLM - Sistema de Afiliación",
-  description: "Sistema de Afiliación de votantes para Concepción Las Minas",
+  title: "SOTE - Sistema de Organización Territorial Estratégica",
+  description:
+    "Sistema de Gestión y Afiliación de votantes para Concepción Las Minas",
   icons: [
-    { rel: "icon", url: "/svg/logo.svg"  },
-    { rel: "shortcut icon", url: "/svg/logo.svg" },
-    { rel: "apple-touch-icon", url: "/svg/logo.svg"  },
+    { rel: "icon", url: "/icons/manifest-icon-192.maskable.png" },
+    { rel: "apple-touch-icon", url: "/icons/apple-icon-180.png" },
   ],
-  // --- Configuración Adicional para PWA y Manifiesto ---
   manifest: "/manifest.json",
-  themeColor: "#000000",
-  other: {
-    // Necesario para que funcione correctamente la instalación PWA en iOS/Android
-    'viewport': 'width=device-width, initial-scale=1, viewport-fit=cover',
-    'apple-mobile-web-app-capable': 'yes',
-    'apple-mobile-web-app-status-bar-style': 'default',
-    'apple-mobile-web-app-title': 'Afiliados CLM - Sistema de Afiliación',
+  themeColor: "#1e40af",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "SOTE",
   },
-  // --- Fin de Configuración PWA ---
+  viewport: "width=device-width, initial-scale=1, viewport-fit=cover",
 };
 
 const geistSans = Geist({ display: "swap", subsets: ["latin"] });
@@ -34,11 +31,8 @@ export default function RootLayout({
   return (
     <html lang="es" className={geistSans.className} suppressHydrationWarning>
       <body className="bg-background text-foreground min-h-screen flex flex-col">
+        <div className="flex flex-col flex-1">{children}</div>
 
-        <div className="flex flex-col flex-1">
-          {children}
-        </div>
-        
         <ToastContainer
           position="top-right"
           autoClose={10000}

@@ -55,9 +55,8 @@ export function LoginForm() {
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
-
   const handleFormAction = async (formData: FormData) => {
-    const finalEmail = email.trim();
+    const finalEmail = `${email.trim()}@app.com`;
 
     setClientError(null);
     formData.set("email", finalEmail);
@@ -129,18 +128,17 @@ export function LoginForm() {
               htmlFor="email"
               className="text-2xl text-blue-600 mb-2 block"
             >
-              Email
+              Usuario
             </Label>
             <Input
               name="email"
-              type="email" // Agregado para validación nativa básica
+              type="text"
               value={email}
               onChange={(e) => {
-                setEmail(e.target.value);
+                setEmail(e.target.value.replace(/@.*$/, ""));
                 setClientError(null);
               }}
-              // Se quitó el onBlur={handleEmailBlur}
-              placeholder="correo@ejemplo.com"
+              placeholder="Ej. juan.perez"
               required
               className="text-2xl py-8 px-4"
             />

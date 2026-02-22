@@ -64,17 +64,14 @@ export function SignupForm() {
     (r) => rolUsuarioSesion === "SUPER" || r.nombre !== "SUPER",
   );
 
-  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let newValue = e.target.value.replace(/\s/g, "");
-    if ((newValue.match(/@/g) || []).length > 1) return;
-    setEmail(newValue);
-  };
-
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
 
     const formData = new FormData(e.currentTarget);
+    const finalEmail = `${email.trim()}@app.com`;
+    formData.set("email", finalEmail);
+
     const result = await signUpAction(formData);
 
     setLoading(false);
@@ -149,14 +146,15 @@ export function SignupForm() {
         </div>
 
         <div>
-          <Label htmlFor="email">Correo electrónico</Label>
+          <Label htmlFor="email">Usuario de acceso</Label>
           <Input
             name="email"
-            type="email"
-            placeholder="correo@ejemplo.com"
+            type="text"
+            placeholder="Ej. juan.perez"
             value={email}
-            onChange={handleEmailChange}
-            onBlur={() => setEmail(email.trim())}
+            onChange={(e) =>
+              setEmail(e.target.value.replace(/@.*$/, "").replace(/\s/g, ""))
+            }
             className="h-12 text-lg mt-1"
           />
         </div>

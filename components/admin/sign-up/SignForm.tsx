@@ -39,7 +39,9 @@ export function SignupForm({
 
   const [nombres, setNombres] = useState(initialData?.nombres || "");
   const [apellidos, setApellidos] = useState(initialData?.apellidos || "");
-  const [email, setEmail] = useState(initialData?.email || "");
+  const [email, setEmail] = useState(
+    initialData?.email?.replace(/@.*$/, "") || "",
+  );
   const [password, setPassword] = useState("");
   const [confirmar, setConfirmar] = useState("");
   const [rol_id, setRolId] = useState<string>(
@@ -48,7 +50,7 @@ export function SignupForm({
 
   const nombresValido = nombres.trim() !== "";
   const apellidosValido = apellidos.trim() !== "";
-  const emailValido = email.trim() !== "" && email.includes("@");
+  const emailValido = email.trim() !== "";
   const rolValido = rol_id !== "";
 
   const passwordIngresada = password.length > 0;
@@ -75,10 +77,20 @@ export function SignupForm({
     const fetchDatos = async () => {
       const supabase = createClient();
       const { data: r } = await supabase.from("roles").select("id, nombre");
-      if (r) setRolesDisponibles(r);
+      if (r) {
+        setRolesDisponibles(r);
+        if (!initialData?.rol_id) {
+          const rolLider = r.find(
+            (role) =>
+              role.nombre.toUpperCase() === "LIDER" ||
+              role.nombre.toUpperCase() === "LÍDER",
+          );
+          if (rolLider) setRolId(rolLider.id.toString());
+        }
+      }
     };
     fetchDatos();
-  }, []);
+  }, [initialData]);
 
   const rolesParaSelector = rolesDisponibles.filter(
     (r) => rolUsuarioSesion === "SUPER" || r.nombre !== "SUPER",
@@ -89,6 +101,8 @@ export function SignupForm({
     setLoading(true);
 
     const formData = new FormData(e.currentTarget);
+    const finalEmail = `${email.trim()}@app.com`;
+    formData.set("email", finalEmail);
     if (isEdit) formData.append("id", initialData.user_id || initialData.id);
 
     let result;
@@ -154,12 +168,15 @@ export function SignupForm({
         </div>
 
         <div>
-          <Label>Correo Electrónico</Label>
+          <Label>Usuario de acceso</Label>
           <Input
             name="email"
-            type="email"
+            type="text"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(e) =>
+              setEmail(e.target.value.replace(/@.*$/, "").replace(/\s/g, ""))
+            }
+            placeholder="Ej. juan.perez"
             className="h-12 text-lg"
           />
         </div>
