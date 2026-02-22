@@ -85,7 +85,7 @@ export const signUpAction = async (formData: FormData) => {
       error.message.includes("already been registered") ||
       error.status === 422
     ) {
-      return { error: `El correo: ${email} ya está registrado.` };
+      return { error: `El Usuario: ${email} ya está registrado.` };
     }
     return { error: error.message || "No se pudo crear la cuenta." };
   }
@@ -124,9 +124,9 @@ export const signInAction = async (formData: FormData) => {
 
   if (error) {
     const traduccionErrores: Record<string, string> = {
-      "Invalid login credentials": "Correo o contraseña incorrectos.",
+      "Invalid login credentials": "Usuario o contraseña incorrectos.",
       "Email not confirmed":
-        "Debe confirmar su correo antes de iniciar sesión.",
+        "Debe confirmar su Usuario antes de iniciar sesión.",
       "User is banned": "Este usuario ha sido suspendido.",
     };
     return { error: traduccionErrores[error.message] || error.message };

@@ -25,7 +25,7 @@ export default function UsersTable({ usuarios }: Props) {
           <thead>
             <tr className="text-left text-[15px] font-semibold bg-gray-200 border-b-[2.5px] border-gray-400">
               <th className="p-2 border-[1.5px] border-gray-300 text-center">No.</th>
-              <th className="p-2 border-[1.ISpx] border-gray-300">Correo</th>
+              <th className="p-2 border-[1.ISpx] border-gray-300">Usuario</th>
               <th className="p-2 border-[1.5px] border-gray-300">Nombres</th>
               <th className="p-2 border-[1.5px] border-gray-300">Apellidos</th>
               <th className="p-2 border-[1.5px] border-gray-300">Rol</th>

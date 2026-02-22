@@ -36,10 +36,9 @@ export default function AuthButton() {
   return email ? (
     <div className="flex flex-col items-end gap-1 pt-5">
       <div className="flex flex-col items-end text-right leading-tight">
-        <span className="text-sm font-bold">
+        <span className="text-[9px] md:text-sm font-bold">
           {nombres} {apellidos}
         </span>
-        <span className="text-xs text-gray-500 mb-1">{email}</span>
       </div>
 
       <div className="flex items-center gap-2">

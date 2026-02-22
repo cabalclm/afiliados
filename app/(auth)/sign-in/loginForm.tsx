@@ -40,7 +40,7 @@ export function LoginForm() {
       "invalid login credentials": "Credenciales incorrectas.",
       "signup requires a valid password": "Contraseña inválida.",
       "user not found": "Usuario no encontrado.",
-      "correo o contraseña incorrectos": "Correo o contraseña incorrectos.",
+      "Usuario o contraseña incorrectos": "Usuario o contraseña incorrectos.",
     };
     return errores[mensaje.toLowerCase()] || mensaje;
   }

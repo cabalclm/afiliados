@@ -294,7 +294,7 @@ export default function Lideres({
                 Nombre del Líder
               </th>
               <th className="px-4 py-3 text-left font-bold uppercase tracking-wider">
-                Correo
+                Usuario
               </th>
               <th className="px-4 py-3 text-center font-bold uppercase tracking-wider">
                 Integrantes

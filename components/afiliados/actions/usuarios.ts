@@ -50,7 +50,7 @@ export async function listarUsuariosAction(rol_filtro?: string) {
 
   return perfiles.map((p: any) => ({
     id: p.user_id,
-    email: userMap.get(p.user_id) || "",
+    email: userMap.get(p.user_id)?.replace(/@.*$/, "") || "",
     nombres: p.nombres,
     apellidos: p.apellidos,
     activo: p.activo,

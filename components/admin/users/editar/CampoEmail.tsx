@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 type Props = {
   value: string;
@@ -11,7 +11,7 @@ type Props = {
 export default function CampoEmail({ value, onChange }: Props) {
   return (
     <div>
-      <Label className="text-lg mb-1 block">Correo</Label>
+      <Label className="text-lg mb-1 block">Usuario</Label>
       <Input
         type="email"
         value={value}

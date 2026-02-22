@@ -38,8 +38,8 @@ export default function LogoLink() {
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
         >
-<h1 
-            className="text-[#0066cc] font-serif text-xl sm:text-2xl font-bold leading-tight"
+          <h1
+            className="text-[#0066cc] font-serif text-[9px] md:text-2xl font-bold leading-tight"
             style={{ fontFamily: "'DM Serif Display', serif" }}
           >
             Sistema de Organización <br /> Territorial Estratégica

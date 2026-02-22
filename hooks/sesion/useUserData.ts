@@ -19,7 +19,7 @@ export default function useUserData() {
 
         if (data) {
           setUserId(data.id || "");
-          setEmail(data.email || "");
+          setEmail(data.email?.replace(/@.*$/, "") || "");
           setNombres(data.nombres || "");
           setApellidos(data.apellidos || "");
           setRol(data.rol || "");

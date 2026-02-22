@@ -179,7 +179,7 @@ export default function EditarUsuarioForm() {
 
       <div>
         <Label className="text-blue-700 font-bold mb-2 block">
-          Correo electrónico de acceso
+          Usuario electrónico de acceso
         </Label>
         <Input
           value={email}
