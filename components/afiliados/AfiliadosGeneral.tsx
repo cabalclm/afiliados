@@ -79,7 +79,7 @@ export default function AfiliadosGeneral({
   if (afiliadosAgrupados.length === 0) {
     return (
       <div className="text-center text-gray-500 mt-8 border rounded-lg p-4">
-        No se encontraron afiliados.
+        No se encontraron miembros.
       </div>
     );
   }
@@ -91,7 +91,7 @@ export default function AfiliadosGeneral({
         const isLiderAbierto = liderAbiertoId === liderId;
         const nombreLider = lider
           ? `${lider.nombres} ${lider.apellidos}`
-          : "Afiliados sin Líder asignado";
+          : "Miembros sin Líder asignado";
         const colorClase = lider
           ? lider.rol === "SUPER"
             ? "bg-indigo-50 border-indigo-200"

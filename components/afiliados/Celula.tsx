@@ -77,7 +77,7 @@ export default function Celula({
     colorBarra = "bg-purple-600";
     gifUrl = "/gif/afiliados/gif3.gif";
   } else {
-    mensaje = `🏆 ¡Objetivo alcanzado! ${totalEnGrupo} afiliados. ¡Excelente trabajo!`;
+    mensaje = `🏆 ¡Objetivo alcanzado! ${totalEnGrupo} miembros. ¡Excelente trabajo!`;
     colorBarra = "bg-green-500";
     gifUrl = "/gif/afiliados/gif5.gif";
   }

@@ -48,7 +48,7 @@ export default function Hero() {
             transition={{ duration: 0.5, delay: 0.7 }}
             className="mb-5 text-xl md:text-4xl font-extrabold text-gray-900 dark:text-white  transition-colors"
           >
-            Afiliados CLM
+            Miembros CLM
           </motion.h1>
 
           <motion.p

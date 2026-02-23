@@ -202,7 +202,7 @@ useEffect(() => {
           animate={{ opacity: 1 }}
           transition={{ duration: 0.6, delay: 0.6 }}
         >
-          Desde aquí podrá administrar a los afiliados.
+          Desde aquí podrá administrar a los miembros.
         </motion.p>
 
     
@@ -214,8 +214,8 @@ useEffect(() => {
             transition={{ duration: 0.6, delay: 0.8 }}
           >
         <div className="flex-1 pr-4">
-          <h2 className="text-2xl font-bold text-[#06c]">Gestión de Afiliados</h2>
-          <p className="text-lg text-gray-600">Gestionar Afiliados, Concepción Las Minas.</p>
+          <h2 className="text-2xl font-bold text-[#06c]">Gestión de Miembros</h2>
+          <p className="text-lg text-gray-600">Gestionar Miembros, Concepción Las Minas.</p>
         </div>
         <Image
           src="/gif/afiliados/gif0.gif"
