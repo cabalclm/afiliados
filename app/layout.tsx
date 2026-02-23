@@ -5,8 +5,8 @@ import "react-toastify/dist/ReactToastify.css";
 
 export const metadata = {
   title: "SOTE - Sistema de Organización Territorial Estratégica",
-  description:
-    "Sistema de Gestión y Afiliación de votantes para Concepción Las Minas",
+
+  description: "Sistema de Gestión y Organización territorial Estratégica",
   icons: [
     { rel: "icon", url: "/icons/manifest-icon-192.maskable.png" },
     { rel: "apple-touch-icon", url: "/icons/apple-icon-180.png" },
