@@ -8,10 +8,9 @@ export default function LogoLink() {
   const router = useRouter();
 
   return (
-    // Se mantiene alineado arriba con items-start
-    <div className="flex justify-center items-start">
+    <div className="flex justify-start items-start ml-5">
       <motion.div
-        className="cursor-pointer flex items-center gap-3"
+        className="cursor-pointer flex flex-col md:flex-row items-start md:items-center gap-1 md:gap-3"
         onClick={() => router.push("/protected")}
         initial={{ opacity: 0, scale: 0.8 }}
         animate={{ opacity: 1, scale: 1 }}
@@ -21,14 +20,14 @@ export default function LogoLink() {
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.1 }}
-          className="flex justify-center"
+          className="flex justify-start"
         >
           <Image
             src="/svg/logo-2.svg"
             alt="Afiliaciones CLM"
             height={100}
             width={100}
-            className="w-36 h-auto object-contain"
+            className="w-32 md:w-36 h-auto object-contain ml-2 mt-5"
             priority
           />
         </motion.div>
@@ -39,7 +38,7 @@ export default function LogoLink() {
           transition={{ duration: 0.6, delay: 0.2 }}
         >
           <h1
-            className="text-[#0066cc] font-serif text-[9px] md:text-2xl font-bold leading-tight"
+            className="text-[#0066cc] font-serif text-sm md:text-2xl font-bold leading-tight text-center"
             style={{ fontFamily: "'DM Serif Display', serif" }}
           >
             Sistema de Organización <br /> Territorial Estratégica

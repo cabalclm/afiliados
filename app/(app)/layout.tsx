@@ -1,15 +1,11 @@
 import HeaderAuth from "@/components/header-auth";
 import LogoLink from "@/components/ui/LogoLink";
-import FechaHoraActual from '@/components/ui/FechaHoraActual';
+import FechaHoraActual from "@/components/ui/FechaHoraActual";
 
-export default function AppLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <>
-      <nav className="w-full flex h-40">
+      <nav className="w-full flex h-45  pb-5">
         <div className="w-full flex  items-center justify-between px-5  text-sm">
           <div className="flex items-center gap-3">
             <LogoLink />
