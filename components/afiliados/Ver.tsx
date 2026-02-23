@@ -227,7 +227,7 @@ export default function Ver() {
             onClick={() => setActiveTab("Afiliados")}
             className={`px-4 py-2 text-base font-semibold ${activeTab === "Afiliados" ? "border-b-2 border-blue-600 text-blue-600" : "text-gray-500"}`}
           >
-            ✅ Afiliados
+            ✅ Miembros
           </button>
         </div>
 
