@@ -11,6 +11,7 @@ import {
   ResponsiveContainer,
   LabelList,
 } from "recharts";
+import { useState, useEffect } from "react";
 import type { Afiliado } from "../esquemas";
 
 interface Props {
@@ -18,6 +19,15 @@ interface Props {
 }
 
 export default function Edades({ afiliados }: Props) {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
   const rangos = [
     { name: "Jóvenes (18-30)", min: 18, max: 30, hombres: 0, mujeres: 0 },
     { name: "Adultos (31-60)", min: 31, max: 60, hombres: 0, mujeres: 0 },
@@ -80,14 +90,14 @@ export default function Edades({ afiliados }: Props) {
               name="Hombres"
               fill="#3b82f6"
               radius={[6, 6, 0, 0]}
-              barSize={40}
+              barSize={isMobile ? 20 : 40}
             >
               <LabelList
                 dataKey="hombres"
                 position="top"
                 fill="#1e40af"
                 fontSize={9}
-                fontWeight="bold"
+                fontWeight="900"
               />
             </Bar>
             <Bar
@@ -95,14 +105,14 @@ export default function Edades({ afiliados }: Props) {
               name="Mujeres"
               fill="#ec4899"
               radius={[6, 6, 0, 0]}
-              barSize={40}
+              barSize={isMobile ? 20 : 40}
             >
               <LabelList
                 dataKey="mujeres"
                 position="top"
                 fill="#9d174d"
                 fontSize={9}
-                fontWeight="bold"
+                fontWeight="900"
               />
             </Bar>
           </BarChart>

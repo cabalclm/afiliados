@@ -23,6 +23,8 @@ export const metadata = {
 
 const geistSans = Geist({ display: "swap", subsets: ["latin"] });
 
+import QueryProvider from "@/components/providers/query-provider";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -31,7 +33,9 @@ export default function RootLayout({
   return (
     <html lang="es" className={geistSans.className} suppressHydrationWarning>
       <body className="bg-background text-foreground min-h-screen flex flex-col">
-        <div className="flex flex-col flex-1">{children}</div>
+        <QueryProvider>
+          <div className="flex flex-col flex-1">{children}</div>
+        </QueryProvider>
 
         <ToastContainer
           position="top-right"

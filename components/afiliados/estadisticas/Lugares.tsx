@@ -123,22 +123,29 @@ export default function Lugares({ afiliados }: Props) {
 
                     const hasData = datosLugaresRaw.length > 0;
 
+                    const total = afiliados.length;
+                    const percent = (item.value / total) * 100;
+
                     return (
                       <text
                         x={x}
                         y={y + 22}
                         fill={hasData ? "#6b7280" : "#9ca3af"}
                         fontSize={9}
-                        fontWeight="bold"
                         className="uppercase"
                         textAnchor="start"
                       >
                         {hasData && (
-                          <tspan fontSize={13} fontWeight="900" fill="#6366f1">
-                            ({item.value})
-                          </tspan>
+                          <>
+                            <tspan fontSize={13} fontWeight="900" fill="#6366f1">
+                              ({item.value}
+                            </tspan>
+                            <tspan fontWeight="400" fontSize={10} fill="#9ca3af">
+                              {" "}| {percent.toFixed(0)}%)
+                            </tspan>
+                          </>
                         )}
-                        <tspan dx={hasData ? 5 : 0}> {item.name}</tspan>
+                        <tspan dx={hasData ? 5 : 0} fontWeight="600"> {item.name}</tspan>
                       </text>
                     );
                   }}

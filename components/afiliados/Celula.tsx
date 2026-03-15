@@ -12,13 +12,14 @@ import EstadisticasReligiones from "./estadisticas/Religion";
 import TextoAnimado from "@/components/ui/Typeanimation";
 import Image from "next/image";
 import { Dialog, TransitionChild, DialogPanel } from "@headlessui/react";
-import { Users, BarChart3, X, UserPlus, Search } from "lucide-react";
+import { Users, BarChart3, X, UserPlus, Search, Loader2 } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { obtenerAfiliadosAction } from "./actions/afiliados";
 
 interface Props {
   isOpen: boolean;
   onClose: () => void;
   lider: Lider | null;
-  afiliados: Afiliado[];
   onEditar: (afiliado: Afiliado) => void;
   onAnadirAfiliado: (liderId: string, isFirstMember?: boolean) => void;
   onDataChange: () => void;
@@ -31,7 +32,6 @@ export default function Celula({
   isOpen,
   onClose,
   lider,
-  afiliados,
   onEditar,
   onAnadirAfiliado,
   onDataChange,
@@ -40,15 +40,18 @@ export default function Celula({
   const [vistaActual, setVistaActual] = useState<Vista>("miembros");
   const [busqueda, setBusqueda] = useState("");
 
-  if (!lider) return null;
+  const { data: afiliadosDelLider = [], isLoading } = useQuery({
+    queryKey: ["afiliados-lider", lider?.id],
+    queryFn: () => obtenerAfiliadosAction(lider?.id),
+    enabled: isOpen && !!lider?.id,
+  });
 
-  const afiliadosDelLider =
-    afiliados?.filter((a) => a.lider_id === lider.id) || [];
+  if (!lider) return null;
 
   const afiliadosFiltrados =
     busqueda.length >= 2
       ? afiliadosDelLider.filter(
-          (a) =>
+          (a: Afiliado) =>
             a.nombres.toLowerCase().includes(busqueda.toLowerCase()) ||
             a.apellidos.toLowerCase().includes(busqueda.toLowerCase()) ||
             a.dpi.includes(busqueda),
@@ -63,7 +66,7 @@ export default function Celula({
   let colorBarra = "bg-blue-600";
   let gifUrl = "/gif/afiliados/gif1.gif";
 
-  if (totalEnGrupo === 0) {
+  if (totalEnGrupo === 0 && !isLoading) {
     mensaje = `👋 ¡Hola ${lider.nombres}! Inicia tu grupo registrándote a ti mismo.`;
     colorBarra = "bg-gray-300";
   } else if (totalEnGrupo === 1) {
@@ -76,7 +79,7 @@ export default function Celula({
     mensaje = `😎 ¡Casi llegamos a la meta! Somos ${totalEnGrupo} de ${objetivo}.`;
     colorBarra = "bg-purple-600";
     gifUrl = "/gif/afiliados/gif3.gif";
-  } else {
+  } else if (totalEnGrupo >= 15) {
     mensaje = `🏆 ¡Objetivo alcanzado! ${totalEnGrupo} miembros. ¡Excelente trabajo!`;
     colorBarra = "bg-green-500";
     gifUrl = "/gif/afiliados/gif5.gif";
@@ -107,9 +110,12 @@ export default function Celula({
             <DialogPanel className="w-screen h-screen bg-white flex flex-col overflow-hidden">
               {/* HEADER */}
               <div className="flex justify-between items-center px-4 py-3 border-b shrink-0 bg-white sticky top-0 z-20">
-                <h3 className="text-sm md:text-xl font-bold uppercase truncate">
-                  {lider.nombres} {lider.apellidos}
-                </h3>
+                <div className="flex items-center gap-3">
+                  <h3 className="text-sm md:text-xl font-bold uppercase truncate">
+                    {lider.nombres} {lider.apellidos}
+                  </h3>
+                  {isLoading && <Loader2 className="w-4 h-4 animate-spin text-blue-600" />}
+                </div>
 
                 <Button
                   onClick={onClose}
@@ -144,10 +150,14 @@ export default function Celula({
               {/* CONTENIDO */}
               <div className="flex-1 overflow-y-auto p-4 md:p-8">
                 <div className="max-w-[1600px] mx-auto">
-                  {vistaActual === "miembros" ? (
+                  {isLoading ? (
+                    <div className="flex flex-col items-center justify-center h-64 gap-4">
+                      <Loader2 className="w-12 h-12 animate-spin text-blue-600" />
+                      <p className="text-sm font-bold text-gray-500 uppercase">Consultando Miembros de Célula...</p>
+                    </div>
+                  ) : vistaActual === "miembros" ? (
                     <>
                       <div className="mb-6 p-4 border rounded-xl bg-white shadow-sm flex flex-col md:flex-row items-center gap-4">
-                        {/* Barra de Progreso: Ancho completo en móvil, flexible en escritorio */}
                         <div className="w-full md:flex-1">
                           <div className="flex justify-between items-center mb-2">
                             <span className="text-xs font-bold text-gray-700 uppercase">
@@ -164,7 +174,6 @@ export default function Celula({
                             ></div>
                           </div>
 
-                          {/* Mensaje de texto en escritorio: Debajo de la barra */}
                           <div className="hidden md:block text-center mt-2">
                             <span className="text-xs text-gray-600 font-bold bg-gray-50 px-4 py-1 rounded-full border inline-block">
                               <TextoAnimado textos={[mensaje]} />
@@ -172,16 +181,13 @@ export default function Celula({
                           </div>
                         </div>
 
-                        {/* Contenedor inferior (Móvil) / Lateral (Escritorio) */}
                         <div className="flex items-center gap-3 bg-gray-50 p-2 rounded-lg border w-full md:w-auto shrink-0">
-                          {/* Texto animado en móvil: A la izquierda del GIF */}
                           <div className="md:hidden flex-1">
                             <span className="text-[10px] text-gray-700 font-bold leading-tight uppercase">
                               <TextoAnimado textos={[mensaje]} />
                             </span>
                           </div>
 
-                          {/* GIF: A la derecha en móvil y al lado de la barra en escritorio */}
                           <div className="shrink-0">
                             <Image
                               src={gifUrl}

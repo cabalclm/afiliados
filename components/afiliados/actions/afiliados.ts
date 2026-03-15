@@ -3,14 +3,18 @@
 import { createClient } from "@/utils/supabase/server";
 import supabaseAdmin from "@/utils/supabase/admin";
 
-export async function obtenerAfiliadosAction() {
+export async function obtenerAfiliadosAction(liderId?: string) {
   const supabase = await createClient();
 
-  // Revertimos a select("*") para asegurar compatibilidad total y evitar errores de campos faltantes
-  const { data: afiliados, error } = await supabase
-    .from("afiliados")
-    .select("*")
-    .order("created_at", { ascending: false });
+  let query = supabase.from("afiliados").select("*");
+
+  if (liderId) {
+    query = query.eq("lider_id", liderId);
+  }
+
+  const { data: afiliados, error } = await query.order("created_at", {
+    ascending: false,
+  });
 
   if (error) throw new Error(error.message);
   if (!afiliados) return [];

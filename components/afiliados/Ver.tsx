@@ -33,11 +33,13 @@ import { obtenerLugaresAction } from "./actions/lugares";
 type Lugar = { id: number; nombre: string };
 type Tab = "Lideres" | "Afiliados";
 
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+
 export default function Ver() {
   const { rol, cargando: cargandoRol, userId } = useUserData();
   const router = useRouter();
+  const queryClient = useQueryClient();
 
-  const [afiliados, setAfiliados] = useState<Afiliado[]>([]);
   const [lideres, setLideres] = useState<Lider[]>([]);
   const [lugares, setLugares] = useState<Lugar[]>([]);
   const [loading, setLoading] = useState(true);
@@ -60,15 +62,23 @@ export default function Ver() {
   const [isFirstMemberAddition, setIsFirstMemberAddition] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
 
+  // TanStack Query para afiliados globales (se activa solo si es necesario)
+  const { data: afiliados = [], isLoading: isLoadingAfiliados } = useQuery({
+    queryKey: ["afiliados-gl"],
+    queryFn: () => obtenerAfiliadosAction(),
+    enabled: isEstadisticasOpen || activeTab === "Afiliados" || isCelulaOpen,
+  });
+
   const fetchData = async () => {
     setLoading(true);
     try {
-      // Lanzamos todas las peticiones al mismo tiempo
+      // Al recargar datos, invalidamos el caché de TanStack para forzar actualización
+      queryClient.invalidateQueries({ queryKey: ["afiliados-lider"] });
+      queryClient.invalidateQueries({ queryKey: ["afiliados-gl"] });
+
       const pLideres = listarUsuariosAction("LIDER");
       const pLugares = obtenerLugaresAction();
-      const pAfiliados = obtenerAfiliadosAction();
 
-      // PRIORIDAD 1: Cargamos Líderes y Lugares primero
       const [lideresData, lugaresData] = await Promise.all([pLideres, pLugares]);
       
       const allLideres = (
@@ -90,21 +100,10 @@ export default function Ver() {
           ? lugaresData
           : (lugaresData as any)?.data || []) as Lugar[],
       );
-
-      // En este punto, la tabla de líderes YA puede mostrarse
-      setLoading(false);
-
-      // PRIORIDAD 2: Cargamos los Afiliados de fondo (son los más pesados)
-      const afiliadosData = await pAfiliados;
-      setAfiliados(
-        (Array.isArray(afiliadosData)
-          ? afiliadosData
-          : (afiliadosData as any)?.data || []) as Afiliado[],
-      );
-      
     } catch (e) {
       console.error(e);
       toast.error("Error al cargar los datos.");
+    } finally {
       setLoading(false);
     }
   };
@@ -126,6 +125,7 @@ export default function Ver() {
   const handleSignupSuccess = () => {
     setIsSignupModalOpen(false);
     setLiderAEditar(null);
+    queryClient.invalidateQueries({ queryKey: ["lideres"] });
     fetchData();
   };
 
@@ -171,7 +171,12 @@ export default function Ver() {
 
   const handleSaveAndCloseForm = async () => {
     setIsFormOpen(false);
+    // Invalidamos todos los afiliados para que se refresquen
+    queryClient.invalidateQueries({ queryKey: ["afiliados-lider"] });
+    queryClient.invalidateQueries({ queryKey: ["afiliados-gl"] });
+    
     await fetchData();
+    
     if (liderParaCelula) {
       const updatedLider = lideres.find((l) => l.id === liderParaCelula.id);
       if (updatedLider) {
@@ -321,7 +326,6 @@ export default function Ver() {
         isOpen={isCelulaOpen}
         onClose={handleCloseCelulaModal}
         lider={liderParaCelula}
-        afiliados={afiliados}
         onEditar={handleOpenEditModal}
         onAnadirAfiliado={handleOpenAnadirAfiliadoModal}
         onDataChange={fetchData}

@@ -105,8 +105,9 @@ export default function Religiones({ afiliados }: Props) {
           dominantBaseline="central"
           className="uppercase"
         >
-          <tspan x={ex + (cos >= 0 ? 1 : -1) * 5} dy="-0.6em" className={`${isMobile ? "text-[8px]" : "text-[10px]"} font-black fill-gray-900`}>
-            {`${value} | ${(percent * 100).toFixed(0)}%`}
+          <tspan x={ex + (cos >= 0 ? 1 : -1) * 5} dy="-0.6em" className={isMobile ? "text-[8px]" : "text-[10px]"}>
+            <tspan fontWeight="900" fill={fill}>{value}</tspan>
+            <tspan fontWeight="normal" fill="#6b7280"> | {(percent * 100).toFixed(0)}%</tspan>
           </tspan>
           {lines.slice(0, 3).map((line, i) => (
             <tspan 
