@@ -6,8 +6,8 @@ import {
   Cell,
   Tooltip,
   ResponsiveContainer,
-  Legend,
 } from "recharts";
+import { useState, useEffect } from "react";
 import type { Afiliado } from "../esquemas";
 
 interface Props {
@@ -15,6 +15,15 @@ interface Props {
 }
 
 export default function Empadronados({ afiliados }: Props) {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
   let totalEmpadronados = 0;
   let totalNoEmpadronados = 0;
 
@@ -37,27 +46,72 @@ export default function Empadronados({ afiliados }: Props) {
       : datosPadron.filter((d) => d.value > 0);
 
   const renderLabelPie = (props: any) => {
-    const { cx, cy, midAngle, innerRadius, outerRadius, percent, name } = props;
+    const { cx, cy, midAngle, innerRadius, outerRadius, percent, name, fill, value } = props;
 
     if (name === "Sin registros") return null;
 
-    const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
-    const x = cx + radius * Math.cos((-midAngle * Math.PI) / 180);
-    const y = cy + radius * Math.sin((-midAngle * Math.PI) / 180);
+    const RADIAN = Math.PI / 180;
+    const sin = Math.sin(-RADIAN * midAngle);
+    const cos = Math.cos(-RADIAN * midAngle);
+    
+    const offset = isMobile ? 5 : 10;
+    const sx = cx + (outerRadius + 2) * cos;
+    const sy = cy + (outerRadius + 2) * sin;
+    const mx = cx + (outerRadius + offset) * cos;
+    const my = cy + (outerRadius + offset) * sin;
+    const ex = mx + (cos >= 0 ? 1 : -1) * 6;
+    const ey = my;
+    const textAnchor = cos >= 0 ? "start" : "end";
 
     if (percent === undefined || percent <= 0) return null;
 
+    const words = name.split(" ");
+    let lines = [name];
+    if (name.length > 12) {
+      lines = [];
+      let currentLine = "";
+      words.forEach((word: string) => {
+        if ((currentLine + word).length > 12) {
+          lines.push(currentLine.trim());
+          currentLine = word + " ";
+        } else {
+          currentLine += word + " ";
+        }
+      });
+      lines.push(currentLine.trim());
+    }
+
     return (
-      <text
-        x={x}
-        y={y}
-        fill="white"
-        textAnchor="middle"
-        dominantBaseline="central"
-        className="text-xl font-bold drop-shadow-md"
-      >
-        {`${(percent * 100).toFixed(0)}%`}
-      </text>
+      <g>
+        <path
+          d={`M${sx},${sy}L${mx},${my}L${ex},${ey}`}
+          stroke={fill}
+          fill="none"
+          strokeWidth={1.5}
+        />
+        <circle cx={ex} cy={ey} r={2} fill={fill} stroke="none" />
+        <text
+          x={ex + (cos >= 0 ? 1 : -1) * 4}
+          y={ey}
+          textAnchor={textAnchor}
+          dominantBaseline="central"
+          className="uppercase"
+        >
+          <tspan x={ex + (cos >= 0 ? 1 : -1) * 5} dy="-0.6em" className={`${isMobile ? "text-[8px]" : "text-[10px]"} font-black fill-gray-900`}>
+            {`${value} | ${(percent * 100).toFixed(0)}%`}
+          </tspan>
+          {lines.slice(0, 3).map((line, i) => (
+            <tspan 
+              key={i} 
+              x={ex + (cos >= 0 ? 1 : -1) * 5} 
+              dy="1.2em" 
+              className={`${isMobile ? "text-[6px]" : "text-[7px]"} font-bold fill-gray-500`}
+            >
+              {line}
+            </tspan>
+          ))}
+        </text>
+      </g>
     );
   };
 
@@ -86,13 +140,6 @@ export default function Empadronados({ afiliados }: Props) {
     return null;
   };
 
-  const legendPayload = datosPadron.map((item) => ({
-    id: item.name,
-    type: "circle" as const,
-    value: item.name,
-    color: item.color,
-  }));
-
   return (
     <div className="w-full h-full flex flex-col min-h-[400px]">
       <div className="flex flex-col items-start mb-4 shrink-0">
@@ -104,7 +151,7 @@ export default function Empadronados({ afiliados }: Props) {
         </p>
       </div>
       <div className="flex-1 min-h-[250px] w-full relative">
-        <ResponsiveContainer width="100%" height={280}>
+        <ResponsiveContainer width="100%" height={isMobile ? 280 : 350}>
           <PieChart>
             <Pie
               data={datosGrafica}
@@ -112,8 +159,10 @@ export default function Empadronados({ afiliados }: Props) {
               cy="50%"
               labelLine={false}
               label={renderLabelPie}
-              outerRadius="80%"
+              innerRadius={isMobile ? "35%" : "45%"}
+              outerRadius={isMobile ? "60%" : "75%"}
               fill="#8884d8"
+              paddingAngle={5}
               dataKey="value"
             >
               {datosGrafica.map((entry, index) => (
@@ -126,35 +175,12 @@ export default function Empadronados({ afiliados }: Props) {
               ))}
             </Pie>
             <Tooltip content={<CustomTooltip />} />
-            <Legend
-              verticalAlign="bottom"
-              height={36}
-              iconType="circle"
-              wrapperStyle={{ fontSize: "9px", fontWeight: 500 }}
-              payload={legendPayload}
-            />
           </PieChart>
         </ResponsiveContainer>
       </div>
 
-      <div className="flex justify-center gap-12 mt-4 pt-4 border-t border-gray-100 shrink-0">
-        <div className="text-center">
-          <p className="text-xl font-bold text-green-600">
-            {totalEmpadronados}
-          </p>
-          <p className="text-[9px] uppercase text-gray-500 font-bold tracking-wider mt-1">
-            Empadronados
-          </p>
-        </div>
-        <div className="w-px bg-gray-200 h-10"></div>
-        <div className="text-center">
-          <p className="text-xl font-bold text-red-600">
-            {totalNoEmpadronados}
-          </p>
-          <p className="text-[9px] uppercase text-gray-500 font-bold tracking-wider mt-1">
-            No Empadronados
-          </p>
-        </div>
+      <div className="mt-4 text-center text-[10px] text-gray-400 shrink-0 uppercase font-bold border-t border-gray-100 pt-4">
+        <p className="text-gray-500 mb-1">Total de registros: {afiliados.length}</p>
       </div>
     </div>
   );

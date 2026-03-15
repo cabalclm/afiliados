@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, Fragment, useEffect } from "react";
+import { useState, Fragment, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import {
   ChevronLeft,
@@ -44,32 +44,32 @@ interface Props {
 function LideresSkeleton({ esAdminOSuper }: { esAdminOSuper: boolean }) {
   return (
     <div className="animate-pulse space-y-6">
-      <div className="flex flex-col items-center justify-center py-4">
-        <span className="text-xs font-black text-blue-600 animate-bounce uppercase tracking-widest">
-          Cargando datos...
+      <div className="flex flex-col items-center justify-center py-4 bg-gray-50/50 rounded-xl border border-dashed border-gray-200">
+        <span className="text-[10px] font-black text-blue-400 uppercase tracking-widest animate-pulse">
+          Descargando información...
         </span>
       </div>
 
       {esAdminOSuper && (
         <div className="space-y-2">
           <div className="flex justify-between">
-            <div className="h-3 w-32 bg-gray-300 rounded"></div>
-            <div className="h-3 w-16 bg-gray-300 rounded"></div>
+            <div className="h-3 w-32 bg-gray-200 rounded"></div>
+            <div className="h-3 w-16 bg-gray-200 rounded"></div>
           </div>
-          <div className="h-6 w-full bg-gray-200 rounded-full border border-gray-100"></div>
+          <div className="h-6 w-full bg-gray-100 rounded-full border border-gray-100"></div>
         </div>
       )}
 
       <div className="hidden md:block border border-gray-200 rounded-lg overflow-hidden shadow-sm">
-        <div className="bg-gray-100 h-10 border-b border-gray-200"></div>
+        <div className="bg-gray-50 h-10 border-b border-gray-200"></div>
         {[...Array(6)].map((_, i) => (
           <div
             key={i}
             className="h-12 border-b border-gray-100 bg-white flex items-center px-4 gap-4"
           >
-            <div className="h-4 w-8 bg-gray-200 rounded"></div>
-            <div className="h-4 flex-1 bg-gray-100 rounded"></div>
-            <div className="h-4 w-24 bg-gray-100 rounded"></div>
+            <div className="h-4 w-8 bg-gray-100 rounded"></div>
+            <div className="h-4 flex-1 bg-gray-50 rounded"></div>
+            <div className="h-4 w-24 bg-gray-50 rounded"></div>
           </div>
         ))}
       </div>
@@ -80,9 +80,9 @@ function LideresSkeleton({ esAdminOSuper }: { esAdminOSuper: boolean }) {
             key={i}
             className="h-24 bg-white border border-gray-200 rounded-lg p-4 space-y-3"
           >
-            <div className="h-4 w-3/4 bg-gray-200 rounded"></div>
-            <div className="h-3 w-1/2 bg-gray-100 rounded"></div>
-            <div className="h-2 w-full bg-gray-100 rounded-full"></div>
+            <div className="h-4 w-3/4 bg-gray-100 rounded"></div>
+            <div className="h-3 w-1/2 bg-gray-50 rounded"></div>
+            <div className="h-2 w-full bg-gray-50 rounded-full"></div>
           </div>
         ))}
       </div>
@@ -113,6 +113,50 @@ export default function Lideres({
     setCurrentPage(1);
   }, [searchTerm, itemsPerPage]);
 
+  const totalAfiliadosGeneral = useMemo(() =>
+    lideres.reduce((acc, curr) => acc + (curr.conteoAfiliados || 0), 0)
+  , [lideres]);
+
+  const progresoGeneral = useMemo(() =>
+    Math.min((totalAfiliadosGeneral / OBJETIVO_GENERAL) * 100, 100)
+  , [totalAfiliadosGeneral]);
+
+  const sortedLideres = useMemo(() =>
+    [...lideres].sort((a, b) => {
+      if (a.id === idUsuarioSesion) return -1;
+      if (b.id === idUsuarioSesion) return 1;
+      return (b.conteoAfiliados || 0) - (a.conteoAfiliados || 0);
+    })
+  , [lideres, idUsuarioSesion]);
+
+  const filteredLideres = useMemo(() => {
+    const term = searchTerm.toLowerCase();
+    return sortedLideres.filter((lider) => {
+      const fullName = `${lider.nombres} ${lider.apellidos}`.toLowerCase();
+      const email = lider.email.toLowerCase();
+      return fullName.includes(term) || email.includes(term);
+    });
+  }, [sortedLideres, searchTerm]);
+
+  const effectiveItemsPerPage = useMemo(() =>
+    itemsPerPage === "all" ? filteredLideres.length : itemsPerPage
+  , [itemsPerPage, filteredLideres.length]);
+
+  const totalPages = useMemo(() =>
+    Math.ceil(filteredLideres.length / (effectiveItemsPerPage || 1))
+  , [filteredLideres.length, effectiveItemsPerPage]);
+
+  const startIndex = (currentPage - 1) * (effectiveItemsPerPage as number);
+
+  const lideresPaginados = useMemo(() =>
+    itemsPerPage === "all"
+      ? filteredLideres
+      : filteredLideres.slice(
+          startIndex,
+          startIndex + (effectiveItemsPerPage as number),
+        )
+  , [filteredLideres, startIndex, effectiveItemsPerPage, itemsPerPage]);
+
   if (isLoading) return <LideresSkeleton esAdminOSuper={esAdminOSuper} />;
 
   if (lideres.length === 0) {
@@ -122,42 +166,6 @@ export default function Lideres({
       </div>
     );
   }
-
-  const totalAfiliadosGeneral = lideres.reduce(
-    (acc, curr) => acc + (curr.conteoAfiliados || 0),
-    0,
-  );
-
-  const progresoGeneral = Math.min(
-    (totalAfiliadosGeneral / OBJETIVO_GENERAL) * 100,
-    100,
-  );
-
-  const sortedLideres = [...lideres].sort((a, b) => {
-    if (a.id === idUsuarioSesion) return -1;
-    if (b.id === idUsuarioSesion) return 1;
-    return (b.conteoAfiliados || 0) - (a.conteoAfiliados || 0);
-  });
-  const filteredLideres = sortedLideres.filter((lider) => {
-    const term = searchTerm.toLowerCase();
-    const fullName = `${lider.nombres} ${lider.apellidos}`.toLowerCase();
-    const email = lider.email.toLowerCase();
-    return fullName.includes(term) || email.includes(term);
-  });
-
-  const effectiveItemsPerPage =
-    itemsPerPage === "all" ? filteredLideres.length : itemsPerPage;
-  const totalPages = Math.ceil(
-    filteredLideres.length / (effectiveItemsPerPage || 1),
-  );
-  const startIndex = (currentPage - 1) * (effectiveItemsPerPage || 0);
-  const lideresPaginados =
-    itemsPerPage === "all"
-      ? filteredLideres
-      : filteredLideres.slice(
-          startIndex,
-          startIndex + (effectiveItemsPerPage as number),
-        );
 
   const handleRowClick = (lider: Lider) => {
     if (!isLider || lider.id === idUsuarioSesion) onVerCelula(lider);

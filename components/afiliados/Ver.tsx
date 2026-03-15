@@ -63,19 +63,20 @@ export default function Ver() {
   const fetchData = async () => {
     setLoading(true);
     try {
+      // Lanzamos todas las peticiones al mismo tiempo
       const pLideres = listarUsuariosAction("LIDER");
       const pLugares = obtenerLugaresAction();
+      const pAfiliados = obtenerAfiliadosAction();
 
-      const [lideresData, lugaresData] = await Promise.all([
-        pLideres,
-        pLugares,
-      ]);
-
+      // PRIORIDAD 1: Cargamos Líderes y Lugares primero
+      const [lideresData, lugaresData] = await Promise.all([pLideres, pLugares]);
+      
       const allLideres = (
         Array.isArray(lideresData)
           ? lideresData
           : (lideresData as any)?.data || []
       ) as Lider[];
+      
       if (rol === "LIDER" && userId) {
         const myLider = allLideres.find((l) => l.id === userId);
         const otherLideres = allLideres.filter((l) => l.id !== userId);
@@ -83,20 +84,24 @@ export default function Ver() {
       } else {
         setLideres(allLideres);
       }
+      
       setLugares(
         (Array.isArray(lugaresData)
           ? lugaresData
           : (lugaresData as any)?.data || []) as Lugar[],
       );
 
+      // En este punto, la tabla de líderes YA puede mostrarse
       setLoading(false);
 
-      const afiliadosData = await obtenerAfiliadosAction();
+      // PRIORIDAD 2: Cargamos los Afiliados de fondo (son los más pesados)
+      const afiliadosData = await pAfiliados;
       setAfiliados(
         (Array.isArray(afiliadosData)
           ? afiliadosData
           : (afiliadosData as any)?.data || []) as Afiliado[],
       );
+      
     } catch (e) {
       console.error(e);
       toast.error("Error al cargar los datos.");
@@ -282,26 +287,26 @@ export default function Ver() {
                   <X className="w-5 h-5 text-gray-500" />
                 </Button>
               </div>
-              <div className="flex-1 overflow-y-auto bg-gray-50/30 p-4 md:p-8">
+              <div className="flex-1 overflow-y-auto bg-gray-50/30 py-4 md:p-8">
                 <div className="max-w-[1600px] mx-auto">
-                  <div className="grid grid-cols-1 xl:grid-cols-6 gap-6 w-full pt-4">
-                    <div className="bg-white border rounded-2xl p-6 shadow-sm xl:col-span-2 min-h-[500px] flex flex-col">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full pt-4">
+                    <div className="bg-white flex flex-col min-h-[450px]">
                       <EstadisticasEdades afiliados={afiliados} />
                     </div>
 
-                    <div className="bg-white border rounded-2xl p-6 shadow-sm xl:col-span-2 min-h-[500px] flex flex-col">
+                    <div className="bg-white flex flex-col min-h-[450px]">
                       <EstadisticasEmpadronados afiliados={afiliados} />
                     </div>
 
-                    <div className="bg-white border rounded-2xl p-6 shadow-sm xl:col-span-2 min-h-[500px] flex flex-col">
+                    <div className="bg-white flex flex-col min-h-[450px]">
                       <EstadisticasReligiones afiliados={afiliados} />
                     </div>
 
-                    <div className="bg-white border rounded-2xl p-6 shadow-sm xl:col-span-3 min-h-[500px] flex flex-col">
+                    <div className="bg-white flex flex-col min-h-[450px]">
                       <EstadisticasPoliticas afiliados={afiliados} />
                     </div>
 
-                    <div className="bg-white border rounded-2xl p-6 shadow-sm xl:col-span-3 min-h-[500px] flex flex-col">
+                    <div className="bg-white flex flex-col min-h-[450px] md:col-span-2">
                       <EstadisticasLugares afiliados={afiliados} />
                     </div>
                   </div>

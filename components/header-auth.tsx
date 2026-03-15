@@ -36,7 +36,7 @@ export default function AuthButton() {
   return email ? (
     <div className="flex flex-col items-end gap-1 pt-5">
       <div className="flex flex-col items-end text-right leading-tight">
-        <span className="text-sm md:text-xl font-bold">
+        <span className="text-xs md:text-xl font-bold">
           {nombres} {apellidos}
         </span>
       </div>
@@ -46,7 +46,7 @@ export default function AuthButton() {
           <Button
             type="submit"
             variant="outline"
-            className="h-9 px-4 text-sm font-medium"
+            className="h-9 px-4 px-2 shrink-0 text-xs md:text-sm"
           >
             Cerrar Sesión
           </Button>
@@ -71,7 +71,7 @@ export default function AuthButton() {
       <Button
         asChild
         variant="outline"
-        className="h-9 px-4 text-sm font-medium"
+        className="h-9 px-4 text-xs md:text-sm"
       >
         <Link href="/sign-in">Iniciar Sesión</Link>
       </Button>
