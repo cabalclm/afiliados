@@ -9,16 +9,9 @@ import {
   Trash2,
   Eye,
   ChevronDown,
-  MoreVertical,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { eliminar } from "./acciones";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 
 export interface Lider {
   id: string;
@@ -39,53 +32,26 @@ interface Props {
   searchTerm: string;
   idUsuarioSesion: string;
   isLoading?: boolean;
+  hideMeta?: boolean;
+  showRole?: boolean;
 }
 
 function LideresSkeleton({ esAdminOSuper }: { esAdminOSuper: boolean }) {
   return (
-    <div className="animate-pulse space-y-6">
-      <div className="flex flex-col items-center justify-center py-4 bg-gray-50/50 rounded-xl border border-dashed border-gray-200">
-        <span className="text-[10px] font-black text-blue-400 uppercase tracking-widest animate-pulse">
-          Descargando información...
-        </span>
-      </div>
-
-      {esAdminOSuper && (
-        <div className="space-y-2">
-          <div className="flex justify-between">
-            <div className="h-3 w-32 bg-gray-200 rounded"></div>
-            <div className="h-3 w-16 bg-gray-200 rounded"></div>
+    <div className="animate-pulse space-y-4">
+      {[...Array(5)].map((_, i) => (
+        <div
+          key={i}
+          className="h-20 bg-white border border-gray-200 rounded-xl p-4 flex items-center gap-4"
+        >
+          <div className="h-10 w-10 bg-gray-100 rounded-lg"></div>
+          <div className="flex-1 space-y-2">
+            <div className="h-4 w-1/3 bg-gray-100 rounded"></div>
+            <div className="h-3 w-1/4 bg-gray-50 rounded"></div>
           </div>
-          <div className="h-6 w-full bg-gray-100 rounded-full border border-gray-100"></div>
+          <div className="h-10 w-24 bg-gray-100 rounded-lg"></div>
         </div>
-      )}
-
-      <div className="hidden md:block border border-gray-200 rounded-lg overflow-hidden shadow-sm">
-        <div className="bg-gray-50 h-10 border-b border-gray-200"></div>
-        {[...Array(6)].map((_, i) => (
-          <div
-            key={i}
-            className="h-12 border-b border-gray-100 bg-white flex items-center px-4 gap-4"
-          >
-            <div className="h-4 w-8 bg-gray-100 rounded"></div>
-            <div className="h-4 flex-1 bg-gray-50 rounded"></div>
-            <div className="h-4 w-24 bg-gray-50 rounded"></div>
-          </div>
-        ))}
-      </div>
-
-      <div className="md:hidden space-y-3">
-        {[...Array(3)].map((_, i) => (
-          <div
-            key={i}
-            className="h-24 bg-white border border-gray-200 rounded-lg p-4 space-y-3"
-          >
-            <div className="h-4 w-3/4 bg-gray-100 rounded"></div>
-            <div className="h-3 w-1/2 bg-gray-50 rounded"></div>
-            <div className="h-2 w-full bg-gray-50 rounded-full"></div>
-          </div>
-        ))}
-      </div>
+      ))}
     </div>
   );
 }
@@ -99,6 +65,8 @@ export default function Lideres({
   searchTerm,
   idUsuarioSesion,
   isLoading = false,
+  hideMeta = false,
+  showRole = false,
 }: Props) {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState<number | "all">(10);
@@ -159,37 +127,16 @@ export default function Lideres({
 
   if (isLoading) return <LideresSkeleton esAdminOSuper={esAdminOSuper} />;
 
-  if (lideres.length === 0) {
-    return (
-      <div className="text-center text-gray-500 mt-8 border rounded-lg p-4 font-bold uppercase">
-        No hay líderes registrados.
-      </div>
-    );
-  }
-
-  const handleRowClick = (lider: Lider) => {
-    if (!isLider || lider.id === idUsuarioSesion) onVerCelula(lider);
-  };
-
   const getRowClass = (lider: Lider) => {
     if (lider.id === idUsuarioSesion) {
-      return "bg-blue-100 border-blue-200 cursor-pointer hover:bg-blue-100";
+      return "bg-blue-50 border-blue-200 ring-1 ring-blue-300 shadow-blue-50";
     }
-
-    let baseClass = "bg-white border-gray-200";
-
-    if (!isLider) {
-      baseClass += " cursor-pointer hover:bg-gray-100";
-    } else {
-      baseClass += " cursor-default";
-    }
-
-    return baseClass;
+    return "bg-white border-gray-200 hover:border-blue-400 hover:shadow-lg";
   };
 
   return (
     <>
-      {esAdminOSuper && (
+      {!hideMeta && esAdminOSuper && (
         <div className="mb-6 w-full">
           <div className="flex justify-between items-end mb-2">
             <span className="text-xs font-bold uppercase text-gray-600 font-sans">
@@ -211,222 +158,194 @@ export default function Lideres({
         </div>
       )}
 
-      <div className="md:hidden space-y-2">
+      {/* Lista de Tarjetas en una sola columna */}
+      <div className="flex flex-col gap-3">
         {lideresPaginados.map((lider, index) => {
           const totalEnGrupo = lider.conteoAfiliados || 0;
           const progreso = Math.min((totalEnGrupo / 15) * 100, 100);
+          const tieneAfiliados = totalEnGrupo > 0;
 
           return (
-            <Fragment key={lider.id}>
-              <div
-                className={`border rounded-lg p-3 text-xs shadow-sm ${getRowClass(lider)}`}
-                onClick={() =>
-                  setLiderAbiertoId(
-                    liderAbiertoId === lider.id ? null : lider.id,
-                  )
-                }
+            <div
+              key={lider.id}
+              className={`flex flex-col md:flex-row items-stretch md:items-center border rounded-xl overflow-hidden shadow-sm transition-all duration-300 ${getRowClass(lider)}`}
+            >
+              {/* Contenedor Principal */}
+              <div 
+                className="flex-1 p-4 flex flex-col md:flex-row md:items-center gap-4 cursor-pointer"
+                onClick={() => {
+                   if (window.innerWidth < 768) {
+                    setLiderAbiertoId(liderAbiertoId === lider.id ? null : lider.id);
+                  } else {
+                    onVerCelula(lider);
+                  }
+                }}
               >
-                <div className="flex justify-between items-center mb-2">
-                  <span
-                    className={`font-bold flex items-center flex-wrap gap-2 ${lider.id === idUsuarioSesion ? "text-indigo-800" : "text-gray-800"}`}
-                  >
-                    <span>
-                      {startIndex + index + 1}. {lider.nombres}{" "}
-                      {lider.apellidos}
-                    </span>
-                    {lider.id === idUsuarioSesion && (
-                      <span className="text-[9px] bg-blue-600 text-white px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">
-                        Mi Célula
-                      </span>
-                    )}
-                  </span>
-                  <ChevronDown
-                    className={`h-5 w-5 text-gray-400 transition-transform ${liderAbiertoId === lider.id ? "rotate-180" : ""}`}
-                  />
+                {/* No. y Nombre */}
+                <div className="flex items-center gap-3 min-w-0 md:w-1/3">
+                  <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gray-50 text-xs font-black text-gray-400 shrink-0">
+                    {startIndex + index + 1}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <h3 className={`font-black text-sm md:text-base leading-tight truncate ${lider.id === idUsuarioSesion ? "text-blue-900" : "text-gray-900"}`}>
+                      {lider.nombres} {lider.apellidos}
+                    </h3>
+                    <div className="flex items-center gap-2 mt-1">
+                      <p className="text-[10px] md:text-xs text-gray-500 italic lowercase truncate">
+                        {lider.email}
+                      </p>
+                      {showRole && (
+                        <span className="text-[8px] bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded-full font-bold uppercase shrink-0">
+                          {lider.rol}
+                        </span>
+                      )}
+                    </div>
+                  </div>
                 </div>
-                <div className="mb-2 text-gray-500">{lider.email}</div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div
-                    className="bg-blue-600 h-2 rounded-full"
-                    style={{ width: `${progreso}%` }}
-                  ></div>
+
+                {/* Meta / Progreso */}
+                <div className="flex-1 max-w-md">
+                   <div className="flex justify-between items-end mb-1">
+                      <span className="text-[10px] font-black text-gray-400 uppercase">Progreso de Célula</span>
+                      <span className="text-sm md:text-base font-black text-blue-700">{totalEnGrupo}/15</span>
+                   </div>
+                   <div className="w-full bg-gray-100 rounded-full h-2 border overflow-hidden">
+                      <motion.div
+                        initial={{ width: 0 }}
+                        animate={{ width: `${progreso}%` }}
+                        className="bg-blue-600 h-full rounded-full shadow-sm"
+                      />
+                   </div>
+                </div>
+
+                {/* Flecha solo en Móvil */}
+                <div className="md:hidden flex justify-center pt-2">
+                  <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform ${liderAbiertoId === lider.id ? "rotate-180" : ""}`} />
                 </div>
               </div>
+
+              {/* Botones de Acción - Siempre a la Derecha en Desktop */}
+              <div className="hidden md:flex items-center gap-2 px-4 py-2 border-l border-gray-100 bg-gray-50/30">
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-9 px-3 text-gray-600 hover:bg-blue-600 hover:text-white rounded-lg transition-colors group"
+                  onClick={(e) => { e.stopPropagation(); onVerCelula(lider); }}
+                >
+                  <Eye className="h-4 w-4 mr-2" />
+                  <span className="text-[10px] font-bold uppercase">Célula</span>
+                </Button>
+
+                {rolUsuarioSesion !== "LIDER" && (
+                  <>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-9 px-3 text-blue-600 hover:bg-blue-600 hover:text-white rounded-lg transition-colors"
+                      onClick={(e) => { e.stopPropagation(); onEditar(lider); }}
+                    >
+                      <Pencil className="h-4 w-4 mr-2" />
+                      <span className="text-[10px] font-bold uppercase">Editar</span>
+                    </Button>
+                    
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      disabled={tieneAfiliados}
+                      className={`h-9 px-3 rounded-lg transition-colors ${tieneAfiliados ? "text-gray-300" : "text-red-500 hover:bg-red-600 hover:text-white"}`}
+                      onClick={(e) => { 
+                        e.stopPropagation(); 
+                        if (!tieneAfiliados) eliminar(lider, onDataChange);
+                      }}
+                      title={tieneAfiliados ? "No se puede eliminar un líder con miembros" : "Eliminar líder"}
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      <span className="text-[10px] font-bold uppercase">Eliminar</span>
+                    </Button>
+                  </>
+                )}
+              </div>
+
+              {/* Acordeón Móvil */}
               <AnimatePresence>
                 {liderAbiertoId === lider.id && (
                   <motion.div
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: "auto" }}
                     exit={{ opacity: 0, height: 0 }}
-                    className="bg-white rounded-b-lg border-x border-b border-gray-200 -mt-2 overflow-hidden flex"
+                    className="md:hidden border-t border-gray-100 bg-gray-50 flex divide-x"
                   >
                     <Button
                       variant="ghost"
-                      className="flex-1 text-gray-700 p-3 hover:text-black font-bold uppercase"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleRowClick(lider);
-                      }}
-                      disabled={isLider && lider.id !== idUsuarioSesion}
+                      className="flex-1 text-gray-700 py-4 font-bold uppercase text-[10px] rounded-none"
+                      onClick={(e) => { e.stopPropagation(); onVerCelula(lider); }}
                     >
-                      <Eye className="h-4 w-4 mr-2" /> Célula
+                      <Eye className="h-4 w-4 mr-2" /> Ver
                     </Button>
                     {rolUsuarioSesion !== "LIDER" && (
-                      <Button
-                        variant="ghost"
-                        className="flex-1 text-blue-600 p-3 border-l font-bold uppercase"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onEditar(lider);
-                        }}
-                      >
-                        <Pencil className="h-4 w-4 mr-2" /> Editar
-                      </Button>
+                      <>
+                        <Button
+                          variant="ghost"
+                          className="flex-1 text-blue-600 py-4 font-bold uppercase text-[10px] rounded-none"
+                          onClick={(e) => { e.stopPropagation(); onEditar(lider); }}
+                        >
+                          <Pencil className="h-4 w-4 mr-2" /> Editar
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          disabled={tieneAfiliados}
+                          className={`flex-1 py-4 font-bold uppercase text-[10px] rounded-none ${tieneAfiliados ? "text-gray-300" : "text-red-500"}`}
+                          onClick={(e) => { 
+                            e.stopPropagation(); 
+                            if (!tieneAfiliados) eliminar(lider, onDataChange);
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" /> Borrar
+                        </Button>
+                      </>
                     )}
                   </motion.div>
                 )}
               </AnimatePresence>
-            </Fragment>
+            </div>
           );
         })}
       </div>
 
-      <div className="hidden md:block border border-gray-300 rounded-lg overflow-hidden font-sans">
-        <table className="min-w-full bg-white text-xs">
-          <thead className="bg-gray-50 text-gray-600">
-            <tr>
-              <th className="px-4 py-3 text-left font-bold uppercase tracking-wider">
-                No.
-              </th>
-              <th className="px-4 py-3 text-left font-bold uppercase tracking-wider">
-                Nombre del Líder
-              </th>
-              <th className="px-4 py-3 text-left font-bold uppercase tracking-wider">
-                Usuario
-              </th>
-              <th className="px-4 py-3 text-center font-bold uppercase tracking-wider">
-                Integrantes
-              </th>
-              <th className="px-4 py-3 text-center font-bold uppercase tracking-wider min-w-[150px]">
-                Meta (15)
-              </th>
-              {rolUsuarioSesion !== "LIDER" && (
-                <th className="px-4 py-3 text-center font-bold uppercase tracking-wider">
-                  Acciones
-                </th>
-              )}
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-200 uppercase font-bold">
-            {lideresPaginados.map((lider, index) => {
-              const totalEnGrupo = lider.conteoAfiliados || 0;
-              const progreso = Math.min((totalEnGrupo / 15) * 100, 100);
-              const tieneAfiliados = totalEnGrupo > 0;
-
-              return (
-                <tr
-                  key={lider.id}
-                  className={getRowClass(lider)}
-                  onClick={() => handleRowClick(lider)}
-                >
-                  <td className="px-4 py-3 font-medium text-gray-500">
-                    {startIndex + index + 1}
-                  </td>
-                  <td className="px-4 py-3 font-bold text-gray-900">
-                    <div className="flex items-center gap-2">
-                      <span>
-                        {lider.nombres} {lider.apellidos}
-                      </span>
-                      {lider.id === idUsuarioSesion && (
-                        <span className="text-[9px] bg-blue-600 text-white px-2 py-0.5 ml-2 rounded-full font-bold uppercase tracking-wider shadow-sm">
-                          Mi Célula
-                        </span>
-                      )}
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 text-gray-600 lowercase font-normal italic">
-                    {lider.email}
-                  </td>
-                  <td className="px-4 py-3 text-center font-bold text-lg text-blue-800">
-                    {totalEnGrupo}
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="w-full bg-gray-100 rounded-full h-3 border shadow-sm">
-                      <div
-                        className="bg-blue-600 h-full rounded-full transition-all duration-500"
-                        style={{ width: `${progreso}%` }}
-                      ></div>
-                    </div>
-                  </td>
-                  {rolUsuarioSesion !== "LIDER" && (
-                    <td
-                      className="px-4 py-3 text-center"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon">
-                            <MoreVertical className="h-5 w-5 text-gray-400" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-44">
-                          <DropdownMenuItem
-                            onClick={() => onEditar(lider)}
-                            className="cursor-pointer text-blue-600 font-bold uppercase"
-                          >
-                            <Pencil className="h-4 w-4 mr-2" /> Editar Acceso
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            disabled={tieneAfiliados}
-                            onClick={() =>
-                              !tieneAfiliados && eliminar(lider, onDataChange)
-                            }
-                            className={`cursor-pointer font-bold uppercase ${tieneAfiliados ? "text-gray-300" : "text-red-600"}`}
-                          >
-                            <Trash2 className="h-4 w-4 mr-2" /> Eliminar Cuenta
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </td>
-                  )}
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
-
-      <div className="flex flex-col md:flex-row items-center justify-end gap-4 mt-4 font-sans">
-        <div className="flex items-center gap-2">
+      {/* Paginación */}
+      <div className="flex flex-col md:flex-row items-center justify-center gap-6 mt-8">
+        <div className="flex items-center gap-3">
           <Button
             size="sm"
             variant="outline"
+            className="w-10 h-10 rounded-xl border-gray-200 hover:bg-blue-50 text-blue-600 transition-all shadow-sm"
             onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
             disabled={currentPage === 1 || itemsPerPage === "all"}
           >
-            <ChevronLeft className="h-4 w-4" />
+            <ChevronLeft className="h-5 w-5" />
           </Button>
-          <span className="text-xs font-bold px-2 uppercase">
-            Página {currentPage} de {totalPages || 1}
-          </span>
+          <div className="bg-white px-4 py-2 rounded-xl border border-gray-100 shadow-sm min-w-[120px] text-center">
+            <span className="text-sm font-black text-gray-900">{currentPage} / {totalPages || 1}</span>
+          </div>
           <Button
             size="sm"
             variant="outline"
+            className="w-10 h-10 rounded-xl border-gray-200 hover:bg-blue-50 text-blue-600 transition-all shadow-sm"
             onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
             disabled={currentPage === totalPages || itemsPerPage === "all"}
           >
-            <ChevronRight className="h-4 w-4" />
+            <ChevronRight className="h-5 w-5" />
           </Button>
         </div>
 
-        <div className="flex items-center gap-2 border rounded-md px-2 py-1 bg-white">
+        <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl border border-gray-100 shadow-sm">
           <select
             value={itemsPerPage}
             onChange={(e) => {
               const val = e.target.value;
               setItemsPerPage(val === "all" ? "all" : parseInt(val));
             }}
-            className="text-xs font-bold outline-none bg-transparent cursor-pointer uppercase"
+            className="text-sm font-black outline-none bg-transparent cursor-pointer uppercase text-blue-600 focus:ring-0"
           >
             <option value={10}>10</option>
             <option value={50}>50</option>

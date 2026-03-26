@@ -5,7 +5,7 @@ import FechaHoraActual from "@/components/ui/FechaHoraActual";
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <>
-      <nav className="w-full flex h-45  pb-5">
+      <nav className="w-full flex h-45">
         <div className="w-full flex  items-center justify-between pr-5  text-xs">
           <div className="flex items-center gap-3">
             <LogoLink />

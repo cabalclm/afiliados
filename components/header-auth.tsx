@@ -20,7 +20,7 @@ export default function AuthButton() {
 
   if (cargando) {
     return (
-      <div className="flex flex-col items-end gap-1 pt-5">
+      <div className="flex flex-col items-end gap-1 ">
         <div className="flex flex-col items-end text-right leading-tight mb-1">
           <div className="h-4 w-32 bg-gray-200 rounded animate-pulse mb-1"></div>
           <div className="h-3 w-40 bg-gray-200 rounded animate-pulse"></div>
@@ -34,7 +34,7 @@ export default function AuthButton() {
   }
 
   return email ? (
-    <div className="flex flex-col items-end gap-1 pt-5">
+    <div className="flex flex-col items-end gap-1 ">
       <div className="flex flex-col items-end text-right leading-tight">
         <span className="text-xs md:text-xl font-bold">
           {nombres} {apellidos}
@@ -67,7 +67,7 @@ export default function AuthButton() {
       </div>
     </div>
   ) : (
-    <div className="flex gap-2 pt-5">
+    <div className="flex gap-2 ">
       <Button
         asChild
         variant="outline"

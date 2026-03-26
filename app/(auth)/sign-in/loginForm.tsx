@@ -78,19 +78,45 @@ export function LoginForm() {
   return (
     <div className="flex flex-col items-center">
       <motion.div
-        initial={{ opacity: 0, y: -30, scale: 0.8 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{ duration: 2.0, ease: [0.25, 1, 0.5, 1] }}
+        className="cursor-pointer flex flex-row items-center gap-1 md:gap-3"
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
       >
-        <Image
-          src="/svg/logo.svg"
-          alt="Logo"
-          width={400}
-          height={200}
-          className="object-contain"
-          priority
-        />
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.1 }}
+          className="flex justify-start"
+        >
+          <Image
+            src="/svg/logo-2.svg"
+            alt="Afiliaciones CLM"
+            height={100}
+            width={100}
+            className="w-20 md:w-36 h-auto object-contain my-5"
+            priority
+          />
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, x: -20, filter: "blur(8px)" }}
+          animate={{ opacity: 1, x: 0, filter: "blur(0px)" }}
+          transition={{ 
+            duration: 1, 
+            delay: 0.4, 
+            ease: [0.16, 1, 0.3, 1] 
+          }}
+        >
+          <h1
+            className="font-serif text-2xl md:text-4xl font-bold leading-tight text-left my-5 bg-gradient-to-r from-blue-800 via-blue-400 to-blue-800 bg-[length:200%_auto] text-transparent bg-clip-text animate-text-shine"
+            style={{ fontFamily: "'DM Serif Display', serif" }}
+          >
+            Sistema de Organización <br /> Territorial Estratégica
+          </h1>
+        </motion.div>
       </motion.div>
+
       <form
         ref={formRef}
         action={handleFormAction}

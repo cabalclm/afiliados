@@ -3,7 +3,7 @@
 import { createClient } from "@/utils/supabase/server";
 import supabaseAdmin from "@/utils/supabase/admin";
 
-export async function listarUsuariosAction(rol_filtro?: string) {
+export async function listarUsuariosAction(rol_filtro?: string | string[]) {
   const supabase = await createClient();
 
   const queryPerfiles = supabase
@@ -18,9 +18,15 @@ export async function listarUsuariosAction(rol_filtro?: string) {
     `)
     .order("nombres", { ascending: true });
 
-  const filtroPerfiles = rol_filtro 
-    ? queryPerfiles.eq("roles.nombre", rol_filtro)
-    : queryPerfiles;
+  let filtroPerfiles = queryPerfiles;
+  
+  if (rol_filtro) {
+    if (Array.isArray(rol_filtro)) {
+      filtroPerfiles = queryPerfiles.in("roles.nombre", rol_filtro);
+    } else {
+      filtroPerfiles = queryPerfiles.eq("roles.nombre", rol_filtro);
+    }
+  }
 
   // Ejecutamos TODO en paralelo para eficiencia, pero sin caché compleja que cause fallos en dev
   const [perfilesRes, authRes, conteoRes] = await Promise.all([

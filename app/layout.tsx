@@ -32,7 +32,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es" className={geistSans.className} suppressHydrationWarning>
-      <body className="bg-background text-foreground min-h-screen flex flex-col">
+      <body className="bg-background text-foreground min-h-screen flex flex-col ">
         <QueryProvider>
           <div className="flex flex-col flex-1">{children}</div>
         </QueryProvider>
