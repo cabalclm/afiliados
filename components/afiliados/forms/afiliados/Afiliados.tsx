@@ -7,6 +7,7 @@ import { X, Plus } from "lucide-react";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import { toast } from "react-toastify";
+import Swal from "sweetalert2";
 
 import { guardarAfiliadoAction } from "./actions";
 import { POLITICAS, type AfiliadoFormData, type Afiliado } from "./schemas";
@@ -64,7 +65,42 @@ export default function AfiliadosForm({
 
   const sexoActual = watch("sexo");
   const religionActual = watch("religion");
+  const dpiActual = watch("dpi");
+  const [dpiError, setDpiError] = useState<string | null>(null);
+  const [step, setStep] = useState<number>(isEditMode || isFirstMember ? 2 : 1);
+
   const buscador = useBuscadorLider(lideres, setValue);
+
+  useEffect(() => {
+    if (dpiActual && dpiActual.length === 13) {
+      if (!isEditMode || (isEditMode && dpiActual !== afiliadoAEditar?.dpi)) {
+        const afiliadoExistente = afiliados.find(a => a.dpi === dpiActual);
+        if (afiliadoExistente) {
+          const liderNombre = afiliadoExistente.lider_nombre || "Sin Asignar";
+          const msj = `El DPI ya está registrado en la célula del líder: ${liderNombre}`;
+          setDpiError(msj);
+          if (step === 1) {
+            // Se eliminó la alerta invasiva
+          }
+        } else {
+          setDpiError(null);
+        }
+      }
+    } else {
+      setDpiError(null);
+    }
+  }, [dpiActual, afiliados, isEditMode, afiliadoAEditar, step]);
+
+  const irSiguientePaso = () => {
+    if (!dpiActual || dpiActual.length !== 13) {
+      toast.error("Por favor ingresa un DPI válido de 13 dígitos");
+      return;
+    }
+    if (dpiError) {
+       return;
+    }
+    setStep(2);
+  };
 
   useInicializarFormulario(
     isOpen,
@@ -132,15 +168,57 @@ export default function AfiliadosForm({
       >
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-bold uppercase">
-            {isEditMode ? "Editar Afiliado" : "Nuevo Afiliado"}
+            {isEditMode ? "Editar Afiliado" : step === 1 ? "Validar DPI" : "Nuevo Afiliado"}
           </h2>
           <Button size="icon" variant="ghost" onClick={onClose}>
             <X className="h-5 w-5" />
           </Button>
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+        {step === 1 ? (
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-sm font-bold text-gray-700 uppercase">
+                Ingrese el DPI del Afiliado
+              </label>
+              <Input 
+                {...register("dpi")} 
+                placeholder="DPI (13 dígitos)" 
+                maxLength={13} 
+                className={`h-12 text-lg text-center font-bold tracking-widest ${dpiError ? "border-red-500 bg-red-50" : ""}`}
+                autoFocus
+              />
+              {dpiError && <p className="text-xs font-bold text-red-500 text-center">{dpiError}</p>}
+            </div>
+            <div className="flex justify-end gap-2 pt-4">
+              <Button type="button" variant="ghost" onClick={onClose} className="uppercase font-bold text-xs">
+                Cancelar
+              </Button>
+              <Button 
+                type="button" 
+                onClick={irSiguientePaso} 
+                disabled={!!dpiError || !dpiActual || dpiActual.length !== 13}
+                className="bg-blue-600 hover:bg-blue-700 text-white uppercase font-bold text-xs"
+              >
+                Siguiente
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            {!isEditMode && (
+              <div className="space-y-1">
+                <Input 
+                  {...register("dpi")} 
+                  placeholder="Ingrese el DPI (Primero los 13 dígitos)" 
+                  maxLength={13} 
+                  className={dpiError ? "border-red-500 bg-red-50" : ""}
+                />
+                {dpiError && <p className="text-[10px] font-bold text-red-500">{dpiError}</p>}
+              </div>
+            )}
+
+            <div className="grid grid-cols-2 gap-4">
             <Input
               {...register("nombres")}
               placeholder="Nombres"
@@ -155,9 +233,8 @@ export default function AfiliadosForm({
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4">
             <Input {...register("telefono")} placeholder="Teléfono" />
-            <Input {...register("dpi")} placeholder="DPI" />
           </div>
 
           <div className="grid grid-cols-2 gap-4 items-end">
@@ -322,14 +399,15 @@ export default function AfiliadosForm({
               </Button>
               <Button
                 type="submit"
-                disabled={isSubmitting}
-                className="bg-green-600 text-white hover:bg-green-700 text-xs font-bold uppercase px-8 h-10"
+                disabled={isSubmitting || !!dpiError}
+                className={`text-xs font-bold uppercase px-8 h-10 ${dpiError ? 'bg-gray-400 text-gray-200' : 'bg-green-600 text-white hover:bg-green-700'}`}
               >
                 {isSubmitting ? "Guardando..." : "Guardar"}
               </Button>
             </div>
           </div>
         </form>
+        )}
       </motion.div>
     </div>
   );

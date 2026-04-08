@@ -2,6 +2,7 @@
 
 import { useState, Fragment, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
+import Swal from "sweetalert2";
 import {
   ChevronLeft,
   ChevronRight,
@@ -158,6 +159,10 @@ export default function Lideres({
         </div>
       )}
 
+      <div className="text-[10px] text-blue-500 font-bold mb-2">
+        {isLider ? "Haz click para ver tu célula 🤳" : "Haz click para ver una celula 🤳"}
+      </div>
+
       {/* Lista de Tarjetas en una sola columna */}
       <div className="flex flex-col gap-3">
         {lideresPaginados.map((lider, index) => {
@@ -172,13 +177,10 @@ export default function Lideres({
             >
               {/* Contenedor Principal */}
               <div 
-                className="flex-1 p-4 flex flex-col md:flex-row md:items-center gap-4 cursor-pointer"
+                className={`flex-1 p-4 flex flex-col md:flex-row md:items-center gap-4 ${isLider && lider.id !== idUsuarioSesion ? "" : "cursor-pointer"}`}
                 onClick={() => {
-                   if (window.innerWidth < 768) {
-                    setLiderAbiertoId(liderAbiertoId === lider.id ? null : lider.id);
-                  } else {
-                    onVerCelula(lider);
-                  }
+                   if (isLider && lider.id !== idUsuarioSesion) return;
+                   onVerCelula(lider);
                 }}
               >
                 {/* No. y Nombre */}
@@ -219,23 +221,23 @@ export default function Lideres({
                 </div>
 
                 {/* Flecha solo en Móvil */}
-                <div className="md:hidden flex justify-center pt-2">
-                  <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform ${liderAbiertoId === lider.id ? "rotate-180" : ""}`} />
-                </div>
+                {rolUsuarioSesion !== "LIDER" && (
+                  <div 
+                    className="md:hidden flex justify-center py-2"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setLiderAbiertoId(liderAbiertoId === lider.id ? null : lider.id);
+                    }}
+                  >
+                    <div className="bg-gray-100 rounded-full p-1 border shadow-sm">
+                      <ChevronDown className={`h-4 w-4 text-gray-500 transition-transform ${liderAbiertoId === lider.id ? "rotate-180" : ""}`} />
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Botones de Acción - Siempre a la Derecha en Desktop */}
               <div className="hidden md:flex items-center gap-2 px-4 py-2 border-l border-gray-100 bg-gray-50/30">
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className="h-9 px-3 text-gray-600 hover:bg-blue-600 hover:text-white rounded-lg transition-colors group"
-                  onClick={(e) => { e.stopPropagation(); onVerCelula(lider); }}
-                >
-                  <Eye className="h-4 w-4 mr-2" />
-                  <span className="text-[10px] font-bold uppercase">Célula</span>
-                </Button>
-
                 {rolUsuarioSesion !== "LIDER" && (
                   <>
                     <Button
@@ -251,13 +253,20 @@ export default function Lideres({
                     <Button
                       size="sm"
                       variant="ghost"
-                      disabled={tieneAfiliados}
-                      className={`h-9 px-3 rounded-lg transition-colors ${tieneAfiliados ? "text-gray-300" : "text-red-500 hover:bg-red-600 hover:text-white"}`}
+                      className="h-9 px-3 rounded-lg transition-colors text-red-500 hover:bg-red-600 hover:text-white group"
                       onClick={(e) => { 
                         e.stopPropagation(); 
-                        if (!tieneAfiliados) eliminar(lider, onDataChange);
+                        if (tieneAfiliados) {
+                          Swal.fire({
+                            icon: 'error',
+                            title: 'Acción no permitida',
+                            text: 'Sólo se puede eliminar un líder sin integrantes',
+                            confirmButtonColor: '#3b82f6'
+                          });
+                        } else {
+                          eliminar(lider, onDataChange);
+                        }
                       }}
-                      title={tieneAfiliados ? "No se puede eliminar un líder con miembros" : "Eliminar líder"}
                     >
                       <Trash2 className="h-4 w-4 mr-2" />
                       <span className="text-[10px] font-bold uppercase">Eliminar</span>
@@ -268,7 +277,7 @@ export default function Lideres({
 
               {/* Acordeón Móvil */}
               <AnimatePresence>
-                {liderAbiertoId === lider.id && (
+                {liderAbiertoId === lider.id && rolUsuarioSesion !== "LIDER" && (
                   <motion.div
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: "auto" }}
@@ -277,33 +286,30 @@ export default function Lideres({
                   >
                     <Button
                       variant="ghost"
-                      className="flex-1 text-gray-700 py-4 font-bold uppercase text-[10px] rounded-none"
-                      onClick={(e) => { e.stopPropagation(); onVerCelula(lider); }}
+                      className="flex-1 text-blue-600 py-4 font-bold uppercase text-[10px] rounded-none"
+                      onClick={(e) => { e.stopPropagation(); onEditar(lider); }}
                     >
-                      <Eye className="h-4 w-4 mr-2" /> Ver
+                      <Pencil className="h-4 w-4 mr-2" /> Editar
                     </Button>
-                    {rolUsuarioSesion !== "LIDER" && (
-                      <>
-                        <Button
-                          variant="ghost"
-                          className="flex-1 text-blue-600 py-4 font-bold uppercase text-[10px] rounded-none"
-                          onClick={(e) => { e.stopPropagation(); onEditar(lider); }}
-                        >
-                          <Pencil className="h-4 w-4 mr-2" /> Editar
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          disabled={tieneAfiliados}
-                          className={`flex-1 py-4 font-bold uppercase text-[10px] rounded-none ${tieneAfiliados ? "text-gray-300" : "text-red-500"}`}
-                          onClick={(e) => { 
-                            e.stopPropagation(); 
-                            if (!tieneAfiliados) eliminar(lider, onDataChange);
-                          }}
-                        >
-                          <Trash2 className="h-4 w-4 mr-2" /> Borrar
-                        </Button>
-                      </>
-                    )}
+                    <Button
+                      variant="ghost"
+                      className="flex-1 py-4 font-bold uppercase text-[10px] rounded-none text-red-500 hover:bg-red-50"
+                      onClick={(e) => { 
+                        e.stopPropagation(); 
+                        if (tieneAfiliados) {
+                          Swal.fire({
+                            icon: 'warning',
+                            title: 'Acción no permitida',
+                            text: 'Sólo se puede eliminar un líder sin integrantes',
+                            confirmButtonColor: '#3b82f6'
+                          });
+                        } else {
+                          eliminar(lider, onDataChange);
+                        }
+                      }}
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" /> Borrar
+                    </Button>
                   </motion.div>
                 )}
               </AnimatePresence>
