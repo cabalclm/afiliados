@@ -219,22 +219,31 @@ export default function AfiliadosForm({
             )}
 
             <div className="grid grid-cols-2 gap-4">
-            <Input
-              {...register("nombres")}
-              placeholder="Nombres"
-              readOnly={isFirstMember}
-              className={isFirstMember ? "bg-gray-100" : ""}
-            />
-            <Input
-              {...register("apellidos")}
-              placeholder="Apellidos"
-              readOnly={isFirstMember}
-              className={isFirstMember ? "bg-gray-100" : ""}
-            />
-          </div>
+              <div className="space-y-1">
+                <Input
+                  {...register("nombres")}
+                  placeholder="Nombres"
+                  readOnly={isFirstMember}
+                  className={isFirstMember ? "bg-gray-100" : ""}
+                />
+                {errors.nombres && <p className="text-[10px] font-bold text-red-500">{errors.nombres.message}</p>}
+              </div>
+              <div className="space-y-1">
+                <Input
+                  {...register("apellidos")}
+                  placeholder="Apellidos"
+                  readOnly={isFirstMember}
+                  className={isFirstMember ? "bg-gray-100" : ""}
+                />
+                {errors.apellidos && <p className="text-[10px] font-bold text-red-500">{errors.apellidos.message}</p>}
+              </div>
+            </div>
 
           <div className="grid grid-cols-1 gap-4">
-            <Input {...register("telefono")} placeholder="Teléfono" />
+            <div className="space-y-1">
+              <Input {...register("telefono")} placeholder="Teléfono" />
+              {errors.telefono && <p className="text-[10px] font-bold text-red-500">{errors.telefono.message}</p>}
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4 items-end">
@@ -247,6 +256,7 @@ export default function AfiliadosForm({
                 {...register("nacimiento")}
                 className="h-9 text-xs"
               />
+              {errors.nacimiento && <p className="text-[10px] font-bold text-red-500">{errors.nacimiento.message}</p>}
             </div>
             <div className="space-y-1">
               <label className="text-[10px] font-bold text-gray-400 uppercase block leading-none">
@@ -272,18 +282,22 @@ export default function AfiliadosForm({
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <select
-              {...register("lugar_id", { valueAsNumber: true })}
-              className="w-full h-10 px-3 border rounded-md text-sm bg-white"
-            >
-              <option value={0}>Seleccione lugar...</option>
-              {lugares.map((l) => (
-                <option key={l.id} value={l.id}>
-                  {l.nombre}
-                </option>
-              ))}
-            </select>
-            <select
+            <div className="space-y-1">
+              <select
+                {...register("lugar_id", { valueAsNumber: true })}
+                className="w-full h-10 px-3 border rounded-md text-sm bg-white"
+              >
+                <option value={0}>Seleccione lugar...</option>
+                {lugares.map((l) => (
+                  <option key={l.id} value={l.id}>
+                    {l.nombre}
+                  </option>
+                ))}
+              </select>
+              {errors.lugar_id && <p className="text-[10px] font-bold text-red-500">{errors.lugar_id.message}</p>}
+            </div>
+            <div className="space-y-1">
+              <select
               {...register("politica")}
               className="w-full h-10 px-3 border rounded-md text-sm bg-white"
             >
@@ -311,11 +325,12 @@ export default function AfiliadosForm({
           </Button>
 
           <div className="grid grid-cols-2 gap-4 items-end">
-            <div>
+            <div className="space-y-1">
               <label className="text-[10px] font-bold text-gray-400 uppercase">
                 No. Padrón
               </label>
               <Input {...register("no_padron")} placeholder="No. Padrón" />
+              {errors.no_padron && <p className="text-[10px] font-bold text-red-500">{errors.no_padron.message}</p>}
             </div>
 
             <div className="flex flex-col">

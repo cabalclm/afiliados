@@ -16,8 +16,10 @@ export const afiliadoSchema = z.object({
   apellidos: z.string().min(2, "Requerido"),
   telefono: z
     .string()
-    .length(8, "Debe tener 8 dígitos")
-    .regex(/^\d+$/, "Solo números"),
+    .optional()
+    .refine((val) => !val || (val.length === 8 && /^\d+$/.test(val)), {
+      message: "Debe ser de 8 dígitos numéricos",
+    }),
   dpi: z
     .string()
     .length(13, "Debe tener 13 dígitos")
