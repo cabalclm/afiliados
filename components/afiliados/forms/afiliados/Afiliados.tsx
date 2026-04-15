@@ -316,6 +316,7 @@ export default function AfiliadosForm({
               ))}
             </select>
           </div>
+        </div>
 
           <Button
             type="button"
