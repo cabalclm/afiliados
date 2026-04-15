@@ -69,6 +69,13 @@ export default function AfiliadosForm({
   const [dpiError, setDpiError] = useState<string | null>(null);
   const [step, setStep] = useState<number>(isEditMode || isFirstMember ? 2 : 1);
 
+  useEffect(() => {
+    if (isOpen) {
+      setStep(isEditMode || isFirstMember ? 2 : 1);
+      setDpiError(null);
+    }
+  }, [isOpen, isEditMode, isFirstMember]);
+
   const buscador = useBuscadorLider(lideres, setValue);
 
   useEffect(() => {
