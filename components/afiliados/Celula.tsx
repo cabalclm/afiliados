@@ -24,6 +24,7 @@ interface Props {
   onAnadirAfiliado: (liderId: string, isFirstMember?: boolean) => void;
   onDataChange: () => void;
   rolUsuarioSesion: string;
+  afiliadosSimulados?: Afiliado[];
 }
 
 type Vista = "miembros" | "estadisticas";
@@ -36,15 +37,23 @@ export default function Celula({
   onAnadirAfiliado,
   onDataChange,
   rolUsuarioSesion,
+  afiliadosSimulados,
 }: Props) {
   const [vistaActual, setVistaActual] = useState<Vista>("miembros");
   const [busqueda, setBusqueda] = useState("");
 
-  const { data: afiliadosDelLider = [], isLoading } = useQuery({
+  const esSimulado = !!lider?.simulado;
+
+  const { data: afiliadosQuery = [], isLoading: isLoadingQuery } = useQuery({
     queryKey: ["afiliados-lider", lider?.id],
     queryFn: () => obtenerAfiliadosAction(lider?.id),
-    enabled: isOpen && !!lider?.id,
+    enabled: isOpen && !!lider?.id && !esSimulado,
   });
+
+  const afiliadosDelLider = esSimulado
+    ? afiliadosSimulados ?? []
+    : afiliadosQuery;
+  const isLoading = esSimulado ? false : isLoadingQuery;
 
   if (!lider) return null;
 

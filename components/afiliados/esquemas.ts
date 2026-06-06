@@ -7,6 +7,7 @@ export interface Lider {
   apellidos: string;
   rol: string;
   conteoAfiliados?: number;
+  simulado?: boolean;
 }
 
 export const POLITICAS = [

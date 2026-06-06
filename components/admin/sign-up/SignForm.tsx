@@ -11,6 +11,7 @@ import Swal from "sweetalert2";
 import PasswordSection from "@/components/admin/sign-up/PasswordSection";
 import useUserData from "@/hooks/sesion/useUserData";
 import { createClient } from "@/utils/supabase/client";
+import { NUEVO_LIDER_SIMULADO } from "@/components/afiliados/datosSimulados";
 
 interface RolDisponible {
   id: number;
@@ -32,6 +33,9 @@ export function SignupForm({
   const router = useRouter();
   const isEdit = !!initialData;
   const { rol: rolUsuarioSesion } = useUserData();
+
+  const modoSimulacion =
+    !isEdit && rolUsuarioSesion?.toUpperCase() === "DOCUMENTADOR";
 
   const [loading, setLoading] = useState(false);
   const [rolesDisponibles, setRolesDisponibles] = useState<RolDisponible[]>([]);
@@ -92,12 +96,36 @@ export function SignupForm({
     fetchDatos();
   }, [initialData]);
 
+  useEffect(() => {
+    if (modoSimulacion) {
+      setNombres(NUEVO_LIDER_SIMULADO.nombres);
+      setApellidos(NUEVO_LIDER_SIMULADO.apellidos);
+      setEmail(NUEVO_LIDER_SIMULADO.email);
+      setPassword(NUEVO_LIDER_SIMULADO.password);
+      setConfirmar(NUEVO_LIDER_SIMULADO.password);
+    }
+  }, [modoSimulacion]);
+
+  const esSuperSesion = rolUsuarioSesion?.toUpperCase() === "SUPER";
   const rolesParaSelector = rolesDisponibles.filter(
-    (r) => rolUsuarioSesion === "SUPER" || r.nombre !== "SUPER",
+    (r) => esSuperSesion || r.nombre.toUpperCase() !== "SUPER",
   );
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
+    if (modoSimulacion) {
+      Swal.fire({
+        icon: "info",
+        title: "Modo Simulación",
+        text: "Esta es una simulación. El usuario líder no se creó realmente.",
+        confirmButtonColor: "#3085d6",
+      }).then(() => {
+        onSuccess();
+      });
+      return;
+    }
+
     setLoading(true);
 
     const formData = new FormData(e.currentTarget);
@@ -138,7 +166,11 @@ export function SignupForm({
     <div className="flex flex-col w-full mx-auto md:max-w-xl gap-6 relative text-left p-2">
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-xl font-bold text-blue-700">
-          {isEdit ? "Editar Perfil de Acceso" : "Nuevo Usuario Líder"}
+          {isEdit
+            ? "Editar Perfil de Acceso"
+            : modoSimulacion
+              ? "Nuevo Usuario Líder (Simulación)"
+              : "Nuevo Usuario Líder"}
         </h3>
         <Button onClick={onClose} variant="ghost" type="button">
           Cerrar
@@ -235,7 +267,9 @@ export function SignupForm({
             ? "Procesando..."
             : isEdit
               ? "Actualizar Datos"
-              : "Crear Acceso"}
+              : modoSimulacion
+                ? "Simular Creación"
+                : "Crear Acceso"}
         </Button>
       </form>
     </div>

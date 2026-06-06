@@ -27,6 +27,7 @@ import {
   DialogPanel,
 } from "@headlessui/react";
 
+import { LIDER_SIMULADO, AFILIADOS_SIMULADOS } from "./datosSimulados";
 import { listarUsuariosAction } from "./actions/usuarios";
 import { obtenerAfiliadosAction } from "./actions/afiliados";
 import { obtenerLugaresAction } from "./actions/lugares";
@@ -63,6 +64,22 @@ export default function Ver() {
 
   const [isFirstMemberAddition, setIsFirstMemberAddition] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [liderSimulado, setLiderSimulado] = useState<Lider | null>(null);
+
+  const puedeCrearLider =
+    rol === "ADMINISTRADOR" || rol === "SUPER" || rol === "DOCUMENTADOR";
+  const puedeSimular =
+    rol === "ADMINISTRADOR" || rol === "SUPER" || rol === "DOCUMENTADOR";
+  const esAdminOSuper = rol === "ADMINISTRADOR" || rol === "SUPER";
+
+  const handleSimular = () => {
+    setLiderSimulado((prev) => (prev ? null : LIDER_SIMULADO));
+  };
+
+  const lideresVisibles = (() => {
+    const base = liderSimulado ? [liderSimulado, ...lideres] : lideres;
+    return base.filter((l) => l.rol !== "DOCUMENTADOR");
+  })();
 
   // TanStack Query para afiliados globales (se activa solo si es necesario)
   const { data: afiliados = [], isLoading: isLoadingAfiliados } = useQuery({
@@ -233,7 +250,18 @@ export default function Ver() {
             >
               📊 Estadísticas Generales
             </Button>
-            {(rol === "ADMINISTRADOR" || rol === "SUPER") && (
+            {puedeSimular && (
+              <Button
+                onClick={handleSimular}
+                variant={liderSimulado ? "default" : "outline"}
+                className={`gap-2 w-full text-xs md:text-xl ${
+                  liderSimulado ? "bg-green-600 hover:bg-green-700 text-white" : ""
+                }`}
+              >
+                🧪 {liderSimulado ? "Simulación activa" : "Simular"}
+              </Button>
+            )}
+            {puedeCrearLider && (
               <Button
                 onClick={handleOpenCreateLiderModal}
                 className="gap-2 w-full text-xl"
@@ -257,7 +285,7 @@ export default function Ver() {
           >
             ✅ Miembros
           </button>
-          {(rol === "ADMINISTRADOR" || rol === "SUPER") && (
+          {esAdminOSuper && (
             <button
               onClick={() => setActiveTab("Administrativos")}
               className={`px-4 py-2 text-base font-semibold ${activeTab === "Administrativos" ? "border-b-2 border-blue-600 text-blue-600" : "text-gray-500"}`}
@@ -269,7 +297,7 @@ export default function Ver() {
 
         {activeTab === "Lideres" && (
           <Lideres
-            lideres={lideres}
+            lideres={lideresVisibles}
             onVerCelula={handleOpenCelulaModal}
             onEditar={handleOpenEditLiderModal}
             rolUsuarioSesion={rol}
@@ -370,6 +398,7 @@ export default function Ver() {
         onAnadirAfiliado={handleOpenAnadirAfiliadoModal}
         onDataChange={fetchData}
         rolUsuarioSesion={rol ?? ""}
+        afiliadosSimulados={AFILIADOS_SIMULADOS}
       />
 
       <Form

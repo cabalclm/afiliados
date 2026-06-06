@@ -22,6 +22,7 @@ export interface Lider {
   rol: string;
   rol_id?: number;
   conteoAfiliados?: number;
+  simulado?: boolean;
 }
 
 interface Props {
@@ -92,6 +93,8 @@ export default function Lideres({
 
   const sortedLideres = useMemo(() =>
     [...lideres].sort((a, b) => {
+      if (a.simulado) return -1;
+      if (b.simulado) return 1;
       if (a.id === idUsuarioSesion) return -1;
       if (b.id === idUsuarioSesion) return 1;
       return (b.conteoAfiliados || 0) - (a.conteoAfiliados || 0);
