@@ -12,6 +12,22 @@ interface Props {
   onEditar: (afiliado: Afiliado) => void;
   onDataChange: () => void;
   searchTerm: string;
+  isLoading?: boolean;
+}
+
+function AfiliadosSkeleton() {
+  return (
+    <div className="animate-pulse space-y-4">
+      {[...Array(4)].map((_, i) => (
+        <div key={i} className="border rounded-lg shadow-sm overflow-hidden">
+          <div className="h-14 bg-gray-50 p-4 flex justify-between items-center">
+            <div className="h-4 w-2/3 bg-gray-200 rounded" />
+            <div className="h-5 w-5 bg-gray-200 rounded" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
 }
 
 export default function AfiliadosGeneral({
@@ -20,6 +36,7 @@ export default function AfiliadosGeneral({
   onEditar,
   onDataChange,
   searchTerm,
+  isLoading = false,
 }: Props) {
   const [liderAbiertoId, setLiderAbiertoId] = useState<string | null>(null);
 
@@ -75,6 +92,8 @@ export default function AfiliadosGeneral({
 
     return leaderGroups;
   }, [afiliados, lideres, searchTerm]);
+
+  if (isLoading) return <AfiliadosSkeleton />;
 
   if (afiliadosAgrupados.length === 0) {
     return (

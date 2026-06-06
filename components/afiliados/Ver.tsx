@@ -52,6 +52,7 @@ export default function Ver() {
   const [isCelulaOpen, setIsCelulaOpen] = useState(false);
   const [isEstadisticasOpen, setIsEstadisticasOpen] = useState(false);
   const [isSignupModalOpen, setIsSignupModalOpen] = useState(false);
+  const [signupFormKey, setSignupFormKey] = useState(0);
 
   const [afiliadoParaEditar, setAfiliadoParaEditar] = useState<Afiliado | null>(
     null,
@@ -87,6 +88,9 @@ export default function Ver() {
     queryFn: () => obtenerAfiliadosAction(),
     enabled: isEstadisticasOpen || activeTab === "Afiliados" || isCelulaOpen,
   });
+
+  const cargandoLideres = loading || cargandoRol;
+  const cargandoMiembros = isLoadingAfiliados || cargandoLideres;
 
   const fetchData = async () => {
     setLoading(true);
@@ -148,11 +152,13 @@ export default function Ver() {
 
   const handleOpenCreateLiderModal = () => {
     setLiderAEditar(null);
+    setSignupFormKey((k) => k + 1);
     setIsSignupModalOpen(true);
   };
 
   const handleOpenEditLiderModal = (lider: Lider) => {
     setLiderAEditar(lider);
+    setSignupFormKey((k) => k + 1);
     setIsSignupModalOpen(true);
   };
 
@@ -226,9 +232,23 @@ export default function Ver() {
         <ConfiguracionSistema />
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
           <div className="flex items-center gap-4 w-full md:w-auto">
-            <h1 className="text-2xl font-bold text-black md:text-3xl whitespace-nowrap">
-              Gestión de Datos 📊
-            </h1>
+            <div className={`relative ${puedeSimular ? "group" : ""}`}>
+              <h1
+                className={`text-2xl font-bold text-black md:text-3xl whitespace-nowrap ${
+                  puedeSimular
+                    ? "cursor-pointer underline decoration-transparent underline-offset-[6px] decoration-2 transition-[text-decoration-color] duration-300 ease-in-out group-hover:decoration-black"
+                    : ""
+                }`}
+                onClick={puedeSimular ? handleSimular : undefined}
+              >
+                Gestión de Datos 📊
+              </h1>
+              {puedeSimular && (
+                <span className="pointer-events-none absolute left-0 top-full z-50 mt-2 scale-95 whitespace-nowrap rounded-md bg-gray-900/95 px-3 py-1.5 text-xs font-medium text-white opacity-0 shadow-lg translate-y-1 transition-all duration-300 ease-out group-hover:scale-100 group-hover:opacity-100 group-hover:translate-y-0 group-hover:delay-100">
+                  Click para simular un registro
+                </span>
+              )}
+            </div>
           </div>
           <div className="relative w-full md:w-96">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -250,17 +270,6 @@ export default function Ver() {
             >
               📊 Estadísticas Generales
             </Button>
-            {puedeSimular && (
-              <Button
-                onClick={handleSimular}
-                variant={liderSimulado ? "default" : "outline"}
-                className={`gap-2 w-full text-xs md:text-xl ${
-                  liderSimulado ? "bg-green-600 hover:bg-green-700 text-white" : ""
-                }`}
-              >
-                🧪 {liderSimulado ? "Simulación activa" : "Simular"}
-              </Button>
-            )}
             {puedeCrearLider && (
               <Button
                 onClick={handleOpenCreateLiderModal}
@@ -304,7 +313,7 @@ export default function Ver() {
             onDataChange={fetchData}
             searchTerm={searchTerm}
             idUsuarioSesion={userId}
-            isLoading={loading}
+            isLoading={cargandoLideres}
           />
         )}
         {activeTab === "Afiliados" && (
@@ -314,6 +323,7 @@ export default function Ver() {
             onEditar={handleOpenEditModal}
             onDataChange={fetchData}
             searchTerm={searchTerm}
+            isLoading={cargandoMiembros}
           />
         )}
         {activeTab === "Administrativos" && (
@@ -325,7 +335,7 @@ export default function Ver() {
             onDataChange={fetchData}
             searchTerm={searchTerm}
             idUsuarioSesion={userId}
-            isLoading={loading}
+            isLoading={cargandoLideres}
             hideMeta
             showRole={true}
           />
@@ -425,10 +435,12 @@ export default function Ver() {
             <div className="flex min-h-full items-center justify-center p-4 text-center">
               <DialogPanel className="bg-white rounded-lg shadow-xl w-full max-w-2xl transform transition-all p-4 md:p-8">
                 <SignupForm
+                  key={signupFormKey}
                   initialData={liderAEditar}
                   onSuccess={handleSignupSuccess}
                   onClose={handleCloseSignupModal}
                   isModal={true}
+                  rolSesion={rol}
                 />
               </DialogPanel>
             </div>

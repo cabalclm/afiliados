@@ -22,6 +22,7 @@ interface SignupFormProps {
   onClose: () => void;
   isModal?: boolean;
   initialData?: any;
+  rolSesion?: string;
 }
 
 export function SignupForm({
@@ -29,13 +30,18 @@ export function SignupForm({
   onClose,
   isModal = false,
   initialData,
+  rolSesion,
 }: SignupFormProps) {
   const router = useRouter();
   const isEdit = !!initialData;
-  const { rol: rolUsuarioSesion } = useUserData();
+  const { rol: rolHook } = useUserData();
+  const rolUsuarioSesion = rolSesion ?? rolHook;
 
   const modoSimulacion =
     !isEdit && rolUsuarioSesion?.toUpperCase() === "DOCUMENTADOR";
+
+  const [simulacionLista, setSimulacionLista] = useState(false);
+  const mostrarSkeleton = modoSimulacion && !simulacionLista;
 
   const [loading, setLoading] = useState(false);
   const [rolesDisponibles, setRolesDisponibles] = useState<RolDisponible[]>([]);
@@ -97,13 +103,18 @@ export function SignupForm({
   }, [initialData]);
 
   useEffect(() => {
-    if (modoSimulacion) {
+    if (!modoSimulacion) return;
+
+    const timer = setTimeout(() => {
       setNombres(NUEVO_LIDER_SIMULADO.nombres);
       setApellidos(NUEVO_LIDER_SIMULADO.apellidos);
       setEmail(NUEVO_LIDER_SIMULADO.email);
       setPassword(NUEVO_LIDER_SIMULADO.password);
       setConfirmar(NUEVO_LIDER_SIMULADO.password);
-    }
+      setSimulacionLista(true);
+    }, 1200);
+
+    return () => clearTimeout(timer);
   }, [modoSimulacion]);
 
   const esSuperSesion = rolUsuarioSesion?.toUpperCase() === "SUPER";
@@ -177,6 +188,37 @@ export function SignupForm({
         </Button>
       </div>
 
+      {mostrarSkeleton ? (
+        <div className="flex flex-col gap-4 animate-pulse">
+          <div className="flex flex-col md:flex-row gap-4">
+            <div className="flex-1 space-y-2">
+              <div className="h-4 w-24 bg-gray-200 rounded" />
+              <div className="h-12 w-full bg-gray-100 rounded" />
+            </div>
+            <div className="flex-1 space-y-2">
+              <div className="h-4 w-24 bg-gray-200 rounded" />
+              <div className="h-12 w-full bg-gray-100 rounded" />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <div className="h-4 w-32 bg-gray-200 rounded" />
+            <div className="h-12 w-full bg-gray-100 rounded" />
+          </div>
+          <div className="space-y-2">
+            <div className="h-4 w-24 bg-gray-200 rounded" />
+            <div className="h-12 w-full bg-gray-100 rounded" />
+          </div>
+          <div className="border rounded-md p-4 bg-gray-50 mt-4 space-y-3">
+            <div className="h-4 w-40 bg-gray-200 rounded" />
+            <div className="h-12 w-full bg-gray-100 rounded" />
+            <div className="h-12 w-full bg-gray-100 rounded" />
+          </div>
+          <div className="h-14 w-full bg-gray-200 rounded mt-4" />
+          <p className="text-center text-sm font-semibold text-blue-600">
+            Cargando datos de simulación...
+          </p>
+        </div>
+      ) : (
       <form className="flex flex-col gap-4" onSubmit={handleSubmit} noValidate>
         <div className="flex flex-col md:flex-row gap-4">
           <div className="flex-1">
@@ -272,6 +314,7 @@ export function SignupForm({
                 : "Crear Acceso"}
         </Button>
       </form>
+      )}
     </div>
   );
 }

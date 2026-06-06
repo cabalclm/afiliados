@@ -168,15 +168,29 @@ export default function Lideres({
 
       {/* Lista de Tarjetas en una sola columna */}
       <div className="flex flex-col gap-3">
+        <AnimatePresence initial={false}>
         {lideresPaginados.map((lider, index) => {
           const totalEnGrupo = lider.conteoAfiliados || 0;
           const progreso = Math.min((totalEnGrupo / 15) * 100, 100);
           const tieneAfiliados = totalEnGrupo > 0;
 
           return (
-            <div
+            <motion.div
               key={lider.id}
-              className={`flex flex-col md:flex-row items-stretch md:items-center border rounded-xl overflow-hidden shadow-sm transition-all duration-300 ${getRowClass(lider)}`}
+              layout
+              initial={
+                lider.simulado
+                  ? { opacity: 0, y: -24, scale: 0.97 }
+                  : false
+              }
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={
+                lider.simulado
+                  ? { opacity: 0, y: -16, scale: 0.98 }
+                  : undefined
+              }
+              transition={{ duration: 0.45, ease: [0.25, 0.46, 0.45, 0.94] }}
+              className={`flex flex-col md:flex-row items-stretch md:items-center border rounded-xl overflow-hidden shadow-sm ${getRowClass(lider)}`}
             >
               {/* Contenedor Principal */}
               <div 
@@ -316,9 +330,10 @@ export default function Lideres({
                   </motion.div>
                 )}
               </AnimatePresence>
-            </div>
+            </motion.div>
           );
         })}
+        </AnimatePresence>
       </div>
 
       {/* Paginación */}
