@@ -5,6 +5,12 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { toast } from "react-toastify";
 import { Search, X } from "lucide-react";
+import {
+  PiCrownDuotone,
+  PiUsersThreeDuotone,
+  PiShieldCheckDuotone,
+  PiChatCircleDotsDuotone,
+} from "react-icons/pi";
 
 import EstadisticasEdades from "./estadisticas/Edades";
 import EstadisticasEmpadronados from "./estadisticas/Empadronados";
@@ -18,7 +24,7 @@ import AfiliadosGeneral from "./AfiliadosGeneral";
 import Form from "./forms/afiliados/Afiliados";
 import Celula from "./Celula";
 import ModalBienvenida from "./ModalBienvenida";
-import MensajesEnviados from "./MensajesEnviados";
+import Difusion from "./Difusion";
 import { SignupForm } from "@/components/admin/sign-up/SignForm";
 import type { Afiliado, Lider } from "./esquemas";
 import {
@@ -35,6 +41,59 @@ type Lugar = { id: number; nombre: string };
 type Tab = "Lideres" | "Afiliados" | "Administrativos" | "Mensajes";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+
+const TAB_THEMES: Record<
+  Tab,
+  {
+    activeText: string;
+    activeBorder: string;
+    activeIconBg: string;
+    activeIconText: string;
+  }
+> = {
+  Lideres: {
+    activeText: "text-orange-600 dark:text-orange-400",
+    activeBorder: "border-orange-500 dark:border-orange-400",
+    activeIconBg: "bg-orange-100 dark:bg-orange-950/60",
+    activeIconText: "text-orange-600 dark:text-orange-400",
+  },
+  Afiliados: {
+    activeText: "text-purple-600 dark:text-purple-400",
+    activeBorder: "border-purple-500 dark:border-purple-400",
+    activeIconBg: "bg-purple-100 dark:bg-purple-950/60",
+    activeIconText: "text-purple-600 dark:text-purple-400",
+  },
+  Administrativos: {
+    activeText: "text-blue-600 dark:text-blue-400",
+    activeBorder: "border-blue-600 dark:border-blue-400",
+    activeIconBg: "bg-blue-100 dark:bg-blue-950/60",
+    activeIconText: "text-blue-600 dark:text-blue-400",
+  },
+  Mensajes: {
+    activeText: "text-green-600 dark:text-green-400",
+    activeBorder: "border-green-500 dark:border-green-400",
+    activeIconBg: "bg-green-100 dark:bg-green-950/60",
+    activeIconText: "text-green-600 dark:text-green-400",
+  },
+};
+
+const tabBtnClass = (active: boolean, tab: Tab) => {
+  const theme = TAB_THEMES[tab];
+  return `flex flex-1 flex-col md:flex-row items-center justify-center gap-1 md:gap-2 px-1 md:px-3 py-2 text-[10px] md:text-base font-semibold min-w-0 transition-colors border-b-2 ${
+    active
+      ? `${theme.activeBorder} ${theme.activeText}`
+      : "border-transparent text-gray-500 dark:text-gray-400"
+  }`;
+};
+
+const tabIconClass = (active: boolean, tab: Tab) => {
+  const theme = TAB_THEMES[tab];
+  return `p-1.5 rounded-lg transition-colors shrink-0 ${
+    active
+      ? `${theme.activeIconBg} ${theme.activeIconText}`
+      : "bg-gray-100 dark:bg-neutral-800 text-gray-500 dark:text-gray-400"
+  }`;
+};
 
 export default function Ver() {
   const router = useRouter();
@@ -226,13 +285,13 @@ export default function Ver() {
           nombreLider={miPerfilGlobal?.nombres || "Usuario"}
         />
       )}
-      <div className="px-2 md:px-6">
+      <div className="px-2 md:px-6 max-w-full overflow-x-hidden min-w-0 w-full">
         <ConfiguracionSistema />
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
-          <div className="flex items-center gap-4 w-full md:w-auto">
-            <div className={`relative ${puedeSimular ? "group" : ""}`}>
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4 min-w-0">
+          <div className="flex items-center gap-4 w-full md:w-auto min-w-0">
+            <div className={`relative min-w-0 ${puedeSimular ? "group" : ""}`}>
               <h1
-                className={`text-2xl font-bold text-black dark:text-white md:text-3xl whitespace-nowrap ${
+                className={`text-lg font-bold text-black dark:text-white md:text-3xl truncate md:whitespace-nowrap ${
                   puedeSimular
                     ? "cursor-pointer underline decoration-transparent underline-offset-[6px] decoration-2 transition-[text-decoration-color] duration-300 ease-in-out group-hover:decoration-black dark:group-hover:decoration-white"
                     : ""
@@ -275,9 +334,9 @@ export default function Ver() {
             {puedeCrearLider && (
               <Button
                 onClick={handleOpenCreateLiderModal}
-                className="gap-2 w-full text-xl"
+                className="gap-2 w-full text-sm md:text-xl"
               >
-                🦸 Nuevo Líder
+                Nuevo Líder
               </Button>
             )}
           </div>
@@ -312,33 +371,45 @@ export default function Ver() {
           )
         ) : (
         <>
-        <div className="flex border-b dark:border-neutral-800 mb-6">
+        <div className="flex border-b dark:border-neutral-800 mb-6 w-full min-w-0">
           <button
             onClick={() => setActiveTab("Lideres")}
-            className={`px-4 py-2 text-base font-semibold ${activeTab === "Lideres" ? "border-b-2 border-blue-600 dark:border-blue-400 text-blue-600 dark:text-blue-400" : "text-gray-500 dark:text-gray-400"}`}
+            className={tabBtnClass(activeTab === "Lideres", "Lideres")}
           >
-            👥 Líderes
+            <span className={tabIconClass(activeTab === "Lideres", "Lideres")}>
+              <PiCrownDuotone className="w-4 h-4 md:w-5 md:h-5 shrink-0" />
+            </span>
+            <span className="truncate">Líderes</span>
           </button>
           <button
             onClick={() => setActiveTab("Afiliados")}
-            className={`px-4 py-2 text-base font-semibold ${activeTab === "Afiliados" ? "border-b-2 border-blue-600 dark:border-blue-400 text-blue-600 dark:text-blue-400" : "text-gray-500 dark:text-gray-400"}`}
+            className={tabBtnClass(activeTab === "Afiliados", "Afiliados")}
           >
-            ✅ Miembros
+            <span className={tabIconClass(activeTab === "Afiliados", "Afiliados")}>
+              <PiUsersThreeDuotone className="w-4 h-4 md:w-5 md:h-5 shrink-0" />
+            </span>
+            <span className="truncate">Miembros</span>
           </button>
           {esAdminOSuper && (
             <button
               onClick={() => setActiveTab("Administrativos")}
-              className={`px-4 py-2 text-base font-semibold ${activeTab === "Administrativos" ? "border-b-2 border-blue-600 dark:border-blue-400 text-blue-600 dark:text-blue-400" : "text-gray-500 dark:text-gray-400"}`}
+              className={tabBtnClass(activeTab === "Administrativos", "Administrativos")}
             >
-              🛡️ Administrativos
+              <span className={tabIconClass(activeTab === "Administrativos", "Administrativos")}>
+                <PiShieldCheckDuotone className="w-4 h-4 md:w-5 md:h-5 shrink-0" />
+              </span>
+              <span className="truncate">Administrativos</span>
             </button>
           )}
           {esAdminOSuper && (
             <button
               onClick={() => setActiveTab("Mensajes")}
-              className={`px-4 py-2 text-base font-semibold ${activeTab === "Mensajes" ? "border-b-2 border-blue-600 dark:border-blue-400 text-blue-600 dark:text-blue-400" : "text-gray-500 dark:text-gray-400"}`}
+              className={tabBtnClass(activeTab === "Mensajes", "Mensajes")}
             >
-              ✉️ Mensajes
+              <span className={tabIconClass(activeTab === "Mensajes", "Mensajes")}>
+                <PiChatCircleDotsDuotone className="w-4 h-4 md:w-5 md:h-5 shrink-0" />
+              </span>
+              <span className="truncate">Mensajes</span>
             </button>
           )}
         </div>
@@ -380,7 +451,7 @@ export default function Ver() {
           />
         )}
         {activeTab === "Mensajes" && esAdminOSuper && (
-          <MensajesEnviados lideres={allUsers} />
+          <Difusion usuarios={allUsers} />
         )}
         </>
         )}

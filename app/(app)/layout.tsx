@@ -16,7 +16,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </div>
       </nav>
 
-      <main className="flex flex-col gap-5 flex-grow w-full self-center">
+      <main className="flex flex-col gap-5 flex-grow w-full self-center max-w-full overflow-x-hidden min-w-0">
         {children}
       </main>
 

@@ -6,7 +6,7 @@ import { Dialog, Transition, TransitionChild, DialogPanel } from "@headlessui/re
 import { Fragment } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { obtenerConfiguracionAction } from "@/components/dashboard/actions/configuracion";
-import { obtenerMensajePendienteAction, marcarLeidoAction } from "@/components/dashboard/actions/mensajes";
+import { obtenerMensajePendienteAction, marcarLeidoAction, contarMensajesPendientesAction } from "@/components/dashboard/actions/mensajes";
 import { toast } from "react-toastify";
 import { Loader2 } from "lucide-react";
 
@@ -20,6 +20,7 @@ export default function ModalBienvenida({ userId, conteoAfiliados, nombreLider }
   const [isOpen, setIsOpen] = useState(false);
   const [mensajeTexto, setMensajeTexto] = useState("");
   const [mensajeId, setMensajeId] = useState("");
+  const [pendientesTotal, setPendientesTotal] = useState(0);
 
   const { data: config } = useQuery({
     queryKey: ["config_sistema"],
@@ -77,16 +78,32 @@ export default function ModalBienvenida({ userId, conteoAfiliados, nombreLider }
     });
   };
 
+  const cargarSiguienteMensaje = async () => {
+    const [mensaje, total] = await Promise.all([
+      obtenerMensajePendienteAction(userId, nivelCompromiso),
+      contarMensajesPendientesAction(userId, nivelCompromiso),
+    ]);
+
+    if (mensaje) {
+      setMensajeTexto(mensaje.mensaje);
+      setMensajeId(mensaje.id);
+      setPendientesTotal(total);
+      setIsOpen(true);
+      return true;
+    }
+
+    setMensajeTexto("");
+    setMensajeId("");
+    setPendientesTotal(0);
+    setIsOpen(false);
+    return false;
+  };
+
   useEffect(() => {
     async function checkMensaje() {
       if (config && userId) {
         try {
-          const mensaje = await obtenerMensajePendienteAction(userId, nivelCompromiso);
-          if (mensaje) {
-            setMensajeTexto(mensaje.mensaje);
-            setMensajeId(mensaje.id);
-            setIsOpen(true);
-          }
+          await cargarSiguienteMensaje();
         } catch (error) {
           console.error("Error al obtener mensaje pendiente", error);
         }
@@ -97,8 +114,8 @@ export default function ModalBienvenida({ userId, conteoAfiliados, nombreLider }
 
   const { mutate: handleContinuar, isPending } = useMutation({
     mutationFn: () => marcarLeidoAction(mensajeId, userId),
-    onSuccess: () => {
-      setIsOpen(false);
+    onSuccess: async () => {
+      await cargarSiguienteMensaje();
     },
     onError: (error: any) => {
       toast.error("Error al marcar como leído: " + error.message);
@@ -133,8 +150,11 @@ export default function ModalBienvenida({ userId, conteoAfiliados, nombreLider }
               leaveTo="opacity-0 scale-95"
             >
               <DialogPanel className={`w-full max-w-lg transform overflow-hidden rounded-2xl ${colorFondo} border-4 p-6 text-left align-middle shadow-2xl transition-all relative flex flex-col items-center`}>
-                
-                
+                {pendientesTotal > 1 && (
+                  <p className="w-full text-center text-[10px] font-bold uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-3">
+                    Tienes {pendientesTotal} mensajes sin leer · del más reciente al más antiguo
+                  </p>
+                )}
                 <div className={`p-3 md:p-4 rounded-xl bg-white/95 dark:bg-black/80 backdrop-blur-md w-full text-left shadow-lg border border-gray-200 dark:border-gray-800 mb-6`}>
                   <p className="font-medium text-gray-800 dark:text-gray-100 text-xs whitespace-pre-wrap leading-relaxed">
                     {renderMensaje(mensajeTexto)}

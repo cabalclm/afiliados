@@ -9,13 +9,6 @@ export async function enviarMensajeAction(
 ) {
   const supabase = await createClient();
 
-  // Desactivar todos los mensajes anteriores
-  await supabase
-    .from("sis_mensajes")
-    .update({ activo: false })
-    .neq("id", "00000000-0000-0000-0000-000000000000"); // Hack para actualizar todos
-
-  // Crear el nuevo mensaje
   const { data, error } = await supabase
     .from("sis_mensajes")
     .insert({
@@ -34,6 +27,49 @@ export async function enviarMensajeAction(
   return data;
 }
 
+function mensajeAplicaAlUsuario(
+  mensaje: {
+    publico_objetivo: string;
+    usuarios_especificos?: string[] | null;
+  },
+  userId: string,
+  nivelCompromiso: string,
+) {
+  if (mensaje.publico_objetivo === "Todos") return true;
+  if (mensaje.publico_objetivo === "Usuarios Específicos") {
+    return mensaje.usuarios_especificos?.includes(userId) ?? false;
+  }
+  return (
+    mensaje.publico_objetivo?.toUpperCase() === nivelCompromiso?.toUpperCase()
+  );
+}
+
+async function obtenerMensajesPendientesParaUsuario(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  userId: string,
+  nivelCompromiso: string,
+) {
+  const { data: mensajes, error: errorMensaje } = await supabase
+    .from("sis_mensajes")
+    .select("*")
+    .eq("activo", true)
+    .order("created_at", { ascending: false });
+
+  if (errorMensaje || !mensajes?.length) return [];
+
+  const { data: lecturas } = await supabase
+    .from("sis_mensajes_lecturas")
+    .select("mensaje_id")
+    .eq("user_id", userId);
+
+  const leidosIds = new Set((lecturas || []).map((l) => l.mensaje_id));
+
+  return mensajes.filter(
+    (m) =>
+      !leidosIds.has(m.id) && mensajeAplicaAlUsuario(m, userId, nivelCompromiso),
+  );
+}
+
 export async function obtenerMensajePendienteAction(
   userId: string,
   nivelCompromiso: string
@@ -41,48 +77,29 @@ export async function obtenerMensajePendienteAction(
   if (!userId) return null;
 
   const supabase = await createClient();
+  const pendientes = await obtenerMensajesPendientesParaUsuario(
+    supabase,
+    userId,
+    nivelCompromiso,
+  );
 
-  // Obtener el mensaje activo
-  const { data: mensajes, error: errorMensaje } = await supabase
-    .from("sis_mensajes")
-    .select("*")
-    .eq("activo", true)
-    .order("created_at", { ascending: false })
-    .limit(1);
+  return pendientes[0] ?? null;
+}
 
-  if (errorMensaje || !mensajes || mensajes.length === 0) {
-    return null; // No hay mensaje activo
-  }
+export async function contarMensajesPendientesAction(
+  userId: string,
+  nivelCompromiso: string,
+) {
+  if (!userId) return 0;
 
-  const mensajeActivo = mensajes[0];
+  const supabase = await createClient();
+  const pendientes = await obtenerMensajesPendientesParaUsuario(
+    supabase,
+    userId,
+    nivelCompromiso,
+  );
 
-  // Verificar si ya lo leyó
-  const { data: lectura } = await supabase
-    .from("sis_mensajes_lecturas")
-    .select("id")
-    .eq("mensaje_id", mensajeActivo.id)
-    .eq("user_id", userId)
-    .maybeSingle();
-
-  if (lectura) {
-    return null; // Ya lo leyó
-  }
-
-  // Verificar si el público objetivo coincide con el usuario
-  let aplica = false;
-  if (mensajeActivo.publico_objetivo === "Todos") {
-    aplica = true;
-  } else if (mensajeActivo.publico_objetivo === "Usuarios Específicos") {
-    aplica = mensajeActivo.usuarios_especificos?.includes(userId);
-  } else if (mensajeActivo.publico_objetivo?.toUpperCase() === nivelCompromiso?.toUpperCase()) {
-    aplica = true;
-  }
-
-  if (aplica) {
-    return mensajeActivo;
-  }
-
-  return null;
+  return pendientes.length;
 }
 
 export async function marcarLeidoAction(mensajeId: string, userId: string) {

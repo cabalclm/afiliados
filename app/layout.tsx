@@ -18,7 +18,13 @@ export const metadata = {
     statusBarStyle: "default",
     title: "SOTE",
   },
-  viewport: "width=device-width, initial-scale=1, viewport-fit=cover",
+  viewport: {
+    width: "device-width",
+    initialScale: 1,
+    maximumScale: 1,
+    userScalable: false,
+    viewportFit: "cover",
+  },
 };
 
 const geistSans = Geist({ display: "swap", subsets: ["latin"] });
