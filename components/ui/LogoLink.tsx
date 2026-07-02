@@ -23,7 +23,7 @@ export default function LogoLink() {
           className="flex justify-start"
         >
           <Image
-            src="/svg/logo-2.svg"
+            src="/icons/logo.png"
             alt="Afiliaciones CLM"
             height={100}
             width={100}
@@ -42,7 +42,7 @@ export default function LogoLink() {
           }}
         >
           <h1
-            className="font-serif text-sm md:text-2xl font-bold leading-tight text-left mt-5 bg-gradient-to-r from-blue-800 via-blue-400 to-blue-800 bg-[length:200%_auto] text-transparent bg-clip-text animate-text-shine"
+            className="font-serif text-sm md:text-2xl font-bold leading-tight text-left mt-5 bg-gradient-to-r from-blue-800 via-blue-400 to-blue-800 dark:from-blue-400 dark:via-blue-200 dark:to-blue-400 bg-[length:200%_auto] text-transparent bg-clip-text animate-text-shine"
             style={{ fontFamily: "'DM Serif Display', serif" }}
           >
             Sistema de Organización <br /> Territorial Estratégica

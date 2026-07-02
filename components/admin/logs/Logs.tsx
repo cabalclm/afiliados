@@ -157,16 +157,16 @@ return (
       <Button
         variant="ghost"
         onClick={() => router.push("/protected")}
-        className="text-blue-600 text-base underline w-full md:w-auto"
+        className="text-blue-600 dark:text-blue-400 text-base underline w-full md:w-auto"
       >
         Volver
       </Button>
-      <h1 className="text-2xl font-bold text-center w-full md:w-auto">Registro de Actividades</h1>
+      <h1 className="text-2xl font-bold text-center w-full md:w-auto text-gray-900 dark:text-gray-100">Registro de Actividades</h1>
     </div>
 
     <div className="flex flex-col md:flex-row md:items-center gap-4 mb-6">
       <select
-        className="border p-2 rounded w-full md:w-auto"
+        className="border border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-gray-900 dark:text-gray-100 p-2 rounded w-full md:w-auto"
         value={filtro.modulo}
         onChange={(e) => setFiltro({ ...filtro, modulo: e.target.value })}
       >
@@ -179,7 +179,7 @@ return (
       </select>
 
       <select
-        className="border p-2 rounded w-full md:w-auto"
+        className="border border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-gray-900 dark:text-gray-100 p-2 rounded w-full md:w-auto"
         value={filtro.usuario}
         onChange={(e) => setFiltro({ ...filtro, usuario: e.target.value })}
       >
@@ -194,35 +194,35 @@ return (
       <div className="flex items-center gap-2 w-full md:w-auto">
         <button
           onClick={() => cambiarDia(-1)}
-          className="px-2 text-lg border rounded hover:bg-gray-100"
+          className="px-2 text-lg border dark:border-neutral-700 rounded bg-white dark:bg-neutral-900 hover:bg-gray-100 dark:hover:bg-neutral-800 text-gray-900 dark:text-gray-100"
         >
           &lt;
         </button>
         <input
           type="date"
-          className="border p-2 rounded w-full md:w-auto"
+          className="border border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-gray-900 dark:text-gray-100 p-2 rounded w-full md:w-auto"
           value={filtro.fecha}
           max={hoy}
           onChange={(e) => setFiltro({ ...filtro, fecha: e.target.value })}
         />
         <button
           onClick={() => cambiarDia(1)}
-          className="px-2 text-lg border rounded hover:bg-gray-100"
+          className="px-2 text-lg border dark:border-neutral-700 rounded bg-white dark:bg-neutral-900 hover:bg-gray-100 dark:hover:bg-neutral-800 text-gray-900 dark:text-gray-100"
         >
           &gt;
         </button>
       </div>
     </div>
 
-    <div className="w-full overflow-x-auto max-w-full border-[2.5px] border-gray-400">
-      <table className="w-full min-w-[1000px] border-collapse text-xs border-[2.5px] border-gray-300">
+    <div className="w-full overflow-x-auto max-w-full border-[2.5px] border-gray-400 dark:border-neutral-600">
+      <table className="w-full min-w-[1000px] border-collapse text-xs border-[2.5px] border-gray-300 dark:border-neutral-700">
         <thead>
-          <tr className="bg-gray-100">
-            <th className="p-2 border">Usuario</th>
-            <th className="p-2 border">Acción</th>
-            <th className="p-2 border">Módulo</th>
-            <th className="p-2 border">Fecha</th>
-            <th className="p-2 border">Descripción</th>
+          <tr className="bg-gray-100 dark:bg-neutral-800 text-gray-900 dark:text-gray-100">
+            <th className="p-2 border border-gray-200 dark:border-neutral-700">Usuario</th>
+            <th className="p-2 border border-gray-200 dark:border-neutral-700">Acción</th>
+            <th className="p-2 border border-gray-200 dark:border-neutral-700">Módulo</th>
+            <th className="p-2 border border-gray-200 dark:border-neutral-700">Fecha</th>
+            <th className="p-2 border border-gray-200 dark:border-neutral-700">Descripción</th>
           </tr>
         </thead>
         <tbody>
@@ -231,18 +231,18 @@ return (
             const hora = fecha.getHours();
             const dia = fecha.getDay();
             const esHorarioLaboral = hora >= 8 && hora < 17 && dia >= 1 && dia <= 5;
-            const colorFila = esHorarioLaboral ? 'bg-green-100' : 'bg-yellow-100';
+            const colorFila = esHorarioLaboral ? 'bg-green-100 dark:bg-green-900/30' : 'bg-yellow-100 dark:bg-yellow-900/30';
 
             return (
-              <tr key={log.id} className={colorFila}>
-                <td className="p-2 border">{log.usuario}</td>
-                <td className="p-2 border">{log.accion}</td>
-                <td className="p-2 border">{log.modulo?.nombre ?? '—'}</td>
-                <td className="p-2 border whitespace-pre-line">
+              <tr key={log.id} className={`${colorFila} text-gray-900 dark:text-gray-100 border-t border-gray-200 dark:border-neutral-700`}>
+                <td className="p-2 border border-gray-200 dark:border-neutral-700">{log.usuario}</td>
+                <td className="p-2 border border-gray-200 dark:border-neutral-700">{log.accion}</td>
+                <td className="p-2 border border-gray-200 dark:border-neutral-700">{log.modulo?.nombre ?? '—'}</td>
+                <td className="p-2 border border-gray-200 dark:border-neutral-700 whitespace-pre-line">
                   {formatearFecha(log.fecha)}
                 </td>
                 <td
-                  className="p-2 border whitespace-pre-line break-words"
+                  className="p-2 border border-gray-200 dark:border-neutral-700 whitespace-pre-line break-words"
                   dangerouslySetInnerHTML={{ __html: log.descripcion }}
                 ></td>
               </tr>
@@ -252,14 +252,14 @@ return (
          </table>
 
     {logs.length === 0 && (
-      <p className="mt-4 text-gray-500">
+      <p className="mt-4 text-gray-500 dark:text-gray-400">
         No hay registros para los filtros seleccionados.
       </p>
     )}
   </div>
 
   {/* Selector de cantidad por página */}
-  <div className="flex justify-center mt-6 mb-2 items-center gap-2 text-sm">
+  <div className="flex justify-center mt-6 mb-2 items-center gap-2 text-sm text-gray-900 dark:text-gray-100">
     <span className="font-semibold">Ver por:</span>
 <select
   value={elementosPorPagina}
@@ -268,7 +268,7 @@ return (
     setElementosPorPagina(nuevaCantidad);
     setPaginaActual(1);
   }}
-  className="border border-gray-300 rounded px-2 py-1"
+  className="border border-gray-300 dark:border-neutral-700 rounded px-2 py-1 bg-white dark:bg-neutral-900"
 >
   <option value={20}>20</option>
   <option value={50}>50</option>
@@ -283,10 +283,10 @@ return (
       {Array.from({ length: totalPaginas }, (_, i) => i + 1).map((num) => (
         <button
           key={num}
-          className={`px-3 py-1 rounded border ${
+          className={`px-3 py-1 rounded border dark:border-neutral-700 ${
             num === paginaActual
-              ? 'bg-blue-600 text-white'
-              : 'bg-white text-blue-600 hover:bg-blue-100'
+              ? 'bg-blue-600 dark:bg-blue-700 text-white'
+              : 'bg-white dark:bg-neutral-900 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-neutral-800'
           }`}
           onClick={() => setPaginaActual(num)}
         >

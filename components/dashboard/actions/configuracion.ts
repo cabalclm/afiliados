@@ -21,7 +21,9 @@ export async function obtenerConfiguracionAction() {
 export async function actualizarConfiguracionAction(
   nombre_candidato: string,
   lugar: string,
-  frase: string
+  frase: string,
+  meta_celula: number = 15,
+  meta_celula_minima: number = 10
 ) {
   const supabase = await createClient();
 
@@ -32,6 +34,8 @@ export async function actualizarConfiguracionAction(
       nombre_candidato, 
       lugar, 
       frase,
+      meta_celula,
+      meta_celula_minima,
       updated_at: new Date().toISOString() 
     })
     .select()

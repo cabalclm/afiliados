@@ -10,8 +10,8 @@ export default function NotFoundPage() {
   return (
     <div className="w-full flex flex-col items-center justify-center text-center px-4 mt-20">
       <MdErrorOutline className="text-red-500 mb-4" size={80} />
-      <h1 className="text-6xl font-bold text-gray-800">Página no autorizada</h1>
-      <p className="text-3xl text-gray-500 mt-2">
+      <h1 className="text-6xl font-bold text-gray-800 dark:text-gray-100">Página no autorizada</h1>
+      <p className="text-3xl text-gray-500 dark:text-gray-400 mt-2">
         Lo sentimos, no tienes permiso para acceder a la página que buscas.
       </p>
       <Button

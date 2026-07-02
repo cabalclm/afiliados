@@ -6,9 +6,11 @@ import { Button } from "./ui/button";
 import useUserData from "@/hooks/sesion/useUserData";
 import { RefreshCw } from "lucide-react";
 import { useState } from "react";
+import ConfiguracionModal from "./ConfiguracionModal";
+import { AnimatedThemeToggler } from "@/components/ui/animated-theme-toggler";
 
 export default function AuthButton() {
-  const { email, nombres, apellidos, cargando } = useUserData();
+  const { email, nombres, apellidos, rol, cargando } = useUserData();
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const handleRefresh = () => {
@@ -41,40 +43,56 @@ export default function AuthButton() {
         </span>
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex flex-col items-center gap-1 mt-1">
+        <div className="flex items-center gap-2">
+          {(rol === "ADMIN" || rol === "SUPER" || rol === "ADMINISTRADOR") && (
+            <ConfiguracionModal />
+          )}
+          <Button
+            type="button"
+            variant="ghost"
+            className="h-10 w-10 p-0 rounded-full shrink-0 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100"
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+          >
+            <RefreshCw
+              className={`h-5 w-5 ${
+                isRefreshing ? "animate-spin" : "hover:rotate-180 transition-transform duration-500"
+              }`}
+            />
+          </Button>
+          <AnimatedThemeToggler 
+            duration={600} 
+            className="h-10 w-10 rounded-full flex items-center justify-center shrink-0 text-gray-500 hover:text-gray-900 hover:bg-gray-100/50 dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-gray-800/50 transition-colors" 
+          />
+        </div>
+
         <form action={signOutAction}>
           <Button
             type="submit"
-            variant="outline"
-            className="h-9 px-4 px-2 shrink-0 text-xs md:text-sm"
+            variant="ghost"
+            className="h-8 px-4 rounded-full text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/50 transition-colors text-xs md:text-sm font-semibold"
           >
             Cerrar Sesión
           </Button>
         </form>
-        <Button
-          type="button"
-          variant="outline"
-          className="h-9 w-9 p-0 shrink-0"
-          onClick={handleRefresh}
-          disabled={isRefreshing}
-        >
-          <RefreshCw
-            className={`h-4 w-4 text-gray-600 transition-all duration-500 ${
-              isRefreshing ? "animate-spin" : "hover:rotate-180"
-            }`}
-          />
-        </Button>
       </div>
     </div>
   ) : (
-    <div className="flex gap-2 ">
+    <div className="flex gap-2 items-center">
       <Button
         asChild
-        variant="outline"
-        className="h-9 px-4 text-xs md:text-sm"
+        variant="ghost"
+        className="h-10 px-5 rounded-full text-blue-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/50 transition-colors text-xs md:text-sm font-semibold"
       >
         <Link href="/sign-in">Iniciar Sesión</Link>
       </Button>
+      <AnimatedThemeToggler 
+        variant="hexagon" 
+        duration={600} 
+        fromCenter 
+        className="h-10 w-10 rounded-full flex items-center justify-center shrink-0 text-gray-500 hover:text-gray-900 hover:bg-gray-100/50 dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-gray-800/50 transition-colors"
+      />
     </div>
   );
 }

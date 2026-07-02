@@ -1,8 +1,11 @@
-"use server";
-
 import { createClient } from "@/utils/supabase/server";
+import { NextResponse } from "next/server";
 
-export async function obtenerAfiliadosAction(liderId?: string) {
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const liderId = searchParams.get("liderId");
+
+  console.time(`⏱️ API /api/afiliados?liderId=${liderId}`);
   const supabase = await createClient();
 
   let query = supabase.from("afiliados").select("*");
@@ -15,8 +18,15 @@ export async function obtenerAfiliadosAction(liderId?: string) {
     ascending: false,
   });
 
-  if (error) throw new Error(error.message);
-  if (!afiliados) return [];
+  if (error) {
+    console.error("Error fetching afiliados:", error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  if (!afiliados || afiliados.length === 0) {
+    console.timeEnd(`⏱️ API /api/afiliados?liderId=${liderId}`);
+    return NextResponse.json([]);
+  }
 
   const liderIds = [
     ...new Set(afiliados.map((a) => a.lider_id).filter((id) => id)),
@@ -25,7 +35,6 @@ export async function obtenerAfiliadosAction(liderId?: string) {
     ...new Set(afiliados.map((a) => a.lugar_id).filter((id) => id)),
   ];
 
-  // Solo queries directas a Supabase — sin listUsers de Auth
   const [perfilesRes, lugaresRes] = await Promise.all([
     liderIds.length > 0
       ? supabase
@@ -45,7 +54,7 @@ export async function obtenerAfiliadosAction(liderId?: string) {
   const perfilMap = new Map(perfiles.map((p: any) => [p.user_id, p]));
   const lugarMap = new Map(lugares.map((l: any) => [l.id, l.nombre]));
 
-  return afiliados.map((afiliado: any) => {
+  const result = afiliados.map((afiliado: any) => {
     const perfilLider = afiliado.lider_id
       ? perfilMap.get(afiliado.lider_id)
       : null;
@@ -61,4 +70,7 @@ export async function obtenerAfiliadosAction(liderId?: string) {
       lider_email: "",
     };
   });
+
+  console.timeEnd(`⏱️ API /api/afiliados?liderId=${liderId}`);
+  return NextResponse.json(result);
 }

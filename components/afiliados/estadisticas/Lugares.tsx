@@ -12,12 +12,15 @@ import {
   Rectangle,
 } from "recharts";
 import type { Afiliado } from "../esquemas";
+import { chartStyles, useChartTheme } from "./utils";
 
 interface Props {
   afiliados: Afiliado[];
 }
 
 export default function Lugares({ afiliados }: Props) {
+  const theme = useChartTheme();
+
   const conteoLugares: Record<string, number> = {};
 
   afiliados.forEach((afiliado) => {
@@ -40,13 +43,14 @@ export default function Lugares({ afiliados }: Props) {
       if (payload[0].payload.name === "Sin registros") return null;
 
       return (
-        <div className="bg-white border border-gray-200 rounded-lg px-4 py-3 shadow-xl text-[9px] z-50">
-          <p className="font-bold text-gray-800 mb-2 border-b pb-1 uppercase">
-            {label}
-          </p>
+        <div className={chartStyles.tooltip}>
+          <p className={chartStyles.tooltipTitle}>{label}</p>
           <p className="flex items-center gap-2">
-            <span className="text-gray-600">Personas:</span>
-            <strong className="text-[#6366f1] text-xl">
+            <span className={chartStyles.tooltipLabel}>Personas:</span>
+            <strong
+              className="text-xl"
+              style={{ color: theme.barAccent }}
+            >
               {payload[0].value}
             </strong>
           </p>
@@ -57,17 +61,17 @@ export default function Lugares({ afiliados }: Props) {
   };
 
   return (
-    <div className="w-full h-full flex flex-col p-2">
+    <div className={chartStyles.cardCompact}>
       <div className="flex flex-col items-start mb-4 shrink-0">
-        <h4 className="text-xl font-bold text-gray-800 uppercase">
+        <h4 className={chartStyles.headerTitle}>
           Ubicación de los Afiliados
         </h4>
-        <p className="text-sm text-gray-500 italic">
+        <p className={chartStyles.headerSubtitleLeft}>
           Lugares con mayor presencia
         </p>
       </div>
 
-      <div className="flex-1 w-full overflow-x-auto overflow-y-hidden pb-4 scrollbar-thin scrollbar-thumb-gray-300">
+      <div className="flex-1 w-full overflow-x-auto overflow-y-hidden pb-4 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-zinc-700">
         <div
           className="w-full md:min-w-[550px]"
           style={{ height: Math.max(datosLugares.length * 55 + 30, 100) }}
@@ -81,7 +85,7 @@ export default function Lugares({ afiliados }: Props) {
               <CartesianGrid
                 strokeDasharray="3 3"
                 horizontal={false}
-                stroke="#e5e7eb"
+                stroke={theme.gridStroke}
               />
               <XAxis type="number" hide />
               <YAxis
@@ -94,7 +98,7 @@ export default function Lugares({ afiliados }: Props) {
               />
               <Tooltip
                 content={<CustomTooltip />}
-                cursor={{ fill: "#f3f4f6", radius: 8 }}
+                cursor={{ fill: theme.cursorFill, radius: 8 }}
               />
               <Bar
                 dataKey="value"
@@ -107,8 +111,12 @@ export default function Lugares({ afiliados }: Props) {
                       y={y - 12}
                       width={width}
                       height={height}
-                      fill={datosLugaresRaw.length > 0 ? "#6366f1" : "#e5e7eb"}
-                      radius={[0, 8, 8, 0]}
+                      fill={
+                        datosLugaresRaw.length > 0
+                          ? theme.barAccent
+                          : theme.emptySlice
+                      }
+                      radius={[0, 10, 10, 0]}
                     />
                   );
                 }}
@@ -122,7 +130,6 @@ export default function Lugares({ afiliados }: Props) {
                     if (!item) return null;
 
                     const hasData = datosLugaresRaw.length > 0;
-
                     const total = afiliados.length;
                     const percent = (item.value / total) * 100;
 
@@ -130,22 +137,34 @@ export default function Lugares({ afiliados }: Props) {
                       <text
                         x={x}
                         y={y + 22}
-                        fill={hasData ? "#6b7280" : "#9ca3af"}
+                        fill={hasData ? theme.barLabel : theme.axisTick}
                         fontSize={9}
                         className="uppercase"
                         textAnchor="start"
                       >
                         {hasData && (
                           <>
-                            <tspan fontSize={13} fontWeight="900" fill="#6366f1">
+                            <tspan
+                              fontSize={13}
+                              fontWeight="900"
+                              fill={theme.barAccent}
+                            >
                               ({item.value}
                             </tspan>
-                            <tspan fontWeight="400" fontSize={10} fill="#9ca3af">
-                              {" "}| {percent.toFixed(0)}%)
+                            <tspan
+                              fontWeight="400"
+                              fontSize={10}
+                              fill={theme.axisTick}
+                            >
+                              {" "}
+                              | {percent.toFixed(0)}%)
                             </tspan>
                           </>
                         )}
-                        <tspan dx={hasData ? 5 : 0} fontWeight="600"> {item.name}</tspan>
+                        <tspan dx={hasData ? 5 : 0} fontWeight="600">
+                          {" "}
+                          {item.name}
+                        </tspan>
                       </text>
                     );
                   }}

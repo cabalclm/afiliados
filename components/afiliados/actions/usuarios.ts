@@ -1,11 +1,13 @@
 "use server";
 
 import { createClient } from "@/utils/supabase/server";
-import supabaseAdmin from "@/utils/supabase/admin";
 
 export async function listarUsuariosAction(rol_filtro?: string | string[]) {
+  console.time("🔵 SERVER: listarUsuariosAction TOTAL");
   const supabase = await createClient();
 
+  // Query directa a info_perfil con JOIN a roles — sin listUsers de Auth
+  console.time("🔵 SERVER: query perfiles");
   const queryPerfiles = supabase
     .from("info_perfil")
     .select(`
@@ -28,32 +30,32 @@ export async function listarUsuariosAction(rol_filtro?: string | string[]) {
     }
   }
 
-  // Ejecutamos TODO en paralelo para eficiencia, pero sin caché compleja que cause fallos en dev
-  const [perfilesRes, authRes, conteoRes] = await Promise.all([
+  // Ejecutamos las dos queries en paralelo — ambas son rápidas (< 500ms)
+  const [perfilesRes, conteoRes] = await Promise.all([
     filtroPerfiles,
-    supabaseAdmin.auth.admin.listUsers({ perPage: 1000 }).catch(() => ({ data: { users: [] } })),
-    supabase.from("afiliados").select("lider_id")
+    supabase.from("afiliados").select("lider_id").not("lider_id", "is", null)
   ]);
+  console.timeEnd("🔵 SERVER: query perfiles");
 
   if (perfilesRes.error) throw new Error(perfilesRes.error.message);
   if (conteoRes.error) throw new Error(conteoRes.error.message);
 
   const perfiles = perfilesRes.data || [];
-  const users = (authRes as any)?.data?.users || [];
+  console.log("🔵 SERVER: perfiles count:", perfiles.length);
   const conteoRaw = conteoRes.data || [];
+  console.log("🔵 SERVER: conteoRaw count:", conteoRaw.length);
 
-  const conteoMap = new Map();
+  // Conteo eficiente en memoria
+  const conteoMap = new Map<string, number>();
   conteoRaw.forEach((row) => {
     if (row.lider_id) {
       conteoMap.set(row.lider_id, (conteoMap.get(row.lider_id) || 0) + 1);
     }
   });
 
-  const userMap = new Map(users.map((u: any) => [u.id, u.email]));
-
-  return perfiles.map((p: any) => ({
+  const result = perfiles.map((p: any) => ({
     id: p.user_id,
-    email: (userMap.get(p.user_id) as string)?.replace(/@.*$/, "") || "",
+    email: "",
     nombres: p.nombres,
     apellidos: p.apellidos,
     activo: p.activo,
@@ -61,4 +63,6 @@ export async function listarUsuariosAction(rol_filtro?: string | string[]) {
     rol_id: p.rol_id,
     conteoAfiliados: conteoMap.get(p.user_id) || 0,
   }));
+  console.timeEnd("🔵 SERVER: listarUsuariosAction TOTAL");
+  return result;
 }

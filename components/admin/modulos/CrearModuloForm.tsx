@@ -52,7 +52,7 @@ export default function CrearModuloForm({ onClose, onModuloCreado }: Props) {
         value={nombre}
         onChange={(e) => setNombre(e.target.value)}
       />
-      {error && <p className="text-red-500 text-sm">{error}</p>}
+      {error && <p className="text-red-500 dark:text-red-400 text-sm">{error}</p>}
       <div className="flex justify-end gap-2">
         <Button variant="outline" onClick={onClose}>
           Cancelar

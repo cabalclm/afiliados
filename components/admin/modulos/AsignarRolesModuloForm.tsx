@@ -86,9 +86,9 @@ export default function AsignarRolesModuloForm({ moduloId, onClose }: Props) {
   };
 
   return (
-    <div className="bg-white mx-auto space-y-4">
+    <div className="bg-transparent mx-auto space-y-4">
       {rolesDisponibles.length === 0 ? (
-        <p className="text-sm text-gray-500">No hay roles disponibles.</p>
+        <p className="text-sm text-gray-500 dark:text-gray-400">No hay roles disponibles.</p>
       ) : (
         <div className="space-y-2">
           {rolesDisponibles.map((rol) => (

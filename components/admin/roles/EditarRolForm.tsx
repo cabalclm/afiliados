@@ -56,16 +56,16 @@ const actualizarRol = async () => {
 };
 
   return (
-    <div className=" bg-white space-y-4 max-w-sm mx-auto">
+    <div className="bg-transparent space-y-4 max-w-sm mx-auto">
       <div className="space-y-2">
         <label className="block text-sm font-medium">Nombre del Rol</label>
         <input
           type="text"
           value={nombre}
           onChange={(e) => setNombre(e.target.value)}
-          className="w-full border px-3 py-2 rounded"
+          className="w-full border border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 rounded px-3 py-2 text-sm"
         />
-        {error && <p className="text-red-500 text-sm">{error}</p>}
+        {error && <p className="text-red-500 dark:text-red-400 text-sm">{error}</p>}
       </div>
 
       <div className="flex justify-end gap-2">

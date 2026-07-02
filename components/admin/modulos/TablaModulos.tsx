@@ -29,7 +29,7 @@ export default function TablaModulos({ modulos, onModuloActualizado }: Props) {
 
   if (!modulos || modulos.length === 0) {
     return (
-      <div className="text-center text-gray-500 mt-8">
+      <div className="text-center text-gray-500 dark:text-gray-400 mt-8">
         No hay módulos registrados.
       </div>
     );
@@ -37,19 +37,19 @@ export default function TablaModulos({ modulos, onModuloActualizado }: Props) {
 
   return (
     <div className="space-y-4 mx-auto">
-      <div className="overflow-x-auto border border-gray-300 rounded">
-        <table className="min-w-full divide-y divide-gray-300 text-sm border border-gray-200">
-          <thead className="bg-gray-100">
+      <div className="overflow-x-auto border border-gray-300 dark:border-neutral-700 rounded">
+        <table className="min-w-full divide-y divide-gray-300 dark:divide-neutral-700 text-sm border border-gray-200 dark:border-neutral-700">
+          <thead className="bg-gray-100 dark:bg-neutral-800">
             <tr>
-              <th className="px-4 py-2 text-left font-semibold border-r border-gray-200">
+              <th className="px-4 py-2 text-left font-semibold border-r border-gray-200 dark:border-neutral-700 text-gray-900 dark:text-gray-100">
                 Nombre del Módulo
               </th>
-              <th className="px-4 py-2 text-right font-semibold">Acciones</th>
+              <th className="px-4 py-2 text-right font-semibold text-gray-900 dark:text-gray-100">Acciones</th>
             </tr>
           </thead>
           <tbody>
             {modulos.map((modulo) => (
-              <tr key={modulo.id} className="border-t border-gray-200">
+              <tr key={modulo.id} className="border-t border-gray-200 dark:border-neutral-700 text-gray-900 dark:text-gray-100">
                 <td className="px-4 py-2">{modulo.nombre}</td>
                 <td className="px-4 py-2 text-right space-x-2">
                  <Button
@@ -88,7 +88,7 @@ export default function TablaModulos({ modulos, onModuloActualizado }: Props) {
             leaveFrom="opacity-100"
             leaveTo="opacity-0"
           >
-            <div className="fixed inset-0 bg-black/30" />
+            <div className="fixed inset-0 bg-black/30 backdrop-blur-sm" />
           </TransitionChild>
 
           <div className="fixed inset-0 flex items-center justify-center p-4">
@@ -101,7 +101,7 @@ export default function TablaModulos({ modulos, onModuloActualizado }: Props) {
               leaveFrom="opacity-100 scale-100"
               leaveTo="opacity-0 scale-95"
             >
-              <DialogPanel className="bg-white rounded-lg w-full max-w-md p-6 shadow-xl">
+              <DialogPanel className="bg-white dark:bg-neutral-900 border dark:border-neutral-800 rounded-lg w-full max-w-md p-6 shadow-xl text-gray-900 dark:text-gray-100">
                 <DialogTitle className="text-lg font-bold mb-4">
                   Editar Módulo
                 </DialogTitle>
@@ -130,7 +130,7 @@ export default function TablaModulos({ modulos, onModuloActualizado }: Props) {
             leaveFrom="opacity-100"
             leaveTo="opacity-0"
           >
-            <div className="fixed inset-0 bg-black/30" />
+            <div className="fixed inset-0 bg-black/30 backdrop-blur-sm" />
           </TransitionChild>
 
           <div className="fixed inset-0 flex items-center justify-center p-4">
@@ -143,10 +143,10 @@ export default function TablaModulos({ modulos, onModuloActualizado }: Props) {
               leaveFrom="opacity-100 scale-100"
               leaveTo="opacity-0 scale-95"
             >
-              <DialogPanel className="bg-white rounded-lg w-full max-w-md p-6 shadow-xl">
+              <DialogPanel className="bg-white dark:bg-neutral-900 border dark:border-neutral-800 rounded-lg w-full max-w-md p-6 shadow-xl text-gray-900 dark:text-gray-100">
                 <DialogTitle className="text-lg font-bold mb-4">
                   Asignar Roles al módulo{' '}
-                  <span className="text-blue-600 underline">
+                  <span className="text-blue-600 dark:text-blue-400 underline">
                     {moduloParaRoles?.nombre}
                   </span>
                 </DialogTitle>

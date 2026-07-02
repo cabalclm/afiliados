@@ -192,28 +192,28 @@ export function SignupForm({
         <div className="flex flex-col gap-4 animate-pulse">
           <div className="flex flex-col md:flex-row gap-4">
             <div className="flex-1 space-y-2">
-              <div className="h-4 w-24 bg-gray-200 rounded" />
-              <div className="h-12 w-full bg-gray-100 rounded" />
+              <div className="h-4 w-24 bg-gray-200 dark:bg-neutral-700 rounded" />
+              <div className="h-12 w-full bg-gray-100 dark:bg-neutral-800 rounded" />
             </div>
             <div className="flex-1 space-y-2">
-              <div className="h-4 w-24 bg-gray-200 rounded" />
-              <div className="h-12 w-full bg-gray-100 rounded" />
+              <div className="h-4 w-24 bg-gray-200 dark:bg-neutral-700 rounded" />
+              <div className="h-12 w-full bg-gray-100 dark:bg-neutral-800 rounded" />
             </div>
           </div>
           <div className="space-y-2">
-            <div className="h-4 w-32 bg-gray-200 rounded" />
-            <div className="h-12 w-full bg-gray-100 rounded" />
+            <div className="h-4 w-32 bg-gray-200 dark:bg-neutral-700 rounded" />
+            <div className="h-12 w-full bg-gray-100 dark:bg-neutral-800 rounded" />
           </div>
           <div className="space-y-2">
-            <div className="h-4 w-24 bg-gray-200 rounded" />
-            <div className="h-12 w-full bg-gray-100 rounded" />
+            <div className="h-4 w-24 bg-gray-200 dark:bg-neutral-700 rounded" />
+            <div className="h-12 w-full bg-gray-100 dark:bg-neutral-800 rounded" />
           </div>
-          <div className="border rounded-md p-4 bg-gray-50 mt-4 space-y-3">
-            <div className="h-4 w-40 bg-gray-200 rounded" />
-            <div className="h-12 w-full bg-gray-100 rounded" />
-            <div className="h-12 w-full bg-gray-100 rounded" />
+          <div className="border dark:border-neutral-700 rounded-md p-4 bg-gray-50 dark:bg-neutral-900 mt-4 space-y-3">
+            <div className="h-4 w-40 bg-gray-200 dark:bg-neutral-700 rounded" />
+            <div className="h-12 w-full bg-gray-100 dark:bg-neutral-800 rounded" />
+            <div className="h-12 w-full bg-gray-100 dark:bg-neutral-800 rounded" />
           </div>
-          <div className="h-14 w-full bg-gray-200 rounded mt-4" />
+          <div className="h-14 w-full bg-gray-200 dark:bg-neutral-700 rounded mt-4" />
           <p className="text-center text-sm font-semibold text-blue-600">
             Cargando datos de simulación...
           </p>
@@ -261,7 +261,7 @@ export function SignupForm({
             name="rol_id"
             value={rol_id}
             onChange={(e) => setRolId(e.target.value)}
-            className="w-full border rounded h-12 px-3 text-lg bg-white mt-1"
+            className="w-full border dark:border-neutral-700 rounded h-12 px-3 text-lg bg-white dark:bg-neutral-900 mt-1"
           >
             <option value="">Seleccione un rol...</option>
             {rolesParaSelector.map((r) => (
@@ -272,7 +272,7 @@ export function SignupForm({
           </select>
         </div>
 
-        <div className="border rounded-md p-4 bg-gray-50 mt-4">
+        <div className="border dark:border-neutral-700 rounded-md p-4 bg-gray-50 dark:bg-neutral-900 mt-4">
           {isEdit ? (
             <button
               type="button"
@@ -287,7 +287,7 @@ export function SignupForm({
               {showPasswordAccordion ? <ChevronUp /> : <ChevronDown />}
             </button>
           ) : (
-            <h4 className="font-bold text-gray-700">Configurar Seguridad</h4>
+            <h4 className="font-bold text-gray-700 dark:text-gray-300">Configurar Seguridad</h4>
           )}
 
           <div className={`mt-4 ${showPasswordAccordion ? "block" : "hidden"}`}>

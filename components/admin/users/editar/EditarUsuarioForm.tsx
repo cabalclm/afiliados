@@ -155,10 +155,10 @@ export default function EditarUsuarioForm() {
     );
 
   return (
-    <div className="flex flex-col gap-6 max-w-2xl mx-auto p-4 bg-white rounded-xl border border-gray-200 shadow-sm">
+    <div className="flex flex-col gap-6 max-w-2xl mx-auto p-4 bg-white dark:bg-neutral-900 rounded-xl border border-gray-200 dark:border-neutral-800 shadow-sm text-gray-900 dark:text-gray-100">
       <div className="flex flex-col md:flex-row gap-4">
         <div className="flex-1">
-          <Label className="text-blue-700 font-bold mb-2 block">Nombres</Label>
+          <Label className="text-blue-700 dark:text-blue-400 font-bold mb-2 block">Nombres</Label>
           <Input
             value={nombres}
             onChange={(e) => setNombres(e.target.value)}
@@ -166,7 +166,7 @@ export default function EditarUsuarioForm() {
           />
         </div>
         <div className="flex-1">
-          <Label className="text-blue-700 font-bold mb-2 block">
+          <Label className="text-blue-700 dark:text-blue-400 font-bold mb-2 block">
             Apellidos
           </Label>
           <Input
@@ -178,7 +178,7 @@ export default function EditarUsuarioForm() {
       </div>
 
       <div>
-        <Label className="text-blue-700 font-bold mb-2 block">
+        <Label className="text-blue-700 dark:text-blue-400 font-bold mb-2 block">
           Usuario electrónico de acceso
         </Label>
         <Input
@@ -189,13 +189,13 @@ export default function EditarUsuarioForm() {
       </div>
 
       <div>
-        <Label className="text-blue-700 font-bold mb-2 block">
+        <Label className="text-blue-700 dark:text-blue-400 font-bold mb-2 block">
           Asignar Rol de Sistema
         </Label>
         <select
           value={rol || ""}
           onChange={(e) => setRol(e.target.value || null)}
-          className="w-full border rounded-md px-3 h-12 bg-white"
+          className="w-full border dark:border-neutral-700 rounded-md px-3 h-12 bg-white dark:bg-neutral-900"
         >
           <option value="">-- Seleccione un rol --</option>
           {rolesParaSelector.map((r) => (
@@ -206,21 +206,21 @@ export default function EditarUsuarioForm() {
         </select>
       </div>
 
-      <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border">
+      <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-neutral-800 rounded-lg border dark:border-neutral-700">
         <div className="flex flex-col">
-          <span className="font-bold text-gray-700">Estado de la cuenta</span>
-          <span className="text-sm text-gray-500">
+          <span className="font-bold text-gray-700 dark:text-gray-300">Estado de la cuenta</span>
+          <span className="text-sm text-gray-500 dark:text-gray-400">
             {activo ? "Acceso permitido" : "Acceso bloqueado"}
           </span>
         </div>
         <Switch checked={activo} onCheckedChange={setActivo} />
       </div>
 
-      <div className="border-t pt-4 flex flex-col gap-4">
+      <div className="border-t dark:border-neutral-800 pt-4 flex flex-col gap-4">
         <Button
           variant="ghost"
           onClick={() => setMostrarPassword(!mostrarPassword)}
-          className={`font-semibold ${mostrarPassword ? "text-red-500" : "text-blue-600"}`}
+          className={`font-semibold ${mostrarPassword ? "text-red-500 dark:text-red-400" : "text-blue-600 dark:text-blue-400"}`}
         >
           {mostrarPassword
             ? "Cancelar cambio de contraseña"

@@ -19,10 +19,10 @@ function AfiliadosSkeleton() {
   return (
     <div className="animate-pulse space-y-4">
       {[...Array(4)].map((_, i) => (
-        <div key={i} className="border rounded-lg shadow-sm overflow-hidden">
-          <div className="h-14 bg-gray-50 p-4 flex justify-between items-center">
-            <div className="h-4 w-2/3 bg-gray-200 rounded" />
-            <div className="h-5 w-5 bg-gray-200 rounded" />
+        <div key={i} className="border dark:border-neutral-800 rounded-lg shadow-sm overflow-hidden">
+          <div className="h-14 bg-gray-50 dark:bg-neutral-900 p-4 flex justify-between items-center">
+            <div className="h-4 w-2/3 bg-gray-200 dark:bg-neutral-800 rounded" />
+            <div className="h-5 w-5 bg-gray-200 dark:bg-neutral-800 rounded" />
           </div>
         </div>
       ))}
@@ -97,7 +97,7 @@ export default function AfiliadosGeneral({
 
   if (afiliadosAgrupados.length === 0) {
     return (
-      <div className="text-center text-gray-500 mt-8 border rounded-lg p-4">
+      <div className="text-center text-gray-500 dark:text-gray-400 mt-8 border dark:border-neutral-700 rounded-lg p-4">
         No se encontraron miembros.
       </div>
     );
@@ -113,9 +113,9 @@ export default function AfiliadosGeneral({
           : "Miembros sin Líder asignado";
         const colorClase = lider
           ? lider.rol === "SUPER"
-            ? "bg-indigo-50 border-indigo-200"
-            : "bg-gray-50 border-gray-200"
-          : "bg-red-50 border-red-200";
+            ? "bg-indigo-50 dark:bg-indigo-900/20 border-indigo-200 dark:border-indigo-800/50"
+            : "bg-gray-50 dark:bg-neutral-800/50 border-gray-200 dark:border-neutral-700"
+          : "bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800/50";
 
         return (
           <div key={liderId} className="border rounded-lg shadow-sm">
@@ -123,14 +123,14 @@ export default function AfiliadosGeneral({
               className={`flex justify-between items-center p-4 cursor-pointer ${colorClase} rounded-lg`}
               onClick={() => setLiderAbiertoId(isLiderAbierto ? null : liderId)}
             >
-              <h3 className="text-base font-bold text-gray-800">
+              <h3 className="text-base font-bold text-gray-800 dark:text-gray-200">
                 Célula de:{" "}
-                <span className="text-blue-700 uppercase">
+                <span className="text-blue-700 dark:text-blue-400 uppercase">
                   {nombreLider} ({list.length})
                 </span>
               </h3>
               <ChevronDown
-                className={`h-5 w-5 text-gray-600 transition-transform ${isLiderAbierto ? "rotate-180" : ""}`}
+                className={`h-5 w-5 text-gray-600 dark:text-gray-400 transition-transform ${isLiderAbierto ? "rotate-180" : ""}`}
               />
             </div>
 
@@ -141,39 +141,39 @@ export default function AfiliadosGeneral({
               className="overflow-hidden"
             >
               <div className="overflow-x-auto">
-                <table className="min-w-full bg-white text-xs">
-                  <thead className="bg-gray-100">
+                <table className="min-w-full bg-white dark:bg-neutral-900 text-xs">
+                  <thead className="bg-gray-100 dark:bg-neutral-800">
                     <tr>
-                      <th className="px-4 py-2 text-left font-bold text-gray-600 uppercase">
+                      <th className="px-4 py-2 text-left font-bold text-gray-600 dark:text-gray-300 uppercase">
                         No.
                       </th>
-                      <th className="px-4 py-2 text-left font-bold text-gray-600 uppercase">
+                      <th className="px-4 py-2 text-left font-bold text-gray-600 dark:text-gray-300 uppercase">
                         Nombre
                       </th>
-                      <th className="px-4 py-2 text-left font-bold text-gray-600 uppercase">
+                      <th className="px-4 py-2 text-left font-bold text-gray-600 dark:text-gray-300 uppercase">
                         DPI
                       </th>
-                      <th className="px-4 py-2 text-left font-bold text-gray-600 uppercase">
+                      <th className="px-4 py-2 text-left font-bold text-gray-600 dark:text-gray-300 uppercase">
                         Teléfono
                       </th>
-                      <th className="px-4 py-2 text-left font-bold text-gray-600 uppercase">
+                      <th className="px-4 py-2 text-left font-bold text-gray-600 dark:text-gray-300 uppercase">
                         Edad
                       </th>
-                      <th className="px-4 py-2 text-left font-bold text-gray-600 uppercase">
+                      <th className="px-4 py-2 text-left font-bold text-gray-600 dark:text-gray-300 uppercase">
                         Ubicación
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-200">
+                  <tbody className="divide-y divide-gray-200 dark:divide-neutral-700">
                     {list.map((afiliado, index) => (
                       <tr
                         key={afiliado.id + 1}
-                        className="hover:bg-gray-50 uppercase"
+                        className="hover:bg-gray-50 dark:hover:bg-neutral-800/50 uppercase"
                       >
-                        <td className="px-4 py-2 whitespace-nowrap text-gray-500">
+                        <td className="px-4 py-2 whitespace-nowrap text-gray-500 dark:text-gray-400">
                           {index + 1}
                         </td>
-                        <td className="px-4 py-2 whitespace-nowrap font-bold text-gray-900">
+                        <td className="px-4 py-2 whitespace-nowrap font-bold text-gray-900 dark:text-gray-100">
                           {afiliado.nombres} {afiliado.apellidos}
                         </td>
                         <td className="px-4 py-2 whitespace-nowrap font-mono">

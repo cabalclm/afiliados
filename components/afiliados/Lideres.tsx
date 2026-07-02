@@ -12,6 +12,8 @@ import {
   ChevronDown,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useQuery } from "@tanstack/react-query";
+import { obtenerConfiguracionAction } from "@/components/dashboard/actions/configuracion";
 import { eliminar } from "./acciones";
 
 export interface Lider {
@@ -44,14 +46,14 @@ function LideresSkeleton({ esAdminOSuper }: { esAdminOSuper: boolean }) {
       {[...Array(5)].map((_, i) => (
         <div
           key={i}
-          className="h-20 bg-white border border-gray-200 rounded-xl p-4 flex items-center gap-4"
+          className="h-20 bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-800 rounded-xl p-4 flex items-center gap-4"
         >
-          <div className="h-10 w-10 bg-gray-100 rounded-lg"></div>
+          <div className="h-10 w-10 bg-gray-100 dark:bg-neutral-800 rounded-lg"></div>
           <div className="flex-1 space-y-2">
-            <div className="h-4 w-1/3 bg-gray-100 rounded"></div>
-            <div className="h-3 w-1/4 bg-gray-50 rounded"></div>
+            <div className="h-4 w-1/3 bg-gray-100 dark:bg-neutral-800 rounded"></div>
+            <div className="h-3 w-1/4 bg-gray-50 dark:bg-neutral-800 rounded"></div>
           </div>
-          <div className="h-10 w-24 bg-gray-100 rounded-lg"></div>
+          <div className="h-10 w-24 bg-gray-100 dark:bg-neutral-800 rounded-lg"></div>
         </div>
       ))}
     </div>
@@ -78,6 +80,14 @@ export default function Lideres({
   const esAdminOSuper =
     rolUsuarioSesion === "ADMINISTRADOR" || rolUsuarioSesion === "SUPER";
   const OBJETIVO_GENERAL = 2250;
+
+  const { data: config } = useQuery({
+    queryKey: ["config_sistema"],
+    queryFn: () => obtenerConfiguracionAction(),
+  });
+
+  const META_CELULA = config?.meta_celula ?? 15;
+  const META_MINIMA = config?.meta_celula_minima ?? 10;
 
   useEffect(() => {
     setCurrentPage(1);
@@ -133,9 +143,9 @@ export default function Lideres({
 
   const getRowClass = (lider: Lider) => {
     if (lider.id === idUsuarioSesion) {
-      return "bg-blue-50 border-blue-200 ring-1 ring-blue-300 shadow-blue-50";
+      return "bg-blue-50 dark:bg-blue-900/30 border-blue-200 dark:border-blue-800 ring-1 ring-blue-300 dark:ring-blue-700 shadow-blue-50 dark:shadow-none";
     }
-    return "bg-white border-gray-200 hover:border-blue-400 hover:shadow-lg";
+    return "bg-white dark:bg-neutral-900 border-gray-200 dark:border-neutral-800 hover:border-blue-400 hover:shadow-lg dark:hover:shadow-none";
   };
 
   return (
@@ -143,7 +153,7 @@ export default function Lideres({
       {!hideMeta && esAdminOSuper && (
         <div className="mb-6 w-full">
           <div className="flex justify-between items-end mb-2">
-            <span className="text-xs font-bold uppercase text-gray-600 font-sans">
+            <span className="text-xs font-bold uppercase text-gray-600 dark:text-gray-400 font-sans">
               Meta General de Afiliación
             </span>
             <span className="text-sm font-black text-blue-700">
@@ -151,7 +161,7 @@ export default function Lideres({
               {OBJETIVO_GENERAL.toLocaleString()}
             </span>
           </div>
-          <div className="w-full bg-gray-200 rounded-full h-6 border-2 border-white shadow-inner overflow-hidden flex items-center relative font-sans">
+          <div className="w-full bg-gray-200 dark:bg-neutral-800 rounded-full h-6 border-2 border-white dark:border-neutral-900 shadow-inner overflow-hidden flex items-center relative font-sans">
             <motion.div
               initial={{ width: 0 }}
               animate={{ width: `${progresoGeneral}%` }}
@@ -171,8 +181,30 @@ export default function Lideres({
         <AnimatePresence initial={false}>
         {lideresPaginados.map((lider, index) => {
           const totalEnGrupo = lider.conteoAfiliados || 0;
-          const progreso = Math.min((totalEnGrupo / 15) * 100, 100);
+          const progreso = Math.min((totalEnGrupo / META_CELULA) * 100, 100);
           const tieneAfiliados = totalEnGrupo > 0;
+
+          let nivelCompromiso = "";
+          let colorBarra = "";
+          let textoColor = "";
+
+          if (totalEnGrupo > META_CELULA) {
+            nivelCompromiso = "Alto";
+            colorBarra = "bg-green-500";
+            textoColor = "text-green-600 dark:text-green-400";
+          } else if (totalEnGrupo === META_CELULA) {
+            nivelCompromiso = "Cumple";
+            colorBarra = "bg-blue-600";
+            textoColor = "text-blue-600 dark:text-blue-400";
+          } else if (totalEnGrupo >= META_MINIMA && totalEnGrupo < META_CELULA) {
+            nivelCompromiso = "Medio";
+            colorBarra = "bg-yellow-500";
+            textoColor = "text-yellow-600 dark:text-yellow-400";
+          } else {
+            nivelCompromiso = "Bajo";
+            colorBarra = "bg-red-500";
+            textoColor = "text-red-600 dark:text-red-400";
+          }
 
           return (
             <motion.div
@@ -202,11 +234,11 @@ export default function Lideres({
               >
                 {/* No. y Nombre */}
                 <div className="flex items-center gap-3 min-w-0 md:w-1/3">
-                  <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gray-50 text-xs font-black text-gray-400 shrink-0">
+                  <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gray-50 dark:bg-neutral-800 text-xs font-black text-gray-400 dark:text-gray-500 shrink-0">
                     {startIndex + index + 1}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <h3 className={`font-black text-sm md:text-base leading-tight truncate ${lider.id === idUsuarioSesion ? "text-blue-900" : "text-gray-900"}`}>
+                    <h3 className={`font-black text-sm md:text-base leading-tight truncate ${lider.id === idUsuarioSesion ? "text-blue-900 dark:text-blue-400" : "text-gray-900 dark:text-gray-100"}`}>
                       {lider.nombres} {lider.apellidos}
                     </h3>
                     <div className="flex items-center gap-2 mt-1">
@@ -214,7 +246,7 @@ export default function Lideres({
                         {lider.email}
                       </p>
                       {showRole && (
-                        <span className="text-[8px] bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded-full font-bold uppercase shrink-0">
+                        <span className="text-[8px] bg-gray-100 dark:bg-neutral-800 text-gray-600 dark:text-gray-400 px-1.5 py-0.5 rounded-full font-bold uppercase shrink-0">
                           {lider.rol}
                         </span>
                       )}
@@ -225,14 +257,16 @@ export default function Lideres({
                 {/* Meta / Progreso */}
                 <div className="flex-1 max-w-md">
                    <div className="flex justify-between items-end mb-1">
-                      <span className="text-[10px] font-black text-gray-400 uppercase">Progreso de Célula</span>
-                      <span className="text-sm md:text-base font-black text-blue-700">{totalEnGrupo}/15</span>
+                      <span className="text-[10px] font-black text-gray-400 uppercase">
+                        Nivel de compromiso: <span className={textoColor}>{nivelCompromiso}</span>
+                      </span>
+                      <span className={`text-sm md:text-base font-black ${textoColor}`}>{totalEnGrupo}/{META_CELULA}</span>
                    </div>
-                   <div className="w-full bg-gray-100 rounded-full h-2 border overflow-hidden">
+                   <div className="w-full bg-gray-100 dark:bg-neutral-800 rounded-full h-2 border dark:border-neutral-700 overflow-hidden">
                       <motion.div
                         initial={{ width: 0 }}
                         animate={{ width: `${progreso}%` }}
-                        className="bg-blue-600 h-full rounded-full shadow-sm"
+                        className={`${colorBarra} h-full rounded-full shadow-sm`}
                       />
                    </div>
                 </div>
@@ -246,7 +280,7 @@ export default function Lideres({
                       setLiderAbiertoId(liderAbiertoId === lider.id ? null : lider.id);
                     }}
                   >
-                    <div className="bg-gray-100 rounded-full p-1 border shadow-sm">
+                    <div className="bg-gray-100 dark:bg-neutral-800 rounded-full p-1 border dark:border-neutral-700 shadow-sm">
                       <ChevronDown className={`h-4 w-4 text-gray-500 transition-transform ${liderAbiertoId === lider.id ? "rotate-180" : ""}`} />
                     </div>
                   </div>
@@ -254,7 +288,7 @@ export default function Lideres({
               </div>
 
               {/* Botones de Acción - Siempre a la Derecha en Desktop */}
-              <div className="hidden md:flex items-center gap-2 px-4 py-2 border-l border-gray-100 bg-gray-50/30">
+              <div className="hidden md:flex items-center gap-2 px-4 py-2 border-l border-gray-100 dark:border-neutral-800 bg-gray-50/30 dark:bg-neutral-800/30">
                 {rolUsuarioSesion !== "LIDER" && (
                   <>
                     <Button
@@ -299,7 +333,7 @@ export default function Lideres({
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: "auto" }}
                     exit={{ opacity: 0, height: 0 }}
-                    className="md:hidden border-t border-gray-100 bg-gray-50 flex divide-x"
+                    className="md:hidden border-t border-gray-100 dark:border-neutral-800 bg-gray-50 dark:bg-neutral-800 flex divide-x dark:divide-neutral-700"
                   >
                     <Button
                       variant="ghost"
@@ -342,19 +376,19 @@ export default function Lideres({
           <Button
             size="sm"
             variant="outline"
-            className="w-10 h-10 rounded-xl border-gray-200 hover:bg-blue-50 text-blue-600 transition-all shadow-sm"
+            className="w-10 h-10 rounded-xl border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 hover:bg-blue-50 dark:hover:bg-blue-900/30 text-blue-600 dark:text-blue-400 transition-all shadow-sm"
             onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
             disabled={currentPage === 1 || itemsPerPage === "all"}
           >
             <ChevronLeft className="h-5 w-5" />
           </Button>
-          <div className="bg-white px-4 py-2 rounded-xl border border-gray-100 shadow-sm min-w-[120px] text-center">
-            <span className="text-sm font-black text-gray-900">{currentPage} / {totalPages || 1}</span>
+          <div className="bg-white dark:bg-neutral-900 px-4 py-2 rounded-xl border border-gray-100 dark:border-neutral-800 shadow-sm min-w-[120px] text-center">
+            <span className="text-sm font-black text-gray-900 dark:text-gray-100">{currentPage} / {totalPages || 1}</span>
           </div>
           <Button
             size="sm"
             variant="outline"
-            className="w-10 h-10 rounded-xl border-gray-200 hover:bg-blue-50 text-blue-600 transition-all shadow-sm"
+            className="w-10 h-10 rounded-xl border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 hover:bg-blue-50 dark:hover:bg-blue-900/30 text-blue-600 dark:text-blue-400 transition-all shadow-sm"
             onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
             disabled={currentPage === totalPages || itemsPerPage === "all"}
           >
@@ -362,14 +396,14 @@ export default function Lideres({
           </Button>
         </div>
 
-        <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl border border-gray-100 shadow-sm">
+        <div className="flex items-center gap-2 bg-white dark:bg-neutral-900 px-4 py-2 rounded-xl border border-gray-100 dark:border-neutral-800 shadow-sm">
           <select
             value={itemsPerPage}
             onChange={(e) => {
               const val = e.target.value;
               setItemsPerPage(val === "all" ? "all" : parseInt(val));
             }}
-            className="text-sm font-black outline-none bg-transparent cursor-pointer uppercase text-blue-600 focus:ring-0"
+            className="text-sm font-black outline-none bg-transparent cursor-pointer uppercase text-blue-600 dark:text-blue-400 focus:ring-0"
           >
             <option value={10}>10</option>
             <option value={50}>50</option>

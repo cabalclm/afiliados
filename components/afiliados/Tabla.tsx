@@ -32,7 +32,7 @@ export default function Tabla({
 
   if (afiliados.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-10 text-gray-500 bg-gray-50 rounded border border-dashed">
+      <div className="flex flex-col items-center justify-center py-10 text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-neutral-800/50 rounded border border-dashed border-gray-200 dark:border-neutral-700">
         <p className="text-sm">No hay afiliados en esta célula aún.</p>
       </div>
     );
@@ -63,29 +63,29 @@ export default function Tabla({
       {afiliados.map((afiliado, index) => (
         <div
           key={afiliado.id}
-          className="bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 flex flex-col overflow-hidden"
+          className="bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-700 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 flex flex-col overflow-hidden"
         >
           <div className="p-4 flex-1 space-y-4">
-            <div className="flex items-center gap-2 border-b border-gray-100 pb-3">
-              <span className="flex items-center justify-center bg-blue-100 text-blue-700 font-bold text-xs h-6 w-6 rounded-md shrink-0">
+            <div className="flex items-center gap-2 border-b border-gray-100 dark:border-neutral-800 pb-3">
+              <span className="flex items-center justify-center bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 font-bold text-xs h-6 w-6 rounded-md shrink-0">
                 {index + 1}
               </span>
-              <h3 className="text-xs font-bold text-gray-900 uppercase leading-tight truncate">
+              <h3 className="text-xs font-bold text-gray-900 dark:text-gray-100 uppercase leading-tight truncate">
                 {afiliado.nombres} {afiliado.apellidos}
               </h3>
             </div>
 
-            <div className="flex items-center justify-between text-xs text-gray-600 gap-2">
+            <div className="flex items-center justify-between text-xs text-gray-600 dark:text-gray-300 gap-2">
               <div className="flex items-center gap-1.5 min-w-0 flex-1">
-                <Hash className="w-3.5 h-3.5 text-gray-400 shrink-0" />
-                <span className="font-bold text-gray-500 shrink-0">DPI:</span>
+                <Hash className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500 shrink-0" />
+                <span className="font-bold text-gray-500 dark:text-gray-400 shrink-0">DPI:</span>
                 <span className="font-mono font-medium truncate">
                   {afiliado.dpi || "—"}
                 </span>
               </div>
 
-              <div className="flex items-center gap-1 shrink-0 bg-gray-50 border border-gray-100 px-2 py-0.5 rounded">
-                <Calendar className="w-3 h-3 text-gray-400" />
+              <div className="flex items-center gap-1 shrink-0 bg-gray-50 dark:bg-neutral-800 border border-gray-100 dark:border-neutral-700 px-2 py-0.5 rounded">
+                <Calendar className="w-3 h-3 text-gray-400 dark:text-gray-500" />
                 <span className="font-bold text-[10px]">
                   {calcularEdad(afiliado.nacimiento)}
                 </span>
@@ -93,11 +93,11 @@ export default function Tabla({
 
               <div className="shrink-0">
                 {afiliado.sexo === "M" ? (
-                  <span className="flex items-center justify-center bg-blue-50 text-blue-700 border border-blue-200 font-bold text-[10px] h-6 w-6 rounded-md">
+                  <span className="flex items-center justify-center bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-800/50 font-bold text-[10px] h-6 w-6 rounded-md">
                     M
                   </span>
                 ) : (
-                  <span className="flex items-center justify-center bg-pink-50 text-pink-700 border border-pink-200 font-bold text-[10px] h-6 w-6 rounded-md">
+                  <span className="flex items-center justify-center bg-pink-50 dark:bg-pink-900/20 text-pink-700 dark:text-pink-400 border border-pink-200 dark:border-pink-800/50 font-bold text-[10px] h-6 w-6 rounded-md">
                     F
                   </span>
                 )}
@@ -105,12 +105,12 @@ export default function Tabla({
             </div>
 
             {/* LÍNEA 3: WHATSAPP + UBICACIÓN */}
-            <div className="flex items-center gap-3 text-xs text-gray-600">
+            <div className="flex items-center gap-3 text-xs text-gray-600 dark:text-gray-300">
               <a
                 href={generarLinkWhatsapp(afiliado.telefono || "")}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-1.5 shrink-0 text-green-600 hover:text-green-700 hover:underline transition-colors"
+                className="flex items-center gap-1.5 shrink-0 text-green-600 dark:text-green-500 hover:text-green-700 dark:hover:text-green-400 hover:underline transition-colors"
               >
                 <MessageCircle className="w-3.5 h-3.5" />
                 <span className="font-bold font-mono">
@@ -118,11 +118,11 @@ export default function Tabla({
                 </span>
               </a>
 
-              <div className="h-4 w-px bg-gray-200 shrink-0"></div>
+              <div className="h-4 w-px bg-gray-200 dark:bg-neutral-700 shrink-0"></div>
 
               {/* Ubicación: Ahora solo depende de afiliado.lugar_nombre */}
               <div className="flex items-center gap-1.5 min-w-0 flex-1">
-                <MapPin className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                <MapPin className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500 shrink-0" />
                 <span
                   className="truncate"
                   title={afiliado.lugar_nombre || "Ubicación no definida"}
@@ -135,8 +135,8 @@ export default function Tabla({
             {/* LÍNEA 4: PADRÓN */}
             <div className="pt-1">
               {afiliado.empadronado ? (
-                <div className="bg-green-50 border border-green-200 rounded p-2 flex items-center gap-2 text-green-800">
-                  <Hash className="w-3.5 h-3.5 text-green-600 shrink-0" />
+                <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800/50 rounded p-2 flex items-center gap-2 text-green-800 dark:text-green-400">
+                  <Hash className="w-3.5 h-3.5 text-green-600 dark:text-green-500 shrink-0" />
                   <div className="text-[10px]">
                     <span className="font-bold uppercase mr-1">Padrón:</span>
                     <span className="font-mono font-bold">
@@ -145,7 +145,7 @@ export default function Tabla({
                   </div>
                 </div>
               ) : (
-                <div className="bg-red-50 border border-red-200 rounded p-2 flex items-center gap-2 text-red-700">
+                <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/50 rounded p-2 flex items-center gap-2 text-red-700 dark:text-red-400">
                   <XCircle className="w-3.5 h-3.5 text-red-500 shrink-0" />
                   <span className="text-[10px] font-bold uppercase">
                     NO EMPADRONADO
@@ -156,10 +156,10 @@ export default function Tabla({
           </div>
 
           {puedeVerAcciones && (
-            <div className="bg-gray-50 p-3 border-t border-gray-100 flex gap-2 mt-auto">
+            <div className="bg-gray-50 dark:bg-neutral-900/50 p-3 border-t border-gray-100 dark:border-neutral-800 flex gap-2 mt-auto">
               <Button
                 variant="outline"
-                className="flex-1 bg-white text-blue-600 border-gray-200 hover:bg-blue-50 hover:text-blue-700 h-8 text-xs"
+                className="flex-1 bg-white dark:bg-neutral-800 text-blue-600 dark:text-blue-400 border-gray-200 dark:border-neutral-700 hover:bg-blue-50 dark:hover:bg-blue-900/30 hover:text-blue-700 dark:hover:text-blue-300 h-8 text-xs"
                 onClick={() => onEditar(afiliado)}
               >
                 <Pencil className="w-3.5 h-3.5 mr-2" />
@@ -167,7 +167,7 @@ export default function Tabla({
               </Button>
               <Button
                 variant="outline"
-                className="flex-1 bg-white text-red-600 border-gray-200 hover:bg-red-50 hover:text-red-700 h-8 text-xs"
+                className="flex-1 bg-white dark:bg-neutral-800 text-red-600 dark:text-red-400 border-gray-200 dark:border-neutral-700 hover:bg-red-50 dark:hover:bg-red-900/30 hover:text-red-700 dark:hover:text-red-300 h-8 text-xs"
                 onClick={() => eliminar(afiliado, onDataChange)}
               >
                 <Trash2 className="w-3.5 h-3.5 mr-2" />

@@ -97,9 +97,9 @@ useEffect(() => {
   };
 
   return (
-    <div className=" bg-white max-w-md mx-auto space-y-4">
+    <div className="bg-transparent max-w-md mx-auto space-y-4">
       {permisosDisponibles.length === 0 ? (
-        <p className="text-sm text-gray-500">No hay permisos disponibles.</p>
+        <p className="text-sm text-gray-500 dark:text-gray-400">No hay permisos disponibles.</p>
       ) : (
         <div className="space-y-2">
           {permisosDisponibles.map((permiso) => (

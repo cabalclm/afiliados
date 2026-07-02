@@ -109,7 +109,7 @@ export function LoginForm() {
           }}
         >
           <h1
-            className="font-serif text-2xl md:text-4xl font-bold leading-tight text-left my-5 bg-gradient-to-r from-blue-800 via-blue-400 to-blue-800 bg-[length:200%_auto] text-transparent bg-clip-text animate-text-shine"
+            className="font-serif text-2xl md:text-4xl font-bold leading-tight text-left my-5 bg-gradient-to-r from-blue-800 via-blue-400 to-blue-800 dark:from-blue-400 dark:via-blue-200 dark:to-blue-400 bg-[length:200%_auto] text-transparent bg-clip-text animate-text-shine"
             style={{ fontFamily: "'DM Serif Display', serif" }}
           >
             Sistema de Organización <br /> Territorial Estratégica
@@ -120,7 +120,7 @@ export function LoginForm() {
       <form
         ref={formRef}
         action={handleFormAction}
-        className="w-full md:max-w-2xl flex flex-col gap-8 text-2xl bg-white md:rounded-xl px-5 py-5 border border-gray-300"
+        className="w-full md:max-w-2xl flex flex-col gap-8 text-2xl bg-white dark:bg-neutral-800 md:rounded-xl px-5 py-5 border border-gray-300 dark:border-neutral-700 transition-colors"
       >
         <motion.div
           initial={{ opacity: 0, scale: 0.8 }}

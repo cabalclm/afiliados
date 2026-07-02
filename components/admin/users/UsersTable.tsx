@@ -20,22 +20,22 @@ export default function UsersTable({ usuarios }: Props) {
 
   return (
     <div className="w-full">
-      <div className="w-full overflow-x-auto border-[2.5px] border-gray-400">
-        <table className="w-full border-collapse border-[2.5px] border-gray-300 text-lg">
+      <div className="w-full overflow-x-auto border-[2.5px] border-gray-400 dark:border-neutral-600">
+        <table className="w-full border-collapse border-[2.5px] border-gray-300 dark:border-neutral-700 text-lg">
           <thead>
-            <tr className="text-left text-[15px] font-semibold bg-gray-200 border-b-[2.5px] border-gray-400">
-              <th className="p-2 border-[1.5px] border-gray-300 text-center">No.</th>
-              <th className="p-2 border-[1.ISpx] border-gray-300">Usuario</th>
-              <th className="p-2 border-[1.5px] border-gray-300">Nombres</th>
-              <th className="p-2 border-[1.5px] border-gray-300">Apellidos</th>
-              <th className="p-2 border-[1.5px] border-gray-300">Rol</th>
-              <th className="p-2 border-[1.5px] border-gray-300 text-center">Acciones</th>
+            <tr className="text-left text-[15px] font-semibold bg-gray-200 dark:bg-neutral-800 border-b-[2.5px] border-gray-400 dark:border-neutral-600 text-gray-900 dark:text-gray-100">
+              <th className="p-2 border-[1.5px] border-gray-300 dark:border-neutral-700 text-center">No.</th>
+              <th className="p-2 border-[1.5px] border-gray-300 dark:border-neutral-700">Usuario</th>
+              <th className="p-2 border-[1.5px] border-gray-300 dark:border-neutral-700">Nombres</th>
+              <th className="p-2 border-[1.5px] border-gray-300 dark:border-neutral-700">Apellidos</th>
+              <th className="p-2 border-[1.5px] border-gray-300 dark:border-neutral-700">Rol</th>
+              <th className="p-2 border-[1.5px] border-gray-300 dark:border-neutral-700 text-center">Acciones</th>
             </tr>
           </thead>
           <tbody>
             {usuariosPaginados.length === 0 ? (
               <tr>
-                <td colSpan={6} className="p-3 text-center text-muted-foreground border-[1.5px] border-gray-300">
+                <td colSpan={6} className="p-3 text-center text-muted-foreground border-[1.5px] border-gray-300 dark:border-neutral-700">
                   No hay resultados
                 </td>
               </tr>
@@ -43,21 +43,21 @@ export default function UsersTable({ usuarios }: Props) {
               usuariosPaginados.map((usuario, index) => (
                 <tr
                   key={usuario.id}
-                  className="hover:bg-gray-50 border-[1.5px] border-gray-300"
+                  className="hover:bg-gray-50 dark:hover:bg-neutral-800/50 border-[1.5px] border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-gray-100"
                 >
-                  <td className="p-2 border-[1.5px] border-gray-300 text-center">
+                  <td className="p-2 border-[1.5px] border-gray-300 dark:border-neutral-700 text-center">
                     {inicio + index + 1}
                   </td>
-                  <td className="p-2 border-[1.5px] border-gray-300">{usuario.email}</td>
-                  <td className="p-2 border-[1.5px] border-gray-300">{usuario.nombres || '—'}</td>
-                  <td className="p-2 border-[1.5px] border-gray-300">{usuario.apellidos || '—'}</td>
-                  <td className="p-2 border-[1.5px] border-gray-300">{usuario.rol || '—'}</td>
-                  <td className="p-2 text-center border-[1.5px] border-gray-300">
+                  <td className="p-2 border-[1.5px] border-gray-300 dark:border-neutral-700">{usuario.email}</td>
+                  <td className="p-2 border-[1.5px] border-gray-300 dark:border-neutral-700">{usuario.nombres || '—'}</td>
+                  <td className="p-2 border-[1.5px] border-gray-300 dark:border-neutral-700">{usuario.apellidos || '—'}</td>
+                  <td className="p-2 border-[1.5px] border-gray-300 dark:border-neutral-700">{usuario.rol || '—'}</td>
+                  <td className="p-2 text-center border-[1.5px] border-gray-300 dark:border-neutral-700">
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => router.push(`/protected/admin/users/ver?id=${usuario.id}`)}
-                      className="text-blue-600 text-xs"
+                      className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-xs"
                     >
                       Ver Usuario
                     </Button>
@@ -77,7 +77,7 @@ export default function UsersTable({ usuarios }: Props) {
             setUsuariosPorPagina(parseInt(e.target.value));
             setPaginaActual(1); 
           }}
-          className="border border-gray-300 rounded px-2 py-1"
+          className="border border-gray-300 dark:border-neutral-700 rounded px-2 py-1 bg-white dark:bg-neutral-900"
         >
           <option value={5}>5</option>
           <option value={10}>10</option>
@@ -90,8 +90,8 @@ export default function UsersTable({ usuarios }: Props) {
         <button
           onClick={() => setPaginaActual((prev) => Math.max(prev - 1, 1))}
           disabled={paginaActual === 1}
-          className={`px-3 py-2 rounded border ${
-            paginaActual === 1 ? 'bg-gray-200 text-gray-500' : 'bg-white hover:bg-blue-50'
+          className={`px-3 py-2 rounded border dark:border-neutral-700 ${
+            paginaActual === 1 ? 'bg-gray-200 dark:bg-neutral-800 text-gray-500 dark:text-gray-400' : 'bg-white dark:bg-neutral-900 hover:bg-blue-50 dark:hover:bg-neutral-800'
           }`}
         >
           ←
@@ -101,8 +101,8 @@ export default function UsersTable({ usuarios }: Props) {
           <button
             key={n}
             onClick={() => setPaginaActual(n)}
-            className={`px-4 py-2 rounded border font-medium ${
-              paginaActual === n ? 'bg-blue-600 text-white' : 'bg-white hover:bg-blue-50'
+            className={`px-4 py-2 rounded border dark:border-neutral-700 font-medium ${
+              paginaActual === n ? 'bg-blue-600 dark:bg-blue-700 text-white' : 'bg-white dark:bg-neutral-900 hover:bg-blue-50 dark:hover:bg-neutral-800'
             }`}
           >
             {n}
@@ -112,8 +112,8 @@ export default function UsersTable({ usuarios }: Props) {
         <button
           onClick={() => setPaginaActual((prev) => Math.min(prev + 1, totalPaginas))}
           disabled={paginaActual === totalPaginas}
-          className={`px-3 py-2 rounded border ${
-            paginaActual === totalPaginas ? 'bg-gray-200 text-gray-500' : 'bg-white hover:bg-blue-50'
+          className={`px-3 py-2 rounded border dark:border-neutral-700 ${
+            paginaActual === totalPaginas ? 'bg-gray-200 dark:bg-neutral-800 text-gray-500 dark:text-gray-400' : 'bg-white dark:bg-neutral-900 hover:bg-blue-50 dark:hover:bg-neutral-800'
           }`}
         >
           →

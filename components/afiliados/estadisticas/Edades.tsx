@@ -13,6 +13,7 @@ import {
 } from "recharts";
 import { useState, useEffect } from "react";
 import type { Afiliado } from "../esquemas";
+import { chartStyles, useChartTheme } from "./utils";
 
 interface Props {
   afiliados: Afiliado[];
@@ -20,6 +21,7 @@ interface Props {
 
 export default function Edades({ afiliados }: Props) {
   const [isMobile, setIsMobile] = useState(false);
+  const theme = useChartTheme();
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
@@ -44,19 +46,36 @@ export default function Edades({ afiliados }: Props) {
     }
   });
 
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (!active || !payload?.length) return null;
+
+    return (
+      <div className={chartStyles.tooltip}>
+        <p className={chartStyles.tooltipTitle}>{label}</p>
+        {payload.map((entry: any) => (
+          <p key={entry.name} className="flex items-center gap-2 mb-1">
+            <span
+              className="w-3 h-3 rounded-full"
+              style={{ backgroundColor: entry.color }}
+            />
+            <span className={chartStyles.tooltipLabel}>{entry.name}:</span>
+            <strong className={chartStyles.tooltipValue}>{entry.value}</strong>
+          </p>
+        ))}
+      </div>
+    );
+  };
+
   return (
-    <div className="w-full h-full flex flex-col p-2">
+    <div className={chartStyles.cardCompact}>
       <div className="mb-4 shrink-0">
-        <h4 className="text-xs md:text-lg font-bold text-gray-800 uppercase text-center md:text-left">
-          Demografía del Grupo
-        </h4>
-        <p className="text-sm text-gray-500 text-center md:text-left">
+        <h4 className={chartStyles.headerTitleSm}>Demografía del Grupo</h4>
+        <p className={chartStyles.headerSubtitle}>
           Distribución por rangos de edad y género
         </p>
       </div>
 
-      {/* Contenedor con Scroll Horizontal para Móvil */}
-      <div className="flex-1 w-full overflow-x-auto overflow-y-hidden pb-4 scrollbar-thin scrollbar-thumb-gray-300">
+      <div className="flex-1 w-full overflow-x-auto overflow-y-hidden pb-4 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-zinc-700">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart
             data={rangos}
@@ -65,37 +84,43 @@ export default function Edades({ afiliados }: Props) {
             <CartesianGrid
               strokeDasharray="3 3"
               vertical={false}
-              stroke="#f0f0f0"
+              stroke={theme.gridStroke}
             />
             <XAxis
               dataKey="name"
-              tick={{ fontSize: 9, fontWeight: 700, fill: "#374151" }}
+              tick={{ fontSize: 9, fontWeight: 700, fill: theme.axisLabel }}
               axisLine={false}
               tickLine={false}
             />
             <YAxis
               axisLine={false}
               tickLine={false}
-              tick={{ fontSize: 9, fill: "#9ca3af" }}
+              tick={{ fontSize: 9, fill: theme.axisTick }}
             />
-            <Tooltip cursor={{ fill: "#f9fafb", radius: 8 }} />
+            <Tooltip
+              content={<CustomTooltip />}
+              cursor={{ fill: theme.cursorFill, radius: 8 }}
+            />
             <Legend
               verticalAlign="top"
               height={40}
               iconType="circle"
-              wrapperStyle={{ fontSize: "9px" }}
+              wrapperStyle={{
+                fontSize: "9px",
+                color: theme.axisTick,
+              }}
             />
             <Bar
               dataKey="hombres"
               name="Hombres"
               fill="#3b82f6"
-              radius={[6, 6, 0, 0]}
+              radius={[8, 8, 0, 0]}
               barSize={isMobile ? 20 : 40}
             >
               <LabelList
                 dataKey="hombres"
                 position="top"
-                fill="#1e40af"
+                fill={theme.hombreLabel}
                 fontSize={9}
                 fontWeight="900"
               />
@@ -104,13 +129,13 @@ export default function Edades({ afiliados }: Props) {
               dataKey="mujeres"
               name="Mujeres"
               fill="#ec4899"
-              radius={[6, 6, 0, 0]}
+              radius={[8, 8, 0, 0]}
               barSize={isMobile ? 20 : 40}
             >
               <LabelList
                 dataKey="mujeres"
                 position="top"
-                fill="#9d174d"
+                fill={theme.mujerLabel}
                 fontSize={9}
                 fontWeight="900"
               />

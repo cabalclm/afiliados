@@ -32,6 +32,21 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es" className={geistSans.className} suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              try {
+                if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                  document.documentElement.classList.add('dark')
+                } else {
+                  document.documentElement.classList.remove('dark')
+                }
+              } catch (_) {}
+            `,
+          }}
+        />
+      </head>
       <body className="bg-background text-foreground min-h-screen flex flex-col " suppressHydrationWarning>
         <QueryProvider>
           <div className="flex flex-col flex-1">{children}</div>

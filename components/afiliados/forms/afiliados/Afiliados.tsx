@@ -169,7 +169,7 @@ export default function AfiliadosForm({
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4 font-sans">
       <motion.div
-        className="bg-white rounded-lg shadow-xl w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto"
+        className="bg-white dark:bg-neutral-900 border dark:border-neutral-800 rounded-lg shadow-xl w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto"
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
       >
@@ -185,14 +185,14 @@ export default function AfiliadosForm({
         {step === 1 ? (
           <div className="space-y-4">
             <div className="space-y-2">
-              <label className="text-sm font-bold text-gray-700 uppercase">
+              <label className="text-sm font-bold text-gray-700 dark:text-gray-300 uppercase">
                 Ingrese el DPI del Afiliado
               </label>
               <Input 
                 {...register("dpi")} 
                 placeholder="DPI (13 dígitos)" 
                 maxLength={13} 
-                className={`h-12 text-lg text-center font-bold tracking-widest ${dpiError ? "border-red-500 bg-red-50" : ""}`}
+                className={`h-12 text-lg text-center font-bold tracking-widest ${dpiError ? "border-red-500 bg-red-50 dark:bg-red-900/20" : ""}`}
                 autoFocus
               />
               {dpiError && <p className="text-xs font-bold text-red-500 text-center">{dpiError}</p>}
@@ -219,7 +219,7 @@ export default function AfiliadosForm({
                   {...register("dpi")} 
                   placeholder="Ingrese el DPI (Primero los 13 dígitos)" 
                   maxLength={13} 
-                  className={dpiError ? "border-red-500 bg-red-50" : ""}
+                  className={dpiError ? "border-red-500 bg-red-50 dark:bg-red-900/20" : ""}
                 />
                 {dpiError && <p className="text-[10px] font-bold text-red-500">{dpiError}</p>}
               </div>
@@ -231,7 +231,7 @@ export default function AfiliadosForm({
                   {...register("nombres")}
                   placeholder="Nombres"
                   readOnly={isFirstMember}
-                  className={isFirstMember ? "bg-gray-100" : ""}
+                  className={isFirstMember ? "bg-gray-100 dark:bg-neutral-800" : ""}
                 />
                 {errors.nombres && <p className="text-[10px] font-bold text-red-500">{errors.nombres.message}</p>}
               </div>
@@ -240,7 +240,7 @@ export default function AfiliadosForm({
                   {...register("apellidos")}
                   placeholder="Apellidos"
                   readOnly={isFirstMember}
-                  className={isFirstMember ? "bg-gray-100" : ""}
+                  className={isFirstMember ? "bg-gray-100 dark:bg-neutral-800" : ""}
                 />
                 {errors.apellidos && <p className="text-[10px] font-bold text-red-500">{errors.apellidos.message}</p>}
               </div>
@@ -253,9 +253,9 @@ export default function AfiliadosForm({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4 items-end">
+            <div className="grid grid-cols-2 gap-4 items-end">
             <div className="space-y-1">
-              <label className="text-[10px] font-bold text-gray-400 uppercase block leading-none">
+              <label className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase block leading-none">
                 Nacimiento
               </label>
               <Input
@@ -266,10 +266,10 @@ export default function AfiliadosForm({
               {errors.nacimiento && <p className="text-[10px] font-bold text-red-500">{errors.nacimiento.message}</p>}
             </div>
             <div className="space-y-1">
-              <label className="text-[10px] font-bold text-gray-400 uppercase block leading-none">
+              <label className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase block leading-none">
                 Sexo
               </label>
-              <div className="flex rounded-md border p-1 bg-gray-50 h-9">
+              <div className="flex rounded-md border dark:border-neutral-700 p-1 bg-gray-50 dark:bg-neutral-800 h-9">
                 <button
                   type="button"
                   onClick={() => setValue("sexo", "M")}
@@ -292,7 +292,7 @@ export default function AfiliadosForm({
             <div className="space-y-1">
               <select
                 {...register("lugar_id", { valueAsNumber: true })}
-                className="w-full h-10 px-3 border rounded-md text-sm bg-white"
+                className="w-full h-10 px-3 border dark:border-neutral-700 rounded-md text-sm bg-white dark:bg-neutral-900"
               >
                 <option value={0}>Seleccione lugar...</option>
                 {lugares.map((l) => (
@@ -306,7 +306,7 @@ export default function AfiliadosForm({
             <div className="space-y-1">
               <select
               {...register("politica")}
-              className="w-full h-10 px-3 border rounded-md text-sm bg-white"
+              className="w-full h-10 px-3 border dark:border-neutral-700 rounded-md text-sm bg-white dark:bg-neutral-900"
             >
               <option value="">Interés Político...</option>
               {POLITICAS.map((p) => (
@@ -334,7 +334,7 @@ export default function AfiliadosForm({
 
           <div className="grid grid-cols-2 gap-4 items-end">
             <div className="space-y-1">
-              <label className="text-[10px] font-bold text-gray-400 uppercase">
+              <label className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase">
                 No. Padrón
               </label>
               <Input {...register("no_padron")} placeholder="No. Padrón" />
@@ -342,7 +342,7 @@ export default function AfiliadosForm({
             </div>
 
             <div className="flex flex-col">
-              <label className="text-[10px] font-bold text-gray-400 uppercase">
+              <label className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase">
                 Religión
               </label>
               <div className="flex gap-2 h-10">
@@ -350,7 +350,7 @@ export default function AfiliadosForm({
                   <>
                     <select
                       {...register("religion")}
-                      className="flex-1 px-3 border rounded-md text-sm bg-white"
+                      className="flex-1 px-3 border dark:border-neutral-700 rounded-md text-sm bg-white dark:bg-neutral-900"
                     >
                       <option value="">Seleccione...</option>
                       <option value="Católico">Católico</option>
@@ -403,7 +403,7 @@ export default function AfiliadosForm({
             value={liderPredefinidoId || ""}
           />
 
-          <div className="flex justify-between items-center pt-4 border-t mt-2">
+          <div className="flex justify-between items-center pt-4 border-t dark:border-neutral-800 mt-2">
             <Image
               src="/gif/afiliados/gif0.gif"
               alt="Animación"
