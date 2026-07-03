@@ -59,7 +59,7 @@ export default function RootLayout({
         </QueryProvider>
 
         <ToastContainer
-          position="top-right"
+          position="top-center"
           autoClose={10000}
           hideProgressBar={false}
           newestOnTop={false}
@@ -68,7 +68,7 @@ export default function RootLayout({
           pauseOnFocusLoss
           draggable
           pauseOnHover
-          theme="light"
+          theme="colored"
         />
       </body>
     </html>

@@ -7,6 +7,7 @@ import useUserData from "@/hooks/sesion/useUserData";
 import { RefreshCw } from "lucide-react";
 import { useState } from "react";
 import ConfiguracionModal from "./ConfiguracionModal";
+import NotificationBell from "./NotificationBell";
 import { AnimatedThemeToggler } from "@/components/ui/animated-theme-toggler";
 
 export default function AuthButton() {
@@ -61,6 +62,7 @@ export default function AuthButton() {
               }`}
             />
           </Button>
+          <NotificationBell />
           <AnimatedThemeToggler 
             duration={600} 
             className="h-10 w-10 rounded-full flex items-center justify-center shrink-0 text-gray-500 hover:text-gray-900 hover:bg-gray-100/50 dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-gray-800/50 transition-colors" 

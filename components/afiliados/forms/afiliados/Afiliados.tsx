@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { X, Plus } from "lucide-react";
 import { motion } from "framer-motion";
 import Image from "next/image";
-import { toast } from "react-toastify";
+import { toast } from "@/lib/toast";
 import Swal from "sweetalert2";
 
 import { guardarAfiliadoAction } from "./actions";

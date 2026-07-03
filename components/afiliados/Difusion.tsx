@@ -12,7 +12,7 @@ import {
 import { Megaphone, X, Search, Check, Users, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { toast } from "react-toastify";
+import { toast } from "@/lib/toast";
 import { enviarMensajeAction } from "../dashboard/actions/mensajes";
 import MensajesEnviados from "./MensajesEnviados";
 
@@ -99,7 +99,9 @@ export default function Difusion({ usuarios }: { usuarios: any[] }) {
   const queryClient = useQueryClient();
 
   const [isOpen, setIsOpen] = useState(false);
+  const [titulo, setTitulo] = useState("");
   const [mensajeTexto, setMensajeTexto] = useState("");
+  const [ruta, setRuta] = useState("");
   const [publicoObjetivo, setPublicoObjetivo] = useState("Todos");
   const [usuariosEspecificos, setUsuariosEspecificos] = useState<string[]>([]);
   const [busquedaUsuario, setBusquedaUsuario] = useState("");
@@ -129,7 +131,9 @@ export default function Difusion({ usuarios }: { usuarios: any[] }) {
   }, [usuarios, busquedaUsuario, usuariosEspecificos]);
 
   const resetForm = () => {
+    setTitulo("");
     setMensajeTexto("");
+    setRuta("");
     setPublicoObjetivo("Todos");
     setUsuariosEspecificos([]);
     setBusquedaUsuario("");
@@ -177,12 +181,20 @@ export default function Difusion({ usuarios }: { usuarios: any[] }) {
 
     setEnviando(true);
     try {
-      await enviarMensajeAction(
-        mensajeTexto,
-        publicoObjetivo,
-        usuariosEspecificos,
+      const { push } = await enviarMensajeAction({
+        titulo: titulo.trim() || undefined,
+        mensaje: mensajeTexto,
+        publico_objetivo: publicoObjetivo,
+        usuarios_especificos: usuariosEspecificos,
+        ruta: ruta.trim() || undefined,
+      });
+
+      const n = push?.enviadas ?? 0;
+      toast.success(
+        n > 0
+          ? `Difusión enviada. Notificación push a ${n} dispositivo${n === 1 ? "" : "s"}.`
+          : "Difusión enviada. (Ningún destinatario tiene notificaciones activas en este momento)",
       );
-      toast.success("Difusión enviada exitosamente");
       queryClient.invalidateQueries({ queryKey: ["historial-mensajes"] });
       resetForm();
       setIsOpen(false);
@@ -270,6 +282,22 @@ export default function Difusion({ usuarios }: { usuarios: any[] }) {
                 <div className="flex-1 overflow-y-auto p-5 flex flex-col gap-5">
                   <div>
                     <label className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5 block">
+                      Título{" "}
+                      <span className="font-normal text-gray-400">
+                        (encabezado de la notificación)
+                      </span>
+                    </label>
+                    <Input
+                      value={titulo}
+                      onChange={(e) => setTitulo(e.target.value)}
+                      maxLength={60}
+                      placeholder="Ej. Aviso importante"
+                      className="h-10 text-sm"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5 block">
                       Mensaje
                     </label>
                     <textarea
@@ -278,6 +306,24 @@ export default function Difusion({ usuarios }: { usuarios: any[] }) {
                       className="w-full min-h-[110px] p-3 text-sm border border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 resize-y text-gray-900 dark:text-gray-100"
                       placeholder="Escribe un mensaje de motivación, aviso o instrucción importante..."
                     />
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5 block">
+                      Ruta al abrir{" "}
+                      <span className="font-normal text-gray-400">
+                        (opcional, por defecto /)
+                      </span>
+                    </label>
+                    <Input
+                      value={ruta}
+                      onChange={(e) => setRuta(e.target.value)}
+                      placeholder="/"
+                      className="h-10 text-sm"
+                    />
+                    <p className="text-[11px] text-gray-400 mt-1">
+                      Página que se abrirá al tocar la notificación. Ej. /protected
+                    </p>
                   </div>
 
                   <div>

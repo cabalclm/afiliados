@@ -5,7 +5,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Settings, Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { toast } from "react-toastify";
+import { toast } from "@/lib/toast";
 import { obtenerConfiguracionAction, actualizarConfiguracionAction } from "@/components/dashboard/actions/configuracion";
 
 export default function ConfiguracionModal() {

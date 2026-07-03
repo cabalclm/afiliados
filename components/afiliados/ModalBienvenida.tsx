@@ -7,8 +7,34 @@ import { Fragment } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { obtenerConfiguracionAction } from "@/components/dashboard/actions/configuracion";
 import { obtenerMensajePendienteAction, marcarLeidoAction, contarMensajesPendientesAction } from "@/components/dashboard/actions/mensajes";
-import { toast } from "react-toastify";
+import { toast } from "@/lib/toast";
 import { Loader2 } from "lucide-react";
+
+function formatearFechaLectura(fecha: Date) {
+  const dias = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
+  const dia = dias[fecha.getDay()];
+  const dd = String(fecha.getDate()).padStart(2, "0");
+  const mm = String(fecha.getMonth() + 1).padStart(2, "0");
+  const yy = String(fecha.getFullYear()).slice(-2);
+  let horas = fecha.getHours();
+  const minutos = String(fecha.getMinutes()).padStart(2, "0");
+  const ampm = horas >= 12 ? "PM" : "AM";
+  horas = horas % 12 || 12;
+  return `${dia} ${dd}/${mm}/${yy} a las ${horas}:${minutos} ${ampm}`;
+}
+
+function colorToastLectura(nivel: string) {
+  switch (nivel) {
+    case "Alto":
+      return { bg: "#16a34a", color: "#ffffff" };
+    case "Cumple":
+      return { bg: "#2563eb", color: "#ffffff" };
+    case "Medio":
+      return { bg: "#ca8a04", color: "#ffffff" };
+    default:
+      return { bg: "#dc2626", color: "#ffffff" };
+  }
+}
 
 interface ModalBienvenidaProps {
   userId: string;
@@ -18,6 +44,7 @@ interface ModalBienvenidaProps {
 
 export default function ModalBienvenida({ userId, conteoAfiliados, nombreLider }: ModalBienvenidaProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [mensajeTitulo, setMensajeTitulo] = useState("");
   const [mensajeTexto, setMensajeTexto] = useState("");
   const [mensajeId, setMensajeId] = useState("");
   const [pendientesTotal, setPendientesTotal] = useState(0);
@@ -63,11 +90,11 @@ export default function ModalBienvenida({ userId, conteoAfiliados, nombreLider }
     return parts.map((part, i) => {
       if (part.match(urlRegex)) {
         return (
-          <a 
-            key={i} 
-            href={part} 
-            target="_blank" 
-            rel="noopener noreferrer" 
+          <a
+            key={i}
+            href={part}
+            target="_blank"
+            rel="noopener noreferrer"
             className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 underline font-bold break-all"
           >
             {part}
@@ -85,6 +112,7 @@ export default function ModalBienvenida({ userId, conteoAfiliados, nombreLider }
     ]);
 
     if (mensaje) {
+      setMensajeTitulo(mensaje.titulo || "");
       setMensajeTexto(mensaje.mensaje);
       setMensajeId(mensaje.id);
       setPendientesTotal(total);
@@ -92,6 +120,7 @@ export default function ModalBienvenida({ userId, conteoAfiliados, nombreLider }
       return true;
     }
 
+    setMensajeTitulo("");
     setMensajeTexto("");
     setMensajeId("");
     setPendientesTotal(0);
@@ -115,6 +144,18 @@ export default function ModalBienvenida({ userId, conteoAfiliados, nombreLider }
   const { mutate: handleContinuar, isPending } = useMutation({
     mutationFn: () => marcarLeidoAction(mensajeId, userId),
     onSuccess: async () => {
+      const { bg, color } = colorToastLectura(nivelCompromiso);
+      toast.success(
+        `Se guardó la lectura del mensaje el ${formatearFechaLectura(new Date())}`,
+        {
+          className: "toast-lectura-mensaje",
+          style: {
+            background: bg,
+            color,
+            boxShadow: "none",
+          },
+        },
+      );
       await cargarSiguienteMensaje();
     },
     onError: (error: any) => {
@@ -149,26 +190,31 @@ export default function ModalBienvenida({ userId, conteoAfiliados, nombreLider }
               leaveFrom="opacity-100 scale-100"
               leaveTo="opacity-0 scale-95"
             >
-              <DialogPanel className={`w-full max-w-lg transform overflow-hidden rounded-2xl ${colorFondo} border-4 p-6 text-left align-middle shadow-2xl transition-all relative flex flex-col items-center`}>
+              <DialogPanel className={`w-full max-w-lg transform overflow-hidden rounded-2xl ${colorFondo} border-4 p-6 text-left align-middle transition-all relative flex flex-col items-center`}>
                 {pendientesTotal > 1 && (
                   <p className="w-full text-center text-[10px] font-bold uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-3">
                     Tienes {pendientesTotal} mensajes sin leer · del más reciente al más antiguo
                   </p>
                 )}
-                <div className={`p-3 md:p-4 rounded-xl bg-white/95 dark:bg-black/80 backdrop-blur-md w-full text-left shadow-lg border border-gray-200 dark:border-gray-800 mb-6`}>
-                  <p className="font-medium text-gray-800 dark:text-gray-100 text-xs whitespace-pre-wrap leading-relaxed">
+                <div className="p-3 md:p-4 rounded-xl bg-white/95 dark:bg-black/80 backdrop-blur-md w-full text-left border border-gray-200 dark:border-gray-800 mb-4">
+                  {mensajeTitulo && (
+                    <p className={`font-bold text-sm mb-2 ${textoColor}`}>
+                      {mensajeTitulo}
+                    </p>
+                  )}
+                  <p className="font-bold text-gray-800 dark:text-gray-100 text-sm whitespace-pre-wrap leading-relaxed">
                     {renderMensaje(mensajeTexto)}
                   </p>
                 </div>
 
-                <div className="flex w-full items-center gap-2 md:gap-4 mb-4">
+                <div className="flex w-full items-center gap-2 md:gap-4 mb-2">
                   <div className="flex-1 w-full px-2">
                     <div className="flex justify-between items-center text-xs md:text-sm font-bold text-gray-600 dark:text-gray-400 px-1 mb-1.5">
                       <span className="text-left">Tu nivel de compromiso es:</span>
                       <span className={`uppercase font-black text-right ml-2 ${textoColor}`}>{nivelCompromiso}</span>
                     </div>
                     
-                    <div className="w-full bg-gray-200 dark:bg-gray-800 rounded-full h-3 overflow-hidden shadow-inner border border-gray-300 dark:border-gray-700 mb-1.5">
+                    <div className="w-full bg-gray-200 dark:bg-gray-800 rounded-full h-3 overflow-hidden border border-gray-300 dark:border-gray-700 mb-1.5">
                       <div 
                         className={`h-3 rounded-full ${conteoAfiliados > META_CELULA ? 'bg-green-500' : conteoAfiliados === META_CELULA ? 'bg-blue-500' : conteoAfiliados >= META_MINIMA ? 'bg-yellow-500' : 'bg-red-500'} transition-all duration-1000 ease-out relative overflow-hidden`} 
                         style={{ width: `${Math.min(100, Math.max(0, (conteoAfiliados / META_CELULA) * 100))}%` }}
@@ -188,7 +234,7 @@ export default function ModalBienvenida({ userId, conteoAfiliados, nombreLider }
                       src={gifUrl}
                       alt={`Nivel ${nivelCompromiso}`}
                       fill
-                      className="object-contain drop-shadow-lg"
+                      className="object-contain"
                       unoptimized
                     />
                   </div>
@@ -197,7 +243,7 @@ export default function ModalBienvenida({ userId, conteoAfiliados, nombreLider }
                 <button 
                   onClick={() => handleContinuar()}
                   disabled={isPending}
-                  className={`mt-6 w-full flex items-center justify-center px-8 py-4 rounded-xl font-bold text-white shadow-lg transition-transform hover:scale-[1.02] active:scale-95 text-lg ${
+                  className={`mt-2 w-full flex items-center justify-center px-8 py-4 rounded-xl font-bold text-white transition-transform hover:scale-[1.02] active:scale-95 text-lg ${
                     nivelCompromiso === 'Alto' ? 'bg-green-600 hover:bg-green-700' :
                     nivelCompromiso === 'Cumple' ? 'bg-blue-600 hover:bg-blue-700' :
                     nivelCompromiso === 'Medio' ? 'bg-yellow-600 hover:bg-yellow-700' :

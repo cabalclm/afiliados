@@ -1,6 +1,6 @@
 import Swal from 'sweetalert2';
 import type { Afiliado, Lider } from './esquemas';
-import { toast } from 'react-toastify';
+import { toast } from '@/lib/toast';
 import { deleteUserAccountAction } from '@/app/actions/usuarios';
 import { deleteAfiliadoAction } from '@/app/actions/afiliados';
 

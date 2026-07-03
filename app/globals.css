@@ -96,3 +96,26 @@
     animation: none;
     mix-blend-mode: normal;
 }
+
+.Toastify__toast {
+  box-shadow: none !important;
+  border-radius: 0.5rem;
+}
+
+.Toastify__toast-body {
+  color: #ffffff !important;
+  font-weight: 600;
+}
+
+.Toastify__close-button {
+  color: #ffffff !important;
+  opacity: 0.85;
+}
+
+.toast-solid {
+  box-shadow: none !important;
+}
+
+.toast-lectura-mensaje {
+  box-shadow: none !important;
+}

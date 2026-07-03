@@ -3,7 +3,7 @@
 import { useState, Fragment } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { toast } from "react-toastify";
+import { toast } from "@/lib/toast";
 import { Search, X } from "lucide-react";
 import {
   PiCrownDuotone,
@@ -171,8 +171,11 @@ export default function Ver() {
   const allUsers = (dashboardData?.usuarios || []) as Lider[];
   const allLideres = allUsers.filter((u) => u.rol === "LIDER");
   const miPerfilGlobal = allUsers.find((l) => l.id === userId);
-  const rolesAdmin = rol === "SUPER" ? ["ADMINISTRADOR", "SUPER"] : ["ADMINISTRADOR"];
-  const administrativos = allUsers.filter((u) => rolesAdmin.includes(u.rol || ""));
+  const rolesAdmin =
+    rol === "SUPER" ? ["ADMINISTRADOR", "SUPER"] : ["ADMINISTRADOR"];
+  const administrativos = allUsers.filter((u) =>
+    rolesAdmin.includes(u.rol || ""),
+  );
   const lugares = (dashboardData?.lugares || []) as Lugar[];
 
   const lideres = (() => {
@@ -262,7 +265,7 @@ export default function Ver() {
     setIsFormOpen(false);
     queryClient.invalidateQueries({ queryKey: ["afiliados-lider"] });
     queryClient.invalidateQueries({ queryKey: ["afiliados-gl"] });
-    
+
     await fetchData();
 
     if (esLider) return;
@@ -308,28 +311,28 @@ export default function Ver() {
             </div>
           </div>
           {vistaCompleta && (
-          <div className="relative w-full md:w-96">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Search className="h-5 w-5 text-gray-400" />
+            <div className="relative w-full md:w-96">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <Search className="h-5 w-5 text-gray-400" />
+              </div>
+              <input
+                type="text"
+                placeholder="Buscar por nombre"
+                className="pl-10 pr-4 py-2 border border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 rounded-md w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
             </div>
-            <input
-              type="text"
-              placeholder="Buscar por nombre"
-              className="pl-10 pr-4 py-2 border border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 rounded-md w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
           )}
           <div className="flex flex-col md:flex-row items-stretch md:items-center justify-end gap-2 w-full md:w-auto">
             {!esLider && (
-            <Button
-              onClick={() => setIsEstadisticasOpen(true)}
-              variant="outline"
-              className="gap-2 w-full text-xs md:text-xl"
-            >
-              📊 Estadísticas Generales
-            </Button>
+              <Button
+                onClick={() => setIsEstadisticasOpen(true)}
+                variant="outline"
+                className="gap-2 w-full text-xs md:text-xl"
+              >
+                📊 Estadísticas Generales
+              </Button>
             )}
             {puedeCrearLider && (
               <Button
@@ -348,7 +351,10 @@ export default function Ver() {
             <div className="h-32 bg-gray-100 dark:bg-neutral-800 rounded-xl" />
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {[1, 2, 3, 4, 5, 6].map((i) => (
-                <div key={i} className="h-44 bg-gray-100 dark:bg-neutral-800 rounded-lg" />
+                <div
+                  key={i}
+                  className="h-44 bg-gray-100 dark:bg-neutral-800 rounded-lg"
+                />
               ))}
             </div>
           </div>
@@ -370,90 +376,110 @@ export default function Ver() {
             </div>
           )
         ) : (
-        <>
-        <div className="flex border-b dark:border-neutral-800 mb-6 w-full min-w-0">
-          <button
-            onClick={() => setActiveTab("Lideres")}
-            className={tabBtnClass(activeTab === "Lideres", "Lideres")}
-          >
-            <span className={tabIconClass(activeTab === "Lideres", "Lideres")}>
-              <PiCrownDuotone className="w-4 h-4 md:w-5 md:h-5 shrink-0" />
-            </span>
-            <span className="truncate">Líderes</span>
-          </button>
-          <button
-            onClick={() => setActiveTab("Afiliados")}
-            className={tabBtnClass(activeTab === "Afiliados", "Afiliados")}
-          >
-            <span className={tabIconClass(activeTab === "Afiliados", "Afiliados")}>
-              <PiUsersThreeDuotone className="w-4 h-4 md:w-5 md:h-5 shrink-0" />
-            </span>
-            <span className="truncate">Miembros</span>
-          </button>
-          {esAdminOSuper && (
-            <button
-              onClick={() => setActiveTab("Administrativos")}
-              className={tabBtnClass(activeTab === "Administrativos", "Administrativos")}
-            >
-              <span className={tabIconClass(activeTab === "Administrativos", "Administrativos")}>
-                <PiShieldCheckDuotone className="w-4 h-4 md:w-5 md:h-5 shrink-0" />
-              </span>
-              <span className="truncate">Administrativos</span>
-            </button>
-          )}
-          {esAdminOSuper && (
-            <button
-              onClick={() => setActiveTab("Mensajes")}
-              className={tabBtnClass(activeTab === "Mensajes", "Mensajes")}
-            >
-              <span className={tabIconClass(activeTab === "Mensajes", "Mensajes")}>
-                <PiChatCircleDotsDuotone className="w-4 h-4 md:w-5 md:h-5 shrink-0" />
-              </span>
-              <span className="truncate">Mensajes</span>
-            </button>
-          )}
-        </div>
+          <>
+            <div className="flex border-b dark:border-neutral-800 mb-6 w-full min-w-0">
+              <button
+                onClick={() => setActiveTab("Lideres")}
+                className={tabBtnClass(activeTab === "Lideres", "Lideres")}
+              >
+                <span
+                  className={tabIconClass(activeTab === "Lideres", "Lideres")}
+                >
+                  <PiCrownDuotone className="w-4 h-4 md:w-5 md:h-5 shrink-0" />
+                </span>
+                <span className="truncate">Líderes</span>
+              </button>
+              <button
+                onClick={() => setActiveTab("Afiliados")}
+                className={tabBtnClass(activeTab === "Afiliados", "Afiliados")}
+              >
+                <span
+                  className={tabIconClass(
+                    activeTab === "Afiliados",
+                    "Afiliados",
+                  )}
+                >
+                  <PiUsersThreeDuotone className="w-4 h-4 md:w-5 md:h-5 shrink-0" />
+                </span>
+                <span className="truncate">Miembros</span>
+              </button>
+              {esAdminOSuper && (
+                <button
+                  onClick={() => setActiveTab("Administrativos")}
+                  className={tabBtnClass(
+                    activeTab === "Administrativos",
+                    "Administrativos",
+                  )}
+                >
+                  <span
+                    className={tabIconClass(
+                      activeTab === "Administrativos",
+                      "Administrativos",
+                    )}
+                  >
+                    <PiShieldCheckDuotone className="w-4 h-4 md:w-5 md:h-5 shrink-0" />
+                  </span>
+                  <span className="truncate">Administrativos</span>
+                </button>
+              )}
+              {esAdminOSuper && (
+                <button
+                  onClick={() => setActiveTab("Mensajes")}
+                  className={tabBtnClass(activeTab === "Mensajes", "Mensajes")}
+                >
+                  <span
+                    className={tabIconClass(
+                      activeTab === "Mensajes",
+                      "Mensajes",
+                    )}
+                  >
+                    <PiChatCircleDotsDuotone className="w-4 h-4 md:w-5 md:h-5 shrink-0" />
+                  </span>
+                  <span className="truncate">Mensajes</span>
+                </button>
+              )}
+            </div>
 
-        {activeTab === "Lideres" && (
-          <Lideres
-            lideres={lideresVisibles}
-            onVerCelula={handleOpenCelulaModal}
-            onEditar={handleOpenEditLiderModal}
-            rolUsuarioSesion={rol}
-            onDataChange={fetchData}
-            searchTerm={searchTerm}
-            idUsuarioSesion={userId}
-            isLoading={cargandoLideres}
-          />
-        )}
-        {activeTab === "Afiliados" && (
-          <AfiliadosGeneral
-            afiliados={afiliados}
-            lideres={lideres}
-            onEditar={handleOpenEditModal}
-            onDataChange={fetchData}
-            searchTerm={searchTerm}
-            isLoading={cargandoMiembros}
-          />
-        )}
-        {activeTab === "Administrativos" && (
-          <Lideres
-            lideres={administrativos}
-            onVerCelula={handleOpenCelulaModal}
-            onEditar={handleOpenEditLiderModal}
-            rolUsuarioSesion={rol}
-            onDataChange={fetchData}
-            searchTerm={searchTerm}
-            idUsuarioSesion={userId}
-            isLoading={cargandoLideres}
-            hideMeta
-            showRole={true}
-          />
-        )}
-        {activeTab === "Mensajes" && esAdminOSuper && (
-          <Difusion usuarios={allUsers} />
-        )}
-        </>
+            {activeTab === "Lideres" && (
+              <Lideres
+                lideres={lideresVisibles}
+                onVerCelula={handleOpenCelulaModal}
+                onEditar={handleOpenEditLiderModal}
+                rolUsuarioSesion={rol}
+                onDataChange={fetchData}
+                searchTerm={searchTerm}
+                idUsuarioSesion={userId}
+                isLoading={cargandoLideres}
+              />
+            )}
+            {activeTab === "Afiliados" && (
+              <AfiliadosGeneral
+                afiliados={afiliados}
+                lideres={lideres}
+                onEditar={handleOpenEditModal}
+                onDataChange={fetchData}
+                searchTerm={searchTerm}
+                isLoading={cargandoMiembros}
+              />
+            )}
+            {activeTab === "Administrativos" && (
+              <Lideres
+                lideres={administrativos}
+                onVerCelula={handleOpenCelulaModal}
+                onEditar={handleOpenEditLiderModal}
+                rolUsuarioSesion={rol}
+                onDataChange={fetchData}
+                searchTerm={searchTerm}
+                idUsuarioSesion={userId}
+                isLoading={cargandoLideres}
+                hideMeta
+                showRole={true}
+              />
+            )}
+            {activeTab === "Mensajes" && esAdminOSuper && (
+              <Difusion usuarios={allUsers} />
+            )}
+          </>
         )}
       </div>
 
@@ -516,16 +542,16 @@ export default function Ver() {
       </Transition>
 
       {!esLider && (
-      <Celula
-        isOpen={isCelulaOpen}
-        onClose={handleCloseCelulaModal}
-        lider={liderParaCelula}
-        onEditar={handleOpenEditModal}
-        onAnadirAfiliado={handleOpenAnadirAfiliadoModal}
-        onDataChange={fetchData}
-        rolUsuarioSesion={rol ?? ""}
-        afiliadosSimulados={AFILIADOS_SIMULADOS}
-      />
+        <Celula
+          isOpen={isCelulaOpen}
+          onClose={handleCloseCelulaModal}
+          lider={liderParaCelula}
+          onEditar={handleOpenEditModal}
+          onAnadirAfiliado={handleOpenAnadirAfiliadoModal}
+          onDataChange={fetchData}
+          rolUsuarioSesion={rol ?? ""}
+          afiliadosSimulados={AFILIADOS_SIMULADOS}
+        />
       )}
 
       <Form
