@@ -6,9 +6,9 @@ import {
   eliminarSubscripcionAction,
 } from "@/app/actions/push";
 
-const SW_URL = "/push-sw.js";
+const SW_URL = "/push/sw.js";
 const SW_SCOPE = "/push/";
-const INIT_TIMEOUT_MS = 10000;
+const ACTIVATION_TIMEOUT_MS = 20000;
 
 function urlBase64ToUint8Array(base64String: string): Uint8Array {
   const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
@@ -21,13 +21,17 @@ function urlBase64ToUint8Array(base64String: string): Uint8Array {
   return outputArray;
 }
 
-function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
-  return Promise.race([
-    promise,
-    new Promise<T>((_, reject) =>
-      setTimeout(() => reject(new Error("timeout")), ms),
-    ),
-  ]);
+function esIOSSinPWA(): boolean {
+  if (typeof window === "undefined") return false;
+  const ua = navigator.userAgent;
+  const esIOS =
+    /iPad|iPhone|iPod/.test(ua) ||
+    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  const esPWA =
+    window.matchMedia("(display-mode: standalone)").matches ||
+    (window.navigator as Navigator & { standalone?: boolean }).standalone ===
+      true;
+  return esIOS && !esPWA;
 }
 
 async function obtenerVapidPublicKey(): Promise<string> {
@@ -44,20 +48,71 @@ async function obtenerVapidPublicKey(): Promise<string> {
   }
 }
 
-async function getRegistration(): Promise<ServiceWorkerRegistration> {
-  // Producción: next-pwa registra el SW raíz con push-handlers.js
-  if (process.env.NODE_ENV === "production") {
-    return withTimeout(navigator.serviceWorker.ready, INIT_TIMEOUT_MS);
+function esperarActivacion(
+  reg: ServiceWorkerRegistration,
+): Promise<ServiceWorkerRegistration> {
+  if (reg.active) return Promise.resolve(reg);
+
+  return new Promise((resolve, reject) => {
+    let intervalo: ReturnType<typeof setInterval> | undefined;
+
+    const listo = () => {
+      if (reg.active) {
+        clearTimeout(timeout);
+        if (intervalo) clearInterval(intervalo);
+        resolve(reg);
+      }
+    };
+
+    const timeout = setTimeout(() => {
+      if (intervalo) clearInterval(intervalo);
+      reject(new Error("timeout activando service worker"));
+    }, ACTIVATION_TIMEOUT_MS);
+
+    const worker = reg.installing || reg.waiting;
+    if (worker) {
+      worker.addEventListener("statechange", listo);
+      listo();
+    }
+
+    reg.addEventListener("updatefound", () => {
+      reg.installing?.addEventListener("statechange", listo);
+    });
+
+    intervalo = setInterval(listo, 250);
+  });
+}
+
+/** SW dedicado a push (scope /push/). Convive con el SW de la PWA en /. */
+async function ensurePushRegistration(): Promise<ServiceWorkerRegistration> {
+  const existente = await navigator.serviceWorker.getRegistration(SW_SCOPE);
+  if (existente?.active) return existente;
+
+  if (existente) {
+    return esperarActivacion(existente);
   }
 
-  // Desarrollo: SW dedicado (PWA deshabilitado en dev)
-  const existente = await navigator.serviceWorker.getRegistration(SW_SCOPE);
-  if (existente) return existente;
+  const reg = await navigator.serviceWorker.register(SW_URL, {
+    scope: SW_SCOPE,
+    updateViaCache: "none",
+  });
 
-  return withTimeout(
-    navigator.serviceWorker.register(SW_URL, { scope: SW_SCOPE }),
-    INIT_TIMEOUT_MS,
-  );
+  return esperarActivacion(reg);
+}
+
+async function comprobarSuscripcionActiva(): Promise<boolean> {
+  if (Notification.permission !== "granted") return false;
+
+  const regs = await navigator.serviceWorker.getRegistrations();
+  for (const reg of regs) {
+    try {
+      const sub = await reg.pushManager.getSubscription();
+      if (sub) return true;
+    } catch {
+      /* siguiente registro */
+    }
+  }
+  return false;
 }
 
 export default function usePushNotifications() {
@@ -99,11 +154,8 @@ export default function usePushNotifications() {
       setSoportado(true);
 
       try {
-        const reg = await getRegistration();
-        const sub = await reg.pushManager.getSubscription();
-        if (!cancelado) {
-          setActivo(!!sub && Notification.permission === "granted");
-        }
+        const yaActivo = await comprobarSuscripcionActiva();
+        if (!cancelado) setActivo(yaActivo);
       } catch (e) {
         console.error("[push] Error comprobando suscripción:", e);
       } finally {
@@ -118,6 +170,11 @@ export default function usePushNotifications() {
 
   const activar = useCallback(async () => {
     if (!soportado || procesando || !vapidKey) return;
+
+    if (esIOSSinPWA()) {
+      return { ok: false, motivo: "ios-sin-pwa" as const };
+    }
+
     setProcesando(true);
     try {
       const permiso = await Notification.requestPermission();
@@ -126,10 +183,7 @@ export default function usePushNotifications() {
         return { ok: false, motivo: "permiso-denegado" as const };
       }
 
-      const reg = await getRegistration();
-      await withTimeout(navigator.serviceWorker.ready, INIT_TIMEOUT_MS).catch(
-        () => {},
-      );
+      const reg = await ensurePushRegistration();
 
       let sub = await reg.pushManager.getSubscription();
       if (!sub) {
@@ -148,7 +202,7 @@ export default function usePushNotifications() {
             auth: json.keys?.auth || "",
           },
         },
-        typeof navigator !== "undefined" ? navigator.userAgent : undefined,
+        navigator.userAgent,
       );
 
       setActivo(true);
@@ -166,12 +220,14 @@ export default function usePushNotifications() {
     if (!soportado || procesando) return;
     setProcesando(true);
     try {
-      const reg = await getRegistration();
-      const sub = await reg.pushManager.getSubscription();
-      if (sub) {
-        const endpoint = sub.endpoint;
-        await sub.unsubscribe().catch(() => {});
-        await eliminarSubscripcionAction(endpoint).catch(() => {});
+      const regs = await navigator.serviceWorker.getRegistrations();
+      for (const reg of regs) {
+        const sub = await reg.pushManager.getSubscription();
+        if (sub) {
+          const endpoint = sub.endpoint;
+          await sub.unsubscribe().catch(() => {});
+          await eliminarSubscripcionAction(endpoint).catch(() => {});
+        }
       }
       setActivo(false);
       return { ok: true as const };

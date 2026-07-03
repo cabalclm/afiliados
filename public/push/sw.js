@@ -1,6 +1,4 @@
-/* Service Worker dedicado a notificaciones push (Web Push / VAPID).
-   Se registra con un scope propio (/push/) para no interferir con el
-   service worker de PWA generado por next-pwa. */
+/* Service Worker de notificaciones push — scope /push/ */
 
 self.addEventListener("install", () => {
   self.skipWaiting();
@@ -61,6 +59,6 @@ self.addEventListener("notificationclick", (event) => {
       if (self.clients.openWindow) {
         return self.clients.openWindow(ruta);
       }
-    })()
+    })(),
   );
 });

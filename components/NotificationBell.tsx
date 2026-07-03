@@ -22,6 +22,10 @@ export default function NotificationBell() {
           ? "Notificaciones desactivadas en este dispositivo"
           : "Notificaciones activadas en este dispositivo",
       );
+    } else if ("motivo" in res && res.motivo === "ios-sin-pwa") {
+      toast.warning(
+        "En iPhone, agrega SOTE a la pantalla de inicio (Compartir → Agregar a inicio) y abre la app desde ahí para activar notificaciones.",
+      );
     } else if ("motivo" in res && res.motivo === "permiso-denegado") {
       toast.warning(
         "Permiso de notificaciones denegado. Actívalo en los ajustes del navegador.",
