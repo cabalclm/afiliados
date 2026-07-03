@@ -8,7 +8,7 @@ import {
 
 const SW_URL = "/push-sw.js";
 const SW_SCOPE = "/push/";
-const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || "";
+const INIT_TIMEOUT_MS = 10000;
 
 function urlBase64ToUint8Array(base64String: string): Uint8Array {
   const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
@@ -21,10 +21,43 @@ function urlBase64ToUint8Array(base64String: string): Uint8Array {
   return outputArray;
 }
 
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) =>
+      setTimeout(() => reject(new Error("timeout")), ms),
+    ),
+  ]);
+}
+
+async function obtenerVapidPublicKey(): Promise<string> {
+  const embebida = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || "";
+  if (embebida) return embebida;
+
+  try {
+    const res = await fetch("/api/push/vapid-public-key");
+    if (!res.ok) return "";
+    const data = await res.json();
+    return data.publicKey || "";
+  } catch {
+    return "";
+  }
+}
+
 async function getRegistration(): Promise<ServiceWorkerRegistration> {
+  // Producción: next-pwa registra el SW raíz con push-handlers.js
+  if (process.env.NODE_ENV === "production") {
+    return withTimeout(navigator.serviceWorker.ready, INIT_TIMEOUT_MS);
+  }
+
+  // Desarrollo: SW dedicado (PWA deshabilitado en dev)
   const existente = await navigator.serviceWorker.getRegistration(SW_SCOPE);
   if (existente) return existente;
-  return navigator.serviceWorker.register(SW_URL, { scope: SW_SCOPE });
+
+  return withTimeout(
+    navigator.serviceWorker.register(SW_URL, { scope: SW_SCOPE }),
+    INIT_TIMEOUT_MS,
+  );
 }
 
 export default function usePushNotifications() {
@@ -32,37 +65,59 @@ export default function usePushNotifications() {
   const [activo, setActivo] = useState(false);
   const [cargando, setCargando] = useState(true);
   const [procesando, setProcesando] = useState(false);
+  const [vapidKey, setVapidKey] = useState("");
 
   useEffect(() => {
-    const esSoportado =
-      typeof window !== "undefined" &&
-      "serviceWorker" in navigator &&
-      "PushManager" in window &&
-      "Notification" in window &&
-      !!VAPID_PUBLIC_KEY;
-
-    setSoportado(esSoportado);
-
-    if (!esSoportado) {
-      setCargando(false);
-      return;
-    }
+    let cancelado = false;
 
     (async () => {
+      const navegadorOk =
+        typeof window !== "undefined" &&
+        "serviceWorker" in navigator &&
+        "PushManager" in window &&
+        "Notification" in window;
+
+      if (!navegadorOk) {
+        if (!cancelado) {
+          setSoportado(false);
+          setCargando(false);
+        }
+        return;
+      }
+
+      const key = await obtenerVapidPublicKey();
+      if (cancelado) return;
+
+      if (!key) {
+        console.warn("[push] Falta NEXT_PUBLIC_VAPID_PUBLIC_KEY en el deploy");
+        setSoportado(false);
+        setCargando(false);
+        return;
+      }
+
+      setVapidKey(key);
+      setSoportado(true);
+
       try {
         const reg = await getRegistration();
         const sub = await reg.pushManager.getSubscription();
-        setActivo(!!sub && Notification.permission === "granted");
+        if (!cancelado) {
+          setActivo(!!sub && Notification.permission === "granted");
+        }
       } catch (e) {
         console.error("[push] Error comprobando suscripción:", e);
       } finally {
-        setCargando(false);
+        if (!cancelado) setCargando(false);
       }
     })();
+
+    return () => {
+      cancelado = true;
+    };
   }, []);
 
   const activar = useCallback(async () => {
-    if (!soportado || procesando) return;
+    if (!soportado || procesando || !vapidKey) return;
     setProcesando(true);
     try {
       const permiso = await Notification.requestPermission();
@@ -72,13 +127,15 @@ export default function usePushNotifications() {
       }
 
       const reg = await getRegistration();
-      await navigator.serviceWorker.ready.catch(() => {});
+      await withTimeout(navigator.serviceWorker.ready, INIT_TIMEOUT_MS).catch(
+        () => {},
+      );
 
       let sub = await reg.pushManager.getSubscription();
       if (!sub) {
         sub = await reg.pushManager.subscribe({
           userVisibleOnly: true,
-          applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
+          applicationServerKey: urlBase64ToUint8Array(vapidKey),
         });
       }
 
@@ -103,7 +160,7 @@ export default function usePushNotifications() {
     } finally {
       setProcesando(false);
     }
-  }, [soportado, procesando]);
+  }, [soportado, procesando, vapidKey]);
 
   const desactivar = useCallback(async () => {
     if (!soportado || procesando) return;

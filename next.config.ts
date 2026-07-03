@@ -6,6 +6,9 @@ const withPWA = withPWAInit({
   dest: "public",
   disable: process.env.NODE_ENV === "development",
   register: true,
+  workboxOptions: {
+    importScripts: ["/push-handlers.js"],
+  },
 });
 
 const nextConfig: NextConfig = {
