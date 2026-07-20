@@ -1,5 +1,6 @@
 import { createClient } from "@/utils/supabase/server";
 import { NextResponse } from "next/server";
+import { getCachedAuthUsers } from "@/components/afiliados/actions/cache";
 
 export async function GET() {
   console.time("🚀 API /api/dashboard TOTAL");
@@ -48,6 +49,10 @@ export async function GET() {
 
   const perfiles = perfilesRes.data || [];
   const conteoRaw = conteoRes.data || [];
+  const authUsers = await getCachedAuthUsers();
+  const emailMap = new Map(
+    authUsers.map((u) => [u.id, u.email || ""]),
+  );
 
   const conteoMap = new Map<string, number>();
   conteoRaw.forEach((row) => {
@@ -58,7 +63,7 @@ export async function GET() {
 
   const usuarios = perfiles.map((p: any) => ({
     id: p.user_id,
-    email: "",
+    email: emailMap.get(p.user_id) || "",
     nombres: p.nombres,
     apellidos: p.apellidos,
     activo: p.activo,

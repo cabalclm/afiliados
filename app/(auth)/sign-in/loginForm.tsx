@@ -9,7 +9,7 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import { Typewriter } from "react-simple-typewriter";
 import { Button } from "@/components/ui/button";
-import Swal from "sweetalert2";
+import Swal from "@/lib/swal";
 
 function PendingSignInButton({ isPending }: { isPending: boolean }) {
   return (

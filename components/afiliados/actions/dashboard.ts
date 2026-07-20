@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/utils/supabase/server";
+import { getCachedAuthUsers } from "./cache";
 
 /**
  * UN SOLO server action que trae TODO lo que necesita el dashboard.
@@ -61,6 +62,10 @@ export async function cargarDashboardAction() {
   // Usuarios con conteo
   const perfiles = perfilesRes.data || [];
   const conteoRaw = conteoRes.data || [];
+  const authUsers = await getCachedAuthUsers();
+  const emailMap = new Map(
+    authUsers.map((u) => [u.id, u.email || ""]),
+  );
 
   const conteoMap = new Map<string, number>();
   conteoRaw.forEach((row) => {
@@ -71,7 +76,7 @@ export async function cargarDashboardAction() {
 
   const usuarios = perfiles.map((p: any) => ({
     id: p.user_id,
-    email: "",
+    email: emailMap.get(p.user_id) || "",
     nombres: p.nombres,
     apellidos: p.apellidos,
     activo: p.activo,

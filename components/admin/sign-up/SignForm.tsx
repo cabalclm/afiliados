@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { ChevronDown, ChevronUp } from "lucide-react";
-import Swal from "sweetalert2";
+import Swal from "@/lib/swal";
 import PasswordSection from "@/components/admin/sign-up/PasswordSection";
 import useUserData from "@/hooks/sesion/useUserData";
 import { createClient } from "@/utils/supabase/client";
@@ -23,6 +23,7 @@ interface SignupFormProps {
   isModal?: boolean;
   initialData?: any;
   rolSesion?: string;
+  modoCrearSede?: boolean;
 }
 
 export function SignupForm({
@@ -31,6 +32,7 @@ export function SignupForm({
   isModal = false,
   initialData,
   rolSesion,
+  modoCrearSede = false,
 }: SignupFormProps) {
   const router = useRouter();
   const isEdit = !!initialData;
@@ -38,7 +40,7 @@ export function SignupForm({
   const rolUsuarioSesion = rolSesion ?? rolHook;
 
   const modoSimulacion =
-    !isEdit && rolUsuarioSesion?.toUpperCase() === "DOCUMENTADOR";
+    !isEdit && !modoCrearSede && rolUsuarioSesion?.toUpperCase() === "DOCUMENTADOR";
 
   const [simulacionLista, setSimulacionLista] = useState(false);
   const mostrarSkeleton = modoSimulacion && !simulacionLista;
@@ -47,10 +49,16 @@ export function SignupForm({
   const [rolesDisponibles, setRolesDisponibles] = useState<RolDisponible[]>([]);
   const [showPasswordAccordion, setShowPasswordAccordion] = useState(!isEdit);
 
-  const [nombres, setNombres] = useState(initialData?.nombres || "");
-  const [apellidos, setApellidos] = useState(initialData?.apellidos || "");
+  const [nombres, setNombres] = useState(
+    modoCrearSede ? "Sede" : initialData?.nombres || "",
+  );
+  const [apellidos, setApellidos] = useState(
+    modoCrearSede ? "Central" : initialData?.apellidos || "",
+  );
   const [email, setEmail] = useState(
-    initialData?.email?.replace(/@.*$/, "") || "",
+    modoCrearSede
+      ? "sede"
+      : initialData?.email?.replace(/@.*$/, "") || "",
   );
   const [password, setPassword] = useState("");
   const [confirmar, setConfirmar] = useState("");
@@ -90,17 +98,26 @@ export function SignupForm({
       if (r) {
         setRolesDisponibles(r);
         if (!initialData?.rol_id) {
-          const rolLider = r.find(
-            (role) =>
-              role.nombre.toUpperCase() === "LIDER" ||
-              role.nombre.toUpperCase() === "LÍDER",
-          );
-          if (rolLider) setRolId(rolLider.id.toString());
+          if (modoCrearSede) {
+            const rolSede = r.find(
+              (role) =>
+                role.id === 5 ||
+                role.nombre.toUpperCase() === "SEDE",
+            );
+            if (rolSede) setRolId(rolSede.id.toString());
+          } else {
+            const rolLider = r.find(
+              (role) =>
+                role.nombre.toUpperCase() === "LIDER" ||
+                role.nombre.toUpperCase() === "LÍDER",
+            );
+            if (rolLider) setRolId(rolLider.id.toString());
+          }
         }
       }
     };
     fetchDatos();
-  }, [initialData]);
+  }, [initialData, modoCrearSede]);
 
   useEffect(() => {
     if (!modoSimulacion) return;
@@ -118,9 +135,17 @@ export function SignupForm({
   }, [modoSimulacion]);
 
   const esSuperSesion = rolUsuarioSesion?.toUpperCase() === "SUPER";
-  const rolesParaSelector = rolesDisponibles.filter(
-    (r) => esSuperSesion || r.nombre.toUpperCase() !== "SUPER",
-  );
+  const editandoSede =
+    isEdit &&
+    ((initialData?.rol || "").toUpperCase() === "SEDE" ||
+      Number(initialData?.rol_id) === 5);
+  const rolesParaSelector = rolesDisponibles.filter((r) => {
+    const nombre = r.nombre.toUpperCase();
+    if (!esSuperSesion && nombre === "SUPER") return false;
+    if (modoCrearSede) return nombre === "SEDE" || r.id === 5;
+    if (editandoSede) return true;
+    return nombre !== "SEDE";
+  });
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -142,6 +167,9 @@ export function SignupForm({
     const formData = new FormData(e.currentTarget);
     const finalEmail = `${email.trim()}@app.com`;
     formData.set("email", finalEmail);
+    formData.set("nombres", nombres.trim());
+    formData.set("apellidos", apellidos.trim());
+    formData.set("rol_id", rol_id);
     if (isEdit) formData.append("id", initialData.user_id || initialData.id);
 
     let result;
@@ -179,9 +207,11 @@ export function SignupForm({
         <h3 className="text-xl font-bold text-blue-700">
           {isEdit
             ? "Editar Perfil de Acceso"
-            : modoSimulacion
-              ? "Nuevo Usuario Líder (Simulación)"
-              : "Nuevo Usuario Líder"}
+            : modoCrearSede
+              ? "Crear Usuario Sede"
+              : modoSimulacion
+                ? "Nuevo Usuario Líder (Simulación)"
+                : "Nuevo Usuario Líder"}
         </h3>
         <Button onClick={onClose} variant="ghost" type="button">
           Cerrar
@@ -228,6 +258,7 @@ export function SignupForm({
               value={nombres}
               onChange={(e) => setNombres(e.target.value)}
               className="h-12 text-lg"
+              readOnly={modoCrearSede}
             />
           </div>
           <div className="flex-1">
@@ -237,6 +268,7 @@ export function SignupForm({
               value={apellidos}
               onChange={(e) => setApellidos(e.target.value)}
               className="h-12 text-lg"
+              readOnly={modoCrearSede}
             />
           </div>
         </div>
@@ -252,6 +284,7 @@ export function SignupForm({
             }
             placeholder="Ingrese su usuario"
             className="h-12 text-lg"
+            readOnly={modoCrearSede}
           />
         </div>
 
@@ -261,7 +294,8 @@ export function SignupForm({
             name="rol_id"
             value={rol_id}
             onChange={(e) => setRolId(e.target.value)}
-            className="w-full border dark:border-neutral-700 rounded h-12 px-3 text-lg bg-white dark:bg-neutral-900 mt-1"
+            disabled={modoCrearSede}
+            className="w-full border dark:border-neutral-700 rounded h-12 px-3 text-lg bg-white dark:bg-neutral-900 mt-1 disabled:opacity-70"
           >
             <option value="">Seleccione un rol...</option>
             {rolesParaSelector.map((r) => (
@@ -309,9 +343,11 @@ export function SignupForm({
             ? "Procesando..."
             : isEdit
               ? "Actualizar Datos"
-              : modoSimulacion
-                ? "Simular Creación"
-                : "Crear Acceso"}
+              : modoCrearSede
+                ? "Crear Sede"
+                : modoSimulacion
+                  ? "Simular Creación"
+                  : "Crear Acceso"}
         </Button>
       </form>
       )}

@@ -7,7 +7,7 @@ import { X, Plus } from "lucide-react";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import { toast } from "@/lib/toast";
-import Swal from "sweetalert2";
+import Swal from "@/lib/swal";
 
 import { guardarAfiliadoAction } from "./actions";
 import { POLITICAS, type AfiliadoFormData, type Afiliado } from "./schemas";

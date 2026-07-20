@@ -1,4 +1,4 @@
-import Swal from 'sweetalert2';
+import Swal from '@/lib/swal';
 import type { Afiliado, Lider } from './esquemas';
 import { toast } from '@/lib/toast';
 import { deleteUserAccountAction } from '@/app/actions/usuarios';

@@ -1,20 +1,28 @@
 "use client";
 
-import { useState, Fragment, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
-import Swal from "sweetalert2";
+import Swal from "@/lib/swal";
 import {
   ChevronLeft,
   ChevronRight,
   Pencil,
   Trash2,
-  Eye,
-  ChevronDown,
+  Building2,
+  MoreVertical,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import { obtenerConfiguracionAction } from "@/components/dashboard/actions/configuracion";
 import { eliminar } from "./acciones";
+import { esUsuarioSede } from "./esquemas";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export interface Lider {
   id: string;
@@ -36,7 +44,6 @@ interface Props {
   searchTerm: string;
   idUsuarioSesion: string;
   isLoading?: boolean;
-  hideMeta?: boolean;
   showRole?: boolean;
 }
 
@@ -69,17 +76,19 @@ export default function Lideres({
   searchTerm,
   idUsuarioSesion,
   isLoading = false,
-  hideMeta = false,
   showRole = false,
 }: Props) {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState<number | "all">(10);
-  const [liderAbiertoId, setLiderAbiertoId] = useState<string | null>(null);
 
-  const isLider = rolUsuarioSesion === "LIDER";
+  const rolUpper = (rolUsuarioSesion || "").toUpperCase();
+  const isLider = rolUpper === "LIDER";
   const esAdminOSuper =
-    rolUsuarioSesion === "ADMINISTRADOR" || rolUsuarioSesion === "SUPER";
-  const OBJETIVO_GENERAL = 2250;
+    rolUpper === "ADMINISTRADOR" ||
+    rolUpper === "ADMIN" ||
+    rolUpper === "SUPER";
+  const puedeGestionarUsuarios =
+    esAdminOSuper || rolUpper === "DOCUMENTADOR";
 
   const { data: config } = useQuery({
     queryKey: ["config_sistema"],
@@ -93,23 +102,25 @@ export default function Lideres({
     setCurrentPage(1);
   }, [searchTerm, itemsPerPage]);
 
-  const totalAfiliadosGeneral = useMemo(() =>
-    lideres.reduce((acc, curr) => acc + (curr.conteoAfiliados || 0), 0)
-  , [lideres]);
+  const sede = useMemo(
+    () => lideres.find((l) => esUsuarioSede(l)) || null,
+    [lideres],
+  );
 
-  const progresoGeneral = useMemo(() =>
-    Math.min((totalAfiliadosGeneral / OBJETIVO_GENERAL) * 100, 100)
-  , [totalAfiliadosGeneral]);
-
-  const sortedLideres = useMemo(() =>
-    [...lideres].sort((a, b) => {
-      if (a.simulado) return -1;
-      if (b.simulado) return 1;
-      if (a.id === idUsuarioSesion) return -1;
-      if (b.id === idUsuarioSesion) return 1;
-      return (b.conteoAfiliados || 0) - (a.conteoAfiliados || 0);
-    })
-  , [lideres, idUsuarioSesion]);
+  const sortedLideres = useMemo(
+    () =>
+      [...lideres].sort((a, b) => {
+        const aSede = esUsuarioSede(a);
+        const bSede = esUsuarioSede(b);
+        if (aSede !== bSede) return aSede ? -1 : 1;
+        if (a.simulado) return -1;
+        if (b.simulado) return 1;
+        if (a.id === idUsuarioSesion) return -1;
+        if (b.id === idUsuarioSesion) return 1;
+        return (b.conteoAfiliados || 0) - (a.conteoAfiliados || 0);
+      }),
+    [lideres, idUsuarioSesion],
+  );
 
   const filteredLideres = useMemo(() => {
     const term = searchTerm.toLowerCase();
@@ -142,6 +153,9 @@ export default function Lideres({
   if (isLoading) return <LideresSkeleton esAdminOSuper={esAdminOSuper} />;
 
   const getRowClass = (lider: Lider) => {
+    if (esUsuarioSede(lider)) {
+      return "bg-blue-50 dark:bg-blue-950/40 border-blue-300 dark:border-blue-800 ring-1 ring-blue-200 dark:ring-blue-700/60";
+    }
     if (lider.id === idUsuarioSesion) {
       return "bg-blue-50 dark:bg-blue-900/30 border-blue-200 dark:border-blue-800 ring-1 ring-blue-300 dark:ring-blue-700 shadow-blue-50 dark:shadow-none";
     }
@@ -150,28 +164,6 @@ export default function Lideres({
 
   return (
     <>
-      {!hideMeta && esAdminOSuper && (
-        <div className="mb-6 w-full">
-          <div className="flex justify-between items-end mb-2">
-            <span className="text-xs font-bold uppercase text-gray-600 dark:text-gray-400 font-sans">
-              Meta General de Afiliación
-            </span>
-            <span className="text-sm font-black text-blue-700">
-              {totalAfiliadosGeneral.toLocaleString()} /{" "}
-              {OBJETIVO_GENERAL.toLocaleString()}
-            </span>
-          </div>
-          <div className="w-full bg-gray-200 dark:bg-neutral-800 rounded-full h-6 border-2 border-white dark:border-neutral-900 shadow-inner overflow-hidden flex items-center relative font-sans">
-            <motion.div
-              initial={{ width: 0 }}
-              animate={{ width: `${progresoGeneral}%` }}
-              transition={{ duration: 1, ease: "easeOut" }}
-              className="bg-blue-600 h-full shadow-[inset_0px_0px_10px_rgba(0,0,0,0.2)]"
-            />
-          </div>
-        </div>
-      )}
-
       <div className="text-[10px] text-blue-500 font-bold mb-2">
         {isLider ? "Haz click para ver tu célula 🤳" : "Haz click para ver una celula 🤳"}
       </div>
@@ -180,6 +172,7 @@ export default function Lideres({
       <div className="flex flex-col gap-3">
         <AnimatePresence initial={false}>
         {lideresPaginados.map((lider, index) => {
+          const esSede = esUsuarioSede(lider);
           const totalEnGrupo = lider.conteoAfiliados || 0;
           const progreso = Math.min((totalEnGrupo / META_CELULA) * 100, 100);
           const tieneAfiliados = totalEnGrupo > 0;
@@ -222,7 +215,7 @@ export default function Lideres({
                   : undefined
               }
               transition={{ duration: 0.45, ease: [0.25, 0.46, 0.45, 0.94] }}
-              className={`flex flex-col md:flex-row items-stretch md:items-center border rounded-xl overflow-hidden shadow-sm ${getRowClass(lider)}`}
+              className={`flex flex-row items-stretch md:items-center border rounded-xl overflow-hidden shadow-sm ${getRowClass(lider)}`}
             >
               {/* Contenedor Principal */}
               <div 
@@ -234,13 +227,30 @@ export default function Lideres({
               >
                 {/* No. y Nombre */}
                 <div className="flex items-center gap-3 min-w-0 md:w-1/3">
-                  <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gray-50 dark:bg-neutral-800 text-xs font-black text-gray-400 dark:text-gray-500 shrink-0">
-                    {startIndex + index + 1}
+                  <div className={`flex items-center justify-center w-8 h-8 rounded-lg text-xs font-black shrink-0 ${
+                    esSede
+                      ? "bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-400"
+                      : "bg-gray-50 dark:bg-neutral-800 text-gray-400 dark:text-gray-500"
+                  }`}>
+                    {esSede ? <Building2 className="h-4 w-4" /> : startIndex + index + 1}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <h3 className={`font-black text-sm md:text-base leading-tight truncate ${lider.id === idUsuarioSesion ? "text-blue-900 dark:text-blue-400" : "text-gray-900 dark:text-gray-100"}`}>
-                      {lider.nombres} {lider.apellidos}
-                    </h3>
+                    <div className="flex items-center gap-2 min-w-0">
+                      <h3 className={`font-black text-sm md:text-base leading-tight truncate ${
+                        esSede
+                          ? "text-blue-900 dark:text-blue-300"
+                          : lider.id === idUsuarioSesion
+                            ? "text-blue-900 dark:text-blue-400"
+                            : "text-gray-900 dark:text-gray-100"
+                      }`}>
+                        {lider.nombres} {lider.apellidos}
+                      </h3>
+                      {esSede && (
+                        <span className="text-[8px] bg-blue-200 dark:bg-blue-900/60 text-blue-900 dark:text-blue-300 px-1.5 py-0.5 rounded-full font-black uppercase shrink-0">
+                          Sede
+                        </span>
+                      )}
+                    </div>
                     <div className="flex items-center gap-2 mt-1">
                       <p className="text-[10px] md:text-xs text-gray-500 italic lowercase truncate">
                         {lider.email}
@@ -256,114 +266,88 @@ export default function Lideres({
 
                 {/* Meta / Progreso */}
                 <div className="flex-1 max-w-md">
-                   <div className="flex justify-between items-end mb-1">
+                  {esSede ? (
+                    <div className="flex items-center justify-between gap-3">
                       <span className="text-[10px] font-black text-gray-400 uppercase">
-                        Nivel de compromiso: <span className={textoColor}>{nivelCompromiso}</span>
+                        Afiliados en sede
                       </span>
-                      <span className={`text-sm md:text-base font-black ${textoColor}`}>{totalEnGrupo}/{META_CELULA}</span>
-                   </div>
-                   <div className="w-full bg-gray-100 dark:bg-neutral-800 rounded-full h-2 border dark:border-neutral-700 overflow-hidden">
-                      <motion.div
-                        initial={{ width: 0 }}
-                        animate={{ width: `${progreso}%` }}
-                        className={`${colorBarra} h-full rounded-full shadow-sm`}
-                      />
-                   </div>
+                      <span className="text-sm md:text-base font-black text-blue-700 dark:text-blue-400">
+                        {totalEnGrupo.toLocaleString()}
+                      </span>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="flex justify-between items-end mb-1">
+                        <span className="text-[10px] font-black text-gray-400 uppercase">
+                          Nivel de compromiso: <span className={textoColor}>{nivelCompromiso}</span>
+                        </span>
+                        <span className={`text-sm md:text-base font-black ${textoColor}`}>
+                          {totalEnGrupo}/{META_CELULA}
+                        </span>
+                      </div>
+                      <div className="w-full bg-gray-100 dark:bg-neutral-800 rounded-full h-2 border dark:border-neutral-700 overflow-hidden">
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{ width: `${progreso}%` }}
+                          className={`${colorBarra} h-full rounded-full shadow-sm`}
+                        />
+                      </div>
+                    </>
+                  )}
                 </div>
 
-                {/* Flecha solo en Móvil */}
-                {rolUsuarioSesion !== "LIDER" && (
-                  <div 
-                    className="md:hidden flex justify-center py-2"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setLiderAbiertoId(liderAbiertoId === lider.id ? null : lider.id);
-                    }}
-                  >
-                    <div className="bg-gray-100 dark:bg-neutral-800 rounded-full p-1 border dark:border-neutral-700 shadow-sm">
-                      <ChevronDown className={`h-4 w-4 text-gray-500 transition-transform ${liderAbiertoId === lider.id ? "rotate-180" : ""}`} />
-                    </div>
-                  </div>
-                )}
               </div>
 
-              {/* Botones de Acción - Siempre a la Derecha en Desktop */}
-              <div className="hidden md:flex items-center gap-2 px-4 py-2 border-l border-gray-100 dark:border-neutral-800 bg-gray-50/30 dark:bg-neutral-800/30">
-                {rolUsuarioSesion !== "LIDER" && (
-                  <>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="h-9 px-3 text-blue-600 hover:bg-blue-600 hover:text-white rounded-lg transition-colors"
-                      onClick={(e) => { e.stopPropagation(); onEditar(lider); }}
-                    >
-                      <Pencil className="h-4 w-4 mr-2" />
-                      <span className="text-[10px] font-bold uppercase">Editar</span>
-                    </Button>
-                    
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="h-9 px-3 rounded-lg transition-colors text-red-500 hover:bg-red-600 hover:text-white group"
-                      onClick={(e) => { 
-                        e.stopPropagation(); 
-                        if (tieneAfiliados) {
-                          Swal.fire({
-                            icon: 'error',
-                            title: 'Acción no permitida',
-                            text: 'Sólo se puede eliminar un líder sin integrantes',
-                            confirmButtonColor: '#3b82f6'
-                          });
-                        } else {
-                          eliminar(lider, onDataChange);
-                        }
-                      }}
-                    >
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      <span className="text-[10px] font-bold uppercase">Eliminar</span>
-                    </Button>
-                  </>
-                )}
-              </div>
-
-              {/* Acordeón Móvil */}
-              <AnimatePresence>
-                {liderAbiertoId === lider.id && rolUsuarioSesion !== "LIDER" && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    exit={{ opacity: 0, height: 0 }}
-                    className="md:hidden border-t border-gray-100 dark:border-neutral-800 bg-gray-50 dark:bg-neutral-800 flex divide-x dark:divide-neutral-700"
-                  >
-                    <Button
-                      variant="ghost"
-                      className="flex-1 text-blue-600 py-4 font-bold uppercase text-[10px] rounded-none"
-                      onClick={(e) => { e.stopPropagation(); onEditar(lider); }}
-                    >
-                      <Pencil className="h-4 w-4 mr-2" /> Editar
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      className="flex-1 py-4 font-bold uppercase text-[10px] rounded-none text-red-500 hover:bg-red-50"
-                      onClick={(e) => { 
-                        e.stopPropagation(); 
-                        if (tieneAfiliados) {
-                          Swal.fire({
-                            icon: 'warning',
-                            title: 'Acción no permitida',
-                            text: 'Sólo se puede eliminar un líder sin integrantes',
-                            confirmButtonColor: '#3b82f6'
-                          });
-                        } else {
-                          eliminar(lider, onDataChange);
-                        }
-                      }}
-                    >
-                      <Trash2 className="h-4 w-4 mr-2" /> Borrar
-                    </Button>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+              {puedeGestionarUsuarios && (
+                <div
+                  className="flex items-center justify-end px-3 py-2 md:border-l border-gray-100 dark:border-neutral-800"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button
+                        type="button"
+                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 dark:hover:bg-neutral-800"
+                        aria-label="Acciones"
+                      >
+                        <MoreVertical className="h-5 w-5" />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-44">
+                      <DropdownMenuItem
+                        className="cursor-pointer gap-2"
+                        onClick={() => onEditar(lider)}
+                      >
+                        <Pencil className="h-4 w-4" />
+                        Editar
+                      </DropdownMenuItem>
+                      {esAdminOSuper && (
+                        <>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            className="cursor-pointer gap-2 text-red-600 focus:text-red-600"
+                            onClick={() => {
+                              if (tieneAfiliados) {
+                                Swal.fire({
+                                  icon: "error",
+                                  title: "Acción no permitida",
+                                  text: "Sólo se puede eliminar un líder sin integrantes",
+                                  confirmButtonColor: "#3b82f6",
+                                });
+                              } else {
+                                eliminar(lider, onDataChange);
+                              }
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                            Eliminar
+                          </DropdownMenuItem>
+                        </>
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              )}
             </motion.div>
           );
         })}

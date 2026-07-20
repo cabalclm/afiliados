@@ -10,6 +10,28 @@ export interface Lider {
   simulado?: boolean;
 }
 
+/** Detecta el usuario especial "Sede" (rol SEDE, o nombre/usuario legado). */
+export function esUsuarioSede(lider: {
+  nombres?: string | null;
+  apellidos?: string | null;
+  email?: string | null;
+  rol?: string | null;
+}): boolean {
+  if ((lider.rol || "").trim().toUpperCase() === "SEDE") return true;
+
+  const nombres = (lider.nombres || "").trim().toLowerCase();
+  const apellidos = (lider.apellidos || "").trim().toLowerCase();
+  const nombreCompleto = `${nombres} ${apellidos}`.trim();
+  const emailLocal = (lider.email || "").split("@")[0].trim().toLowerCase();
+
+  return (
+    nombres === "sede" ||
+    nombreCompleto === "sede" ||
+    nombreCompleto.startsWith("sede ") ||
+    emailLocal === "sede"
+  );
+}
+
 export const POLITICAS = [
   "Obras de Infraestructura",
   "Red Vial",

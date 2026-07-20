@@ -6,7 +6,7 @@ import { signUpAction } from "@/app/actions/usuarios";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import Swal from "sweetalert2";
+import Swal from "@/lib/swal";
 import PasswordSection from "@/components/admin/sign-up/PasswordSection";
 import useUserData from "@/hooks/sesion/useUserData";
 import { createClient } from "@/utils/supabase/client";

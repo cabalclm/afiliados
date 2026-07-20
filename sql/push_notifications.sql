@@ -1,6 +1,7 @@
 -- =====================================================================
 -- Notificaciones Push (Web Push / VAPID)
--- Ejecutar en el editor SQL de Supabase.
+-- Ejecutar DESPUÉS de sql/mensajes_sistema.sql (requiere sis_mensajes).
+-- Orden completo: comandos.sql → mensajes_sistema.sql → push_notifications.sql
 -- =====================================================================
 
 -- 1) Tabla de suscripciones push (una por dispositivo/navegador)

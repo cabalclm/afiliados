@@ -1,20 +1,56 @@
 "use client";
 
-import { useState, Fragment } from "react";
+import { obtenerConfiguracionAction } from "@/components/dashboard/actions/configuracion";
 import { Button } from "@/components/ui/button";
+import TextoAnimado from "@/components/ui/Typeanimation";
+import { Dialog, DialogPanel, TransitionChild } from "@headlessui/react";
+import { useQuery } from "@tanstack/react-query";
+import {
+  ArrowLeft,
+  BarChart3,
+  LayoutGrid,
+  Loader2,
+  Search,
+  Table2,
+  UserPlus,
+  Users,
+  X,
+} from "lucide-react";
+import Image from "next/image";
+import { Fragment, useEffect, useState } from "react";
 import type { Afiliado, Lider } from "./esquemas";
-import Tabla from "./Tabla";
+import { esUsuarioSede } from "./esquemas";
 import EstadisticasEdades from "./estadisticas/Edades";
 import EstadisticasEmpadronados from "./estadisticas/Empadronados";
 import EstadisticasLugares from "./estadisticas/Lugares";
 import EstadisticasPoliticas from "./estadisticas/Politicas";
 import EstadisticasReligiones from "./estadisticas/Religion";
-import TextoAnimado from "@/components/ui/Typeanimation";
-import Image from "next/image";
-import { Dialog, TransitionChild, DialogPanel } from "@headlessui/react";
-import { Users, BarChart3, X, UserPlus, Search, Loader2 } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
-import { obtenerConfiguracionAction } from "@/components/dashboard/actions/configuracion";
+import type { FormatoVista } from "./Tabla";
+import Tabla from "./Tabla";
+
+const GIFS_DISPONIBLES = [
+  "/gif/afiliados/gif0.gif",
+  "/gif/afiliados/gif1.gif",
+  "/gif/afiliados/gif2.gif",
+  "/gif/afiliados/gif3.gif",
+  "/gif/afiliados/gif4.gif",
+  "/gif/afiliados/gif5.gif",
+  "/gif/afiliados/logo.gif",
+  "/gif/afiliados/pensando.gif",
+  "/gif/afiliados/fire.gif",
+  "/gif/afiliados/risa.gif",
+  "/gif/afiliados/payaso.gif",
+  "/gif/afiliados/calculando.gif",
+];
+
+function elegirGifAleatorio(excluido?: string) {
+  const opciones = excluido
+    ? GIFS_DISPONIBLES.filter((g) => g !== excluido)
+    : GIFS_DISPONIBLES;
+  return (
+    opciones[Math.floor(Math.random() * opciones.length)] || GIFS_DISPONIBLES[0]
+  );
+}
 
 interface Props {
   isOpen: boolean;
@@ -26,6 +62,8 @@ interface Props {
   rolUsuarioSesion: string;
   afiliadosSimulados?: Afiliado[];
   embedded?: boolean;
+  /** Si se pasa, muestra botón Atrás en modo embebido (p. ej. al abrir desde un líder). */
+  onBack?: () => void;
 }
 
 type Vista = "miembros" | "estadisticas";
@@ -40,11 +78,23 @@ export default function Celula({
   rolUsuarioSesion,
   afiliadosSimulados,
   embedded = false,
+  onBack,
 }: Props) {
   const [vistaActual, setVistaActual] = useState<Vista>("miembros");
   const [busqueda, setBusqueda] = useState("");
+  const [formatoVista, setFormatoVista] = useState<FormatoVista>("tarjetas");
+  const [gifSede, setGifSede] = useState(() => elegirGifAleatorio());
 
   const esSimulado = !!lider?.simulado;
+  const esSede = !!lider && esUsuarioSede(lider);
+  const soloLectura =
+    (rolUsuarioSesion || "").toUpperCase() === "SEDE";
+
+  useEffect(() => {
+    if (!esSede) return;
+    if (!isOpen && !embedded) return;
+    setGifSede((prev) => elegirGifAleatorio(prev));
+  }, [isOpen, embedded, lider?.id, esSede]);
 
   const { data: config } = useQuery({
     queryKey: ["config_sistema"],
@@ -68,7 +118,7 @@ export default function Celula({
   });
 
   const afiliadosDelLider = esSimulado
-    ? afiliadosSimulados ?? []
+    ? (afiliadosSimulados ?? [])
     : afiliadosQuery;
   const isLoading = esSimulado ? false : isLoadingQuery;
 
@@ -94,7 +144,12 @@ export default function Celula({
   let gifUrl = "/gif/afiliados/gif1.gif";
   let mensaje = "";
 
-  if (totalEnGrupo > META_CELULA) {
+  if (esSede) {
+    textoColor = "text-blue-600 dark:text-blue-400";
+    colorBarra = "bg-blue-600";
+    gifUrl = gifSede;
+    mensaje = "";
+  } else if (totalEnGrupo > META_CELULA) {
     nivelCompromiso = "Alto";
     colorBarra = "bg-green-500";
     textoColor = "text-green-600 dark:text-green-400";
@@ -118,7 +173,7 @@ export default function Celula({
     textoColor = "text-red-600 dark:text-red-400";
     mensaje = `🚀 ¡Vamos por buen camino! Somos ${totalEnGrupo} de ${objetivo}.`;
     gifUrl = "/gif/afiliados/gif2.gif";
-    
+
     if (totalEnGrupo === 1) {
       mensaje = `🎉 ¡Líder registrado! Añade a tus familiares y amigos.`;
     } else if (totalEnGrupo === 0 && !isLoading) {
@@ -135,12 +190,44 @@ export default function Celula({
 
   const panelContent = (
     <>
-      <div className="flex justify-between items-center px-2 py-3 border-b dark:border-neutral-800 shrink-0 bg-white dark:bg-neutral-950 sticky top-0 z-20">
-        <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2 px-2 py-3 border-b dark:border-neutral-800 shrink-0 bg-white dark:bg-neutral-950 sticky top-0 z-20">
+        {embedded && onBack && (
+          <Button
+            type="button"
+            onClick={onBack}
+            variant="ghost"
+            size="sm"
+            className="shrink-0 h-9 gap-1.5 font-bold uppercase text-[10px] text-gray-600 dark:text-gray-300"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Atrás
+          </Button>
+        )}
+
+        <div className="flex items-center gap-2 min-w-0 flex-1">
           <h3 className="text-sm md:text-xl font-bold uppercase truncate dark:text-white">
             {lider.nombres} {lider.apellidos}
           </h3>
-          {isLoading && <Loader2 className="w-4 h-4 animate-spin text-blue-600" />}
+          {isLoading && (
+            <Loader2 className="w-4 h-4 animate-spin text-blue-600 shrink-0" />
+          )}
+        </div>
+
+        <div className="flex bg-gray-200 dark:bg-neutral-800 p-1 rounded-lg gap-1 shrink-0">
+          {TABS.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setVistaActual(tab.id as Vista)}
+              className={`flex items-center justify-center gap-1.5 px-2.5 md:px-3 py-1.5 rounded-md text-[10px] font-bold transition-all whitespace-nowrap ${
+                vistaActual === tab.id
+                  ? "bg-white dark:bg-neutral-700 text-blue-600 dark:text-blue-400 shadow-sm"
+                  : "text-gray-500 dark:text-gray-400 hover:bg-gray-300 dark:hover:bg-neutral-700"
+              }`}
+            >
+              <tab.icon className="w-4 h-4 shrink-0" />
+              <span className="hidden sm:inline">{tab.label}</span>
+            </button>
+          ))}
         </div>
 
         {!embedded && (
@@ -155,25 +242,6 @@ export default function Celula({
         )}
       </div>
 
-      <div className="px-2 py-2 border-b dark:border-neutral-800 bg-gray-50 dark:bg-neutral-900 flex justify-center">
-        <div className="flex bg-gray-200 dark:bg-neutral-800 p-1 rounded-lg gap-1 w-full max-w-md">
-          {TABS.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setVistaActual(tab.id as Vista)}
-              className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-md text-[10px] font-bold transition-all ${
-                vistaActual === tab.id
-                  ? "bg-white dark:bg-neutral-700 text-blue-600 dark:text-blue-400 shadow-sm"
-                  : "text-gray-500 dark:text-gray-400 hover:bg-gray-300 dark:hover:bg-neutral-700"
-              }`}
-            >
-              <tab.icon className="w-4 h-4" />
-              {tab.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
       <div className={`flex-1 overflow-y-auto px-2 ${embedded ? "py-2" : ""}`}>
         <div className="w-full">
           {isLoading ? (
@@ -185,7 +253,10 @@ export default function Celula({
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 w-full">
                 {[1, 2, 3, 4, 5, 6].map((i) => (
-                  <div key={i} className="bg-gray-200 dark:bg-neutral-800 h-44 rounded-lg border border-gray-100 dark:border-neutral-700"></div>
+                  <div
+                    key={i}
+                    className="bg-gray-200 dark:bg-neutral-800 h-44 rounded-lg border border-gray-100 dark:border-neutral-700"
+                  ></div>
                 ))}
               </div>
             </div>
@@ -193,37 +264,58 @@ export default function Celula({
             <>
               <div className="mb-6 p-4 border dark:border-neutral-800 rounded-xl bg-white dark:bg-neutral-900 shadow-sm flex flex-col md:flex-row items-center gap-4">
                 <div className="w-full md:flex-1">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase">
-                      Nivel de compromiso: <span className={textoColor}>{nivelCompromiso}</span>
-                    </span>
-                    <span className={`text-sm font-black ${textoColor}`}>
-                      {totalEnGrupo} / {objetivo}
-                    </span>
-                  </div>
-                  <div className="w-full bg-gray-100 dark:bg-neutral-800 rounded-full h-4 overflow-hidden shadow-inner border dark:border-neutral-700">
-                    <div
-                      className={`${colorBarra} h-full transition-all duration-1000`}
-                      style={{ width: `${progreso}%` }}
-                    ></div>
-                  </div>
+                  {esSede ? (
+                    <div className="flex justify-between items-center gap-4">
+                      <span className="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase">
+                        Afiliados en sede
+                      </span>
+                      <span
+                        className={`text-4xl md:text-5xl font-black leading-none ${textoColor}`}
+                      >
+                        {totalEnGrupo}
+                      </span>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase">
+                          Nivel de compromiso:{" "}
+                          <span className={textoColor}>{nivelCompromiso}</span>
+                        </span>
+                        <span className={`text-sm font-black ${textoColor}`}>
+                          {totalEnGrupo} / {objetivo}
+                        </span>
+                      </div>
+                      <div className="w-full bg-gray-100 dark:bg-neutral-800 rounded-full h-4 overflow-hidden shadow-inner border dark:border-neutral-700">
+                        <div
+                          className={`${colorBarra} h-full transition-all duration-1000`}
+                          style={{ width: `${progreso}%` }}
+                        ></div>
+                      </div>
+                    </>
+                  )}
 
-                  <div className="hidden md:block text-center mt-2">
-                    <span className="text-xs text-gray-600 dark:text-gray-300 font-bold bg-gray-50 dark:bg-neutral-800 px-4 py-1 rounded-full border dark:border-neutral-700 inline-block">
-                      <TextoAnimado textos={[mensaje]} />
-                    </span>
-                  </div>
+                  {!esSede && (
+                    <div className="hidden md:block text-center mt-2">
+                      <span className="text-xs text-gray-600 dark:text-gray-300 font-bold bg-gray-50 dark:bg-neutral-800 px-4 py-1 rounded-full border dark:border-neutral-700 inline-block">
+                        <TextoAnimado textos={[mensaje]} />
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex items-center gap-3 bg-gray-50 dark:bg-neutral-800 p-2 rounded-lg border dark:border-neutral-700 w-full md:w-auto shrink-0">
-                  <div className="md:hidden flex-1">
-                    <span className="text-[10px] text-gray-700 dark:text-gray-300 font-bold leading-tight uppercase">
-                      <TextoAnimado textos={[mensaje]} />
-                    </span>
-                  </div>
+                  {!esSede && (
+                    <div className="md:hidden flex-1">
+                      <span className="text-[10px] text-gray-700 dark:text-gray-300 font-bold leading-tight uppercase">
+                        <TextoAnimado textos={[mensaje]} />
+                      </span>
+                    </div>
+                  )}
 
-                  <div className="shrink-0">
+                  <div className="shrink-0 mx-auto md:mx-0">
                     <Image
+                      key={gifUrl}
                       src={gifUrl}
                       alt="Status"
                       width={100}
@@ -248,28 +340,60 @@ export default function Celula({
                     onChange={(e) => setBusqueda(e.target.value)}
                   />
                 </div>
-                <Button
-                  className={`font-bold h-12 px-6 shadow-md transition-transform hover:scale-105 w-full md:w-auto uppercase text-xs ${
-                    totalEnGrupo === 0
-                      ? "bg-green-600 animate-pulse"
-                      : "bg-blue-700"
-                  }`}
-                  onClick={() =>
-                    onAnadirAfiliado(lider.id, totalEnGrupo === 0)
-                  }
-                >
-                  {totalEnGrupo === 0 ? (
-                    <>
-                      <UserPlus className="w-5 h-5 mr-2" /> Registrarme
-                      como Líder
-                    </>
-                  ) : (
-                    <>
-                      <UserPlus className="w-5 h-5 mr-2" /> Añadir
-                      Integrante
-                    </>
+                <div className="flex items-center gap-2 w-full md:w-auto">
+                  <div className="flex bg-gray-100 dark:bg-neutral-800 p-1 rounded-lg border dark:border-neutral-700 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => setFormatoVista("tarjetas")}
+                      title="Ver tarjetas"
+                      className={`flex items-center gap-1.5 px-3 py-2 rounded-md text-[10px] font-bold uppercase transition-colors ${
+                        formatoVista === "tarjetas"
+                          ? "bg-white dark:bg-neutral-700 text-blue-600 dark:text-blue-400 shadow-sm"
+                          : "text-gray-500 dark:text-gray-400"
+                      }`}
+                    >
+                      <LayoutGrid className="w-4 h-4" />
+                      <span className="hidden sm:inline">Tarjetas</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setFormatoVista("tabla")}
+                      title="Ver tabla"
+                      className={`flex items-center gap-1.5 px-3 py-2 rounded-md text-[10px] font-bold uppercase transition-colors ${
+                        formatoVista === "tabla"
+                          ? "bg-white dark:bg-neutral-700 text-blue-600 dark:text-blue-400 shadow-sm"
+                          : "text-gray-500 dark:text-gray-400"
+                      }`}
+                    >
+                      <Table2 className="w-4 h-4" />
+                      <span className="hidden sm:inline">Lista</span>
+                    </button>
+                  </div>
+                  {!soloLectura && (
+                    <Button
+                      variant="outline"
+                      className={`font-bold h-[42px] px-4 uppercase text-xs bg-transparent border-blue-600 text-blue-600 hover:bg-blue-50 dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-950/40 flex-1 md:flex-none ${
+                        !esSede && totalEnGrupo === 0
+                          ? "border-green-600 text-green-600 hover:bg-green-50 dark:border-green-400 dark:text-green-400 dark:hover:bg-green-950/40 animate-pulse"
+                          : ""
+                      }`}
+                      onClick={() =>
+                        onAnadirAfiliado(lider.id, !esSede && totalEnGrupo === 0)
+                      }
+                    >
+                      {!esSede && totalEnGrupo === 0 ? (
+                        <>
+                          <UserPlus className="w-4 h-4 mr-2" /> Registrarme como
+                          Líder
+                        </>
+                      ) : (
+                        <>
+                          <UserPlus className="w-4 h-4 mr-2" /> Añadir Integrante
+                        </>
+                      )}
+                    </Button>
                   )}
-                </Button>
+                </div>
               </div>
 
               <Tabla
@@ -278,14 +402,13 @@ export default function Celula({
                 onEditar={onEditar}
                 onDataChange={onDataChange}
                 rolUsuarioSesion={rolUsuarioSesion}
+                formato={formatoVista}
               />
             </>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 w-full pt-4">
               <div className="bg-white dark:bg-neutral-900 border dark:border-neutral-800 rounded-2xl p-6 shadow-sm min-h-[400px] flex flex-col">
-                <EstadisticasEmpadronados
-                  afiliados={afiliadosDelLider}
-                />
+                <EstadisticasEmpadronados afiliados={afiliadosDelLider} />
               </div>
               <div className="bg-white dark:bg-neutral-900 border dark:border-neutral-800 rounded-2xl p-6 shadow-sm min-h-[400px] flex flex-col">
                 <EstadisticasReligiones afiliados={afiliadosDelLider} />
@@ -299,6 +422,19 @@ export default function Celula({
               <div className="bg-white dark:bg-neutral-900 border dark:border-neutral-800 rounded-2xl p-6 shadow-sm min-h-[400px] flex flex-col md:col-span-2">
                 <EstadisticasLugares afiliados={afiliadosDelLider} />
               </div>
+            </div>
+          )}
+
+          {!embedded && (
+            <div className="mt-8 mb-4 flex justify-center pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onClose}
+                className="w-full md:w-auto md:min-w-[220px] h-12 text-sm font-bold uppercase"
+              >
+                Cerrar
+              </Button>
             </div>
           )}
         </div>

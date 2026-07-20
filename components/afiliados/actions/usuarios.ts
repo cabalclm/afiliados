@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/utils/supabase/server";
+import { getCachedAuthUsers } from "./cache";
 
 export async function listarUsuariosAction(rol_filtro?: string | string[]) {
   console.time("🔵 SERVER: listarUsuariosAction TOTAL");
@@ -44,6 +45,10 @@ export async function listarUsuariosAction(rol_filtro?: string | string[]) {
   console.log("🔵 SERVER: perfiles count:", perfiles.length);
   const conteoRaw = conteoRes.data || [];
   console.log("🔵 SERVER: conteoRaw count:", conteoRaw.length);
+  const authUsers = await getCachedAuthUsers();
+  const emailMap = new Map(
+    authUsers.map((u) => [u.id, u.email || ""]),
+  );
 
   // Conteo eficiente en memoria
   const conteoMap = new Map<string, number>();
@@ -55,7 +60,7 @@ export async function listarUsuariosAction(rol_filtro?: string | string[]) {
 
   const result = perfiles.map((p: any) => ({
     id: p.user_id,
-    email: "",
+    email: emailMap.get(p.user_id) || "",
     nombres: p.nombres,
     apellidos: p.apellidos,
     activo: p.activo,

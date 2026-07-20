@@ -4,12 +4,14 @@ import { useState, Fragment } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/lib/toast";
-import { Search, X } from "lucide-react";
+import { Search, X, Building2 } from "lucide-react";
 import {
   PiCrownDuotone,
   PiUsersThreeDuotone,
   PiShieldCheckDuotone,
   PiChatCircleDotsDuotone,
+  PiBriefcaseDuotone,
+  PiBuildingsDuotone,
 } from "react-icons/pi";
 
 import EstadisticasEdades from "./estadisticas/Edades";
@@ -21,12 +23,14 @@ import ConfiguracionSistema from "../dashboard/ConfiguracionSistema";
 
 import Lideres from "./Lideres";
 import AfiliadosGeneral from "./AfiliadosGeneral";
+import MetaGeneral from "./MetaGeneral";
 import Form from "./forms/afiliados/Afiliados";
 import Celula from "./Celula";
 import ModalBienvenida from "./ModalBienvenida";
 import Difusion from "./Difusion";
 import { SignupForm } from "@/components/admin/sign-up/SignForm";
 import type { Afiliado, Lider } from "./esquemas";
+import { esUsuarioSede } from "./esquemas";
 import {
   Dialog,
   Transition,
@@ -38,7 +42,13 @@ import { LIDER_SIMULADO, AFILIADOS_SIMULADOS } from "./datosSimulados";
 import { obtenerAfiliadosAction } from "./actions/afiliados";
 
 type Lugar = { id: number; nombre: string };
-type Tab = "Lideres" | "Afiliados" | "Administrativos" | "Mensajes";
+type Tab =
+  | "Sede"
+  | "Lideres"
+  | "Afiliados"
+  | "Trabajadores"
+  | "Administrativos"
+  | "Mensajes";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
@@ -51,27 +61,39 @@ const TAB_THEMES: Record<
     activeIconText: string;
   }
 > = {
+  Sede: {
+    activeText: "text-blue-700 dark:text-blue-400",
+    activeBorder: "border-blue-300 dark:border-blue-700",
+    activeIconBg: "bg-blue-100 dark:bg-blue-950/60",
+    activeIconText: "text-blue-700 dark:text-blue-400",
+  },
   Lideres: {
     activeText: "text-orange-600 dark:text-orange-400",
-    activeBorder: "border-orange-500 dark:border-orange-400",
+    activeBorder: "border-orange-300 dark:border-orange-700",
     activeIconBg: "bg-orange-100 dark:bg-orange-950/60",
     activeIconText: "text-orange-600 dark:text-orange-400",
   },
   Afiliados: {
-    activeText: "text-purple-600 dark:text-purple-400",
-    activeBorder: "border-purple-500 dark:border-purple-400",
-    activeIconBg: "bg-purple-100 dark:bg-purple-950/60",
-    activeIconText: "text-purple-600 dark:text-purple-400",
+    activeText: "text-sky-600 dark:text-sky-400",
+    activeBorder: "border-sky-300 dark:border-sky-700",
+    activeIconBg: "bg-sky-100 dark:bg-sky-950/60",
+    activeIconText: "text-sky-600 dark:text-sky-400",
+  },
+  Trabajadores: {
+    activeText: "text-violet-600 dark:text-violet-400",
+    activeBorder: "border-violet-300 dark:border-violet-700",
+    activeIconBg: "bg-violet-100 dark:bg-violet-950/60",
+    activeIconText: "text-violet-600 dark:text-violet-400",
   },
   Administrativos: {
-    activeText: "text-blue-600 dark:text-blue-400",
-    activeBorder: "border-blue-600 dark:border-blue-400",
-    activeIconBg: "bg-blue-100 dark:bg-blue-950/60",
-    activeIconText: "text-blue-600 dark:text-blue-400",
+    activeText: "text-indigo-600 dark:text-indigo-400",
+    activeBorder: "border-indigo-300 dark:border-indigo-700",
+    activeIconBg: "bg-indigo-100 dark:bg-indigo-950/60",
+    activeIconText: "text-indigo-600 dark:text-indigo-400",
   },
   Mensajes: {
     activeText: "text-green-600 dark:text-green-400",
-    activeBorder: "border-green-500 dark:border-green-400",
+    activeBorder: "border-green-300 dark:border-green-700",
     activeIconBg: "bg-green-100 dark:bg-green-950/60",
     activeIconText: "text-green-600 dark:text-green-400",
   },
@@ -79,16 +101,16 @@ const TAB_THEMES: Record<
 
 const tabBtnClass = (active: boolean, tab: Tab) => {
   const theme = TAB_THEMES[tab];
-  return `flex flex-1 flex-col md:flex-row items-center justify-center gap-1 md:gap-2 px-1 md:px-3 py-2 text-[10px] md:text-base font-semibold min-w-0 transition-colors border-b-2 ${
+  return `relative flex w-[9.5rem] md:w-52 shrink-0 flex-col md:flex-row items-center justify-center gap-1 md:gap-2 px-2 md:px-3 py-2.5 text-[10px] md:text-sm font-semibold transition-colors rounded-t-lg -mb-px border-b-0 ${
     active
-      ? `${theme.activeBorder} ${theme.activeText}`
-      : "border-transparent text-gray-500 dark:text-gray-400"
+      ? `z-10 border-[3px] bg-white dark:bg-neutral-950 ${theme.activeBorder} ${theme.activeText}`
+      : `z-0 border-[3px] border-transparent bg-white dark:bg-neutral-950 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-neutral-900`
   }`;
 };
 
 const tabIconClass = (active: boolean, tab: Tab) => {
   const theme = TAB_THEMES[tab];
-  return `p-1.5 rounded-lg transition-colors shrink-0 ${
+  return `p-1 md:p-1.5 rounded-md transition-colors shrink-0 ${
     active
       ? `${theme.activeIconBg} ${theme.activeIconText}`
       : "bg-gray-100 dark:bg-neutral-800 text-gray-500 dark:text-gray-400"
@@ -99,13 +121,13 @@ export default function Ver() {
   const router = useRouter();
   const queryClient = useQueryClient();
 
-  const [activeTab, setActiveTab] = useState<Tab>("Lideres");
+  const [activeTab, setActiveTab] = useState<Tab>("Sede");
 
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [isCelulaOpen, setIsCelulaOpen] = useState(false);
   const [isEstadisticasOpen, setIsEstadisticasOpen] = useState(false);
   const [isSignupModalOpen, setIsSignupModalOpen] = useState(false);
   const [signupFormKey, setSignupFormKey] = useState(0);
+  const [modoCrearSede, setModoCrearSede] = useState(false);
 
   const [afiliadoParaEditar, setAfiliadoParaEditar] = useState<Afiliado | null>(
     null,
@@ -143,14 +165,37 @@ export default function Ver() {
   const session = dashboardData?.session;
   const rol = session?.rol || "";
   const userId = session?.id || "";
+  const rolUpper = (rol || "").toUpperCase();
 
   const puedeCrearLider =
-    rol === "ADMINISTRADOR" || rol === "SUPER" || rol === "DOCUMENTADOR";
+    rolUpper === "ADMINISTRADOR" ||
+    rolUpper === "ADMIN" ||
+    rolUpper === "SUPER" ||
+    rolUpper === "DOCUMENTADOR";
   const puedeSimular =
-    rol === "ADMINISTRADOR" || rol === "SUPER" || rol === "DOCUMENTADOR";
-  const esAdminOSuper = rol === "ADMINISTRADOR" || rol === "SUPER";
-  const esLider = rol === "LIDER";
-  const vistaCompleta = esAdminOSuper || rol === "DOCUMENTADOR";
+    rolUpper === "ADMINISTRADOR" ||
+    rolUpper === "ADMIN" ||
+    rolUpper === "SUPER" ||
+    rolUpper === "DOCUMENTADOR";
+  const esAdminOSuper =
+    rolUpper === "ADMINISTRADOR" ||
+    rolUpper === "ADMIN" ||
+    rolUpper === "SUPER";
+  /** Rol SEDE o perfil identificable como sede (nombre/usuario). */
+  const esSedeSesion =
+    rolUpper === "SEDE" ||
+    (!!session &&
+      esUsuarioSede({
+        nombres: session.nombres,
+        apellidos: session.apellidos,
+        email: session.email,
+        rol: session.rol,
+      }));
+  /** SUPER / ADMIN / SEDE ven pestañas; el resto solo meta + su célula. */
+  const vistaConPestanas = esAdminOSuper || esSedeSesion;
+  /** SEDE solo consulta: Sede, Líderes y Trabajadores (sin editar). */
+  const soloLecturaSede = esSedeSesion;
+  const esLider = rolUpper === "LIDER";
 
   const handleSimular = () => {
     setLiderSimulado((prev) => (prev ? null : LIDER_SIMULADO));
@@ -162,20 +207,54 @@ export default function Ver() {
     queryFn: () => obtenerAfiliadosAction(),
     enabled:
       isEstadisticasOpen ||
-      activeTab === "Afiliados" ||
-      isCelulaOpen ||
-      esLider,
+      (vistaConPestanas &&
+        (activeTab === "Afiliados" ||
+          activeTab === "Sede" ||
+          !!liderParaCelula)) ||
+      !vistaConPestanas,
   });
 
   // Derivar líderes, admins, lugares de la respuesta unificada
   const allUsers = (dashboardData?.usuarios || []) as Lider[];
-  const allLideres = allUsers.filter((u) => u.rol === "LIDER");
-  const miPerfilGlobal = allUsers.find((l) => l.id === userId);
+  const allLideres = allUsers.filter(
+    (u) =>
+      (u.rol || "").toUpperCase() === "LIDER" ||
+      (u.rol || "").toUpperCase() === "SEDE" ||
+      esUsuarioSede(u),
+  );
+  const miPerfilDesdeLista = allUsers.find((l) => l.id === userId);
+  /** Si la lista no trae el perfil (RLS / join), armarlo desde la sesión. */
+  const miPerfilGlobal: Lider | null =
+    miPerfilDesdeLista ||
+    (userId && session
+      ? {
+          id: userId,
+          email: session.email || "",
+          nombres: session.nombres || "",
+          apellidos: session.apellidos || "",
+          rol: session.rol || (esSedeSesion ? "SEDE" : ""),
+          conteoAfiliados: 0,
+        }
+      : null);
   const rolesAdmin =
     rol === "SUPER" ? ["ADMINISTRADOR", "SUPER"] : ["ADMINISTRADOR"];
   const administrativos = allUsers.filter((u) =>
     rolesAdmin.includes(u.rol || ""),
   );
+  const trabajadores = allUsers.filter(
+    (u) => (u.rol || "").toUpperCase() === "TRABAJADOR",
+  );
+  const totalAfiliadosTrabajadores = trabajadores.reduce(
+    (acc, u) => acc + (u.conteoAfiliados || 0),
+    0,
+  );
+  const sedeUsuario =
+    allUsers.find((u) => esUsuarioSede(u)) ||
+    (esSedeSesion && miPerfilGlobal ? miPerfilGlobal : null);
+  const totalAfiliadosSede = sedeUsuario?.conteoAfiliados || 0;
+  const totalAfiliadosLideres = allUsers
+    .filter((u) => (u.rol || "").toUpperCase() === "LIDER")
+    .reduce((acc, u) => acc + (u.conteoAfiliados || 0), 0);
   const lugares = (dashboardData?.lugares || []) as Lugar[];
 
   const lideres = (() => {
@@ -189,7 +268,9 @@ export default function Ver() {
 
   const lideresVisibles = (() => {
     const base = liderSimulado ? [liderSimulado, ...lideres] : lideres;
-    return base.filter((l) => l.rol !== "DOCUMENTADOR");
+    return base.filter(
+      (l) => l.rol !== "DOCUMENTADOR" && !esUsuarioSede(l),
+    );
   })();
 
   const cargandoLideres = isDashboardLoading;
@@ -203,12 +284,21 @@ export default function Ver() {
 
   const handleOpenCreateLiderModal = () => {
     setLiderAEditar(null);
+    setModoCrearSede(false);
+    setSignupFormKey((k) => k + 1);
+    setIsSignupModalOpen(true);
+  };
+
+  const handleOpenCrearSedeModal = () => {
+    setLiderAEditar(null);
+    setModoCrearSede(true);
     setSignupFormKey((k) => k + 1);
     setIsSignupModalOpen(true);
   };
 
   const handleOpenEditLiderModal = (lider: Lider) => {
     setLiderAEditar(lider);
+    setModoCrearSede(false);
     setSignupFormKey((k) => k + 1);
     setIsSignupModalOpen(true);
   };
@@ -216,6 +306,7 @@ export default function Ver() {
   const handleSignupSuccess = () => {
     setIsSignupModalOpen(false);
     setLiderAEditar(null);
+    setModoCrearSede(false);
     queryClient.invalidateQueries({ queryKey: ["lideres"] });
     queryClient.invalidateQueries({ queryKey: ["administrativos"] });
     fetchData();
@@ -224,13 +315,13 @@ export default function Ver() {
   const handleCloseSignupModal = () => {
     setIsSignupModalOpen(false);
     setLiderAEditar(null);
+    setModoCrearSede(false);
   };
 
   const handleOpenAnadirAfiliadoModal = (
     liderId: string,
     isFirstMember = false,
   ) => {
-    if (!esLider) setIsCelulaOpen(false);
     setAfiliadoParaEditar(null);
     setLiderParaNuevoAfiliado(liderId);
     setIsFirstMemberAddition(isFirstMember);
@@ -238,27 +329,34 @@ export default function Ver() {
   };
 
   const handleOpenEditModal = (afiliado: Afiliado) => {
-    if (!esLider) setIsCelulaOpen(false);
     setAfiliadoParaEditar(afiliado);
     setLiderParaNuevoAfiliado(null);
     setIsFirstMemberAddition(false);
     setIsFormOpen(true);
   };
 
-  const handleOpenCelulaModal = (lider: Lider) => {
+  const handleOpenCelula = (lider: Lider) => {
     if (!lider) return;
     setLiderParaCelula(lider);
-    setIsCelulaOpen(true);
+  };
+
+  const handleVolverDeCelula = () => {
+    setLiderParaCelula(null);
+  };
+
+  const cambiarTab = (tab: Tab) => {
+    if (
+      soloLecturaSede &&
+      (tab === "Mensajes" || tab === "Administrativos")
+    ) {
+      return;
+    }
+    setActiveTab(tab);
+    setLiderParaCelula(null);
   };
 
   const handleCloseFormModal = () => {
     setIsFormOpen(false);
-    if (liderParaCelula) setIsCelulaOpen(true);
-  };
-
-  const handleCloseCelulaModal = () => {
-    setIsCelulaOpen(false);
-    setLiderParaCelula(null);
   };
 
   const handleSaveAndCloseForm = async () => {
@@ -271,11 +369,8 @@ export default function Ver() {
     if (esLider) return;
 
     if (liderParaCelula) {
-      const updatedLider = lideres.find((l) => l.id === liderParaCelula.id);
-      if (updatedLider) {
-        setLiderParaCelula(updatedLider);
-        setIsCelulaOpen(true);
-      }
+      const updatedLider = allUsers.find((l) => l.id === liderParaCelula.id);
+      if (updatedLider) setLiderParaCelula(updatedLider);
     }
   };
 
@@ -310,7 +405,7 @@ export default function Ver() {
               )}
             </div>
           </div>
-          {vistaCompleta && (
+          {vistaConPestanas && (
             <div className="relative w-full md:w-96">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <Search className="h-5 w-5 text-gray-400" />
@@ -325,7 +420,7 @@ export default function Ver() {
             </div>
           )}
           <div className="flex flex-col md:flex-row items-stretch md:items-center justify-end gap-2 w-full md:w-auto">
-            {!esLider && (
+            {vistaConPestanas && (
               <Button
                 onClick={() => setIsEstadisticasOpen(true)}
                 variant="outline"
@@ -334,7 +429,7 @@ export default function Ver() {
                 📊 Estadísticas Generales
               </Button>
             )}
-            {puedeCrearLider && (
+            {puedeCrearLider && vistaConPestanas && (
               <Button
                 onClick={handleOpenCreateLiderModal}
                 className="gap-2 w-full text-sm md:text-xl"
@@ -358,28 +453,49 @@ export default function Ver() {
               ))}
             </div>
           </div>
-        ) : esLider ? (
-          miPerfilGlobal ? (
-            <Celula
-              embedded
-              isOpen
-              onClose={() => {}}
-              lider={miPerfilGlobal}
-              onEditar={handleOpenEditModal}
-              onAnadirAfiliado={handleOpenAnadirAfiliadoModal}
-              onDataChange={fetchData}
-              rolUsuarioSesion={rol}
+        ) : !vistaConPestanas ? (
+          <>
+            <MetaGeneral
+              totalSede={totalAfiliadosSede}
+              totalLideres={totalAfiliadosLideres}
+              totalTrabajadores={totalAfiliadosTrabajadores}
             />
-          ) : (
-            <div className="text-center text-gray-500 mt-8 border rounded-lg p-4">
-              No se encontró tu perfil de líder.
-            </div>
-          )
+            {miPerfilGlobal ? (
+              <Celula
+                embedded
+                isOpen
+                onClose={() => {}}
+                lider={miPerfilGlobal}
+                onEditar={handleOpenEditModal}
+                onAnadirAfiliado={handleOpenAnadirAfiliadoModal}
+                onDataChange={fetchData}
+                rolUsuarioSesion={rol}
+              />
+            ) : (
+              <div className="text-center text-gray-500 mt-8 border rounded-lg p-4">
+                No se encontró tu perfil de usuario.
+              </div>
+            )}
+          </>
         ) : (
           <>
-            <div className="flex border-b dark:border-neutral-800 mb-6 w-full min-w-0">
+            <MetaGeneral
+              totalSede={totalAfiliadosSede}
+              totalLideres={totalAfiliadosLideres}
+              totalTrabajadores={totalAfiliadosTrabajadores}
+            />
+            <div className="flex items-end gap-0.5 overflow-x-auto border-b-2 border-gray-200 dark:border-neutral-700 mb-6 w-full min-w-0 bg-white dark:bg-neutral-950 pb-0">
               <button
-                onClick={() => setActiveTab("Lideres")}
+                onClick={() => cambiarTab("Sede")}
+                className={tabBtnClass(activeTab === "Sede", "Sede")}
+              >
+                <span className={tabIconClass(activeTab === "Sede", "Sede")}>
+                  <PiBuildingsDuotone className="w-4 h-4 md:w-5 md:h-5 shrink-0" />
+                </span>
+                <span className="truncate max-w-full">Sede</span>
+              </button>
+              <button
+                onClick={() => cambiarTab("Lideres")}
                 className={tabBtnClass(activeTab === "Lideres", "Lideres")}
               >
                 <span
@@ -387,10 +503,27 @@ export default function Ver() {
                 >
                   <PiCrownDuotone className="w-4 h-4 md:w-5 md:h-5 shrink-0" />
                 </span>
-                <span className="truncate">Líderes</span>
+                <span className="truncate max-w-full">Líderes</span>
               </button>
               <button
-                onClick={() => setActiveTab("Afiliados")}
+                onClick={() => cambiarTab("Trabajadores")}
+                className={tabBtnClass(
+                  activeTab === "Trabajadores",
+                  "Trabajadores",
+                )}
+              >
+                <span
+                  className={tabIconClass(
+                    activeTab === "Trabajadores",
+                    "Trabajadores",
+                  )}
+                >
+                  <PiBriefcaseDuotone className="w-4 h-4 md:w-5 md:h-5 shrink-0" />
+                </span>
+                <span className="truncate max-w-full">Trabajadores</span>
+              </button>
+              <button
+                onClick={() => cambiarTab("Afiliados")}
                 className={tabBtnClass(activeTab === "Afiliados", "Afiliados")}
               >
                 <span
@@ -401,11 +534,27 @@ export default function Ver() {
                 >
                   <PiUsersThreeDuotone className="w-4 h-4 md:w-5 md:h-5 shrink-0" />
                 </span>
-                <span className="truncate">Miembros</span>
+                <span className="truncate max-w-full">Miembros</span>
               </button>
               {esAdminOSuper && (
                 <button
-                  onClick={() => setActiveTab("Administrativos")}
+                  onClick={() => cambiarTab("Mensajes")}
+                  className={tabBtnClass(activeTab === "Mensajes", "Mensajes")}
+                >
+                  <span
+                    className={tabIconClass(
+                      activeTab === "Mensajes",
+                      "Mensajes",
+                    )}
+                  >
+                    <PiChatCircleDotsDuotone className="w-4 h-4 md:w-5 md:h-5 shrink-0" />
+                  </span>
+                  <span className="truncate max-w-full">Mensajes</span>
+                </button>
+              )}
+              {esAdminOSuper && (
+                <button
+                  onClick={() => cambiarTab("Administrativos")}
                   className={tabBtnClass(
                     activeTab === "Administrativos",
                     "Administrativos",
@@ -419,65 +568,119 @@ export default function Ver() {
                   >
                     <PiShieldCheckDuotone className="w-4 h-4 md:w-5 md:h-5 shrink-0" />
                   </span>
-                  <span className="truncate">Administrativos</span>
-                </button>
-              )}
-              {esAdminOSuper && (
-                <button
-                  onClick={() => setActiveTab("Mensajes")}
-                  className={tabBtnClass(activeTab === "Mensajes", "Mensajes")}
-                >
-                  <span
-                    className={tabIconClass(
-                      activeTab === "Mensajes",
-                      "Mensajes",
-                    )}
-                  >
-                    <PiChatCircleDotsDuotone className="w-4 h-4 md:w-5 md:h-5 shrink-0" />
-                  </span>
-                  <span className="truncate">Mensajes</span>
+                  <span className="truncate max-w-full">Administrativos</span>
                 </button>
               )}
             </div>
 
-            {activeTab === "Lideres" && (
-              <Lideres
-                lideres={lideresVisibles}
-                onVerCelula={handleOpenCelulaModal}
-                onEditar={handleOpenEditLiderModal}
-                rolUsuarioSesion={rol}
-                onDataChange={fetchData}
-                searchTerm={searchTerm}
-                idUsuarioSesion={userId}
-                isLoading={cargandoLideres}
-              />
-            )}
-            {activeTab === "Afiliados" && (
-              <AfiliadosGeneral
-                afiliados={afiliados}
-                lideres={lideres}
+            {liderParaCelula && activeTab !== "Sede" ? (
+              <Celula
+                embedded
+                isOpen
+                onClose={handleVolverDeCelula}
+                onBack={handleVolverDeCelula}
+                lider={liderParaCelula}
                 onEditar={handleOpenEditModal}
+                onAnadirAfiliado={handleOpenAnadirAfiliadoModal}
                 onDataChange={fetchData}
-                searchTerm={searchTerm}
-                isLoading={cargandoMiembros}
+                rolUsuarioSesion={esSedeSesion ? "SEDE" : rol}
+                afiliadosSimulados={AFILIADOS_SIMULADOS}
               />
-            )}
-            {activeTab === "Administrativos" && (
-              <Lideres
-                lideres={administrativos}
-                onVerCelula={handleOpenCelulaModal}
-                onEditar={handleOpenEditLiderModal}
-                rolUsuarioSesion={rol}
-                onDataChange={fetchData}
-                searchTerm={searchTerm}
-                idUsuarioSesion={userId}
-                isLoading={cargandoLideres}
-                hideMeta
-                showRole={true}
-              />
-            )}
-            {activeTab === "Mensajes" && esAdminOSuper && (
-              <Difusion usuarios={allUsers} />
+            ) : (
+              <>
+                {activeTab === "Sede" &&
+                  (sedeUsuario ? (
+                    <Celula
+                      embedded
+                      isOpen
+                      onClose={() => {}}
+                      lider={sedeUsuario}
+                      onEditar={handleOpenEditModal}
+                      onAnadirAfiliado={handleOpenAnadirAfiliadoModal}
+                      onDataChange={fetchData}
+                      rolUsuarioSesion={esSedeSesion ? "SEDE" : rol}
+                    />
+                  ) : (
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl border border-dashed border-blue-400/70 dark:border-blue-700 bg-blue-50/80 dark:bg-blue-950/20 px-4 py-6">
+                      <div className="flex items-start gap-3 min-w-0">
+                        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400 shrink-0">
+                          <Building2 className="h-5 w-5" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-black text-blue-900 dark:text-blue-200">
+                            Aún no existe el usuario Sede
+                          </p>
+                          <p className="text-xs text-blue-800/80 dark:text-blue-300/80 mt-0.5">
+                            Créalo para afiliar desde sede y diferenciarlo del
+                            avance de los líderes.
+                          </p>
+                        </div>
+                      </div>
+                      {esAdminOSuper && (
+                        <Button
+                          type="button"
+                          onClick={handleOpenCrearSedeModal}
+                          className="shrink-0 bg-blue-600 hover:bg-blue-700 text-white"
+                        >
+                          <Building2 className="h-4 w-4 mr-2" />
+                          Crear Sede
+                        </Button>
+                      )}
+                    </div>
+                  ))}
+
+                {activeTab === "Lideres" && (
+                  <Lideres
+                    lideres={lideresVisibles}
+                    onVerCelula={handleOpenCelula}
+                    onEditar={handleOpenEditLiderModal}
+                    rolUsuarioSesion={esSedeSesion ? "SEDE" : rol}
+                    onDataChange={fetchData}
+                    searchTerm={searchTerm}
+                    idUsuarioSesion={userId}
+                    isLoading={cargandoLideres}
+                  />
+                )}
+                {activeTab === "Afiliados" && (
+                  <AfiliadosGeneral
+                    afiliados={afiliados}
+                    lideres={allUsers}
+                    onEditar={handleOpenEditModal}
+                    onDataChange={fetchData}
+                    searchTerm={searchTerm}
+                    isLoading={cargandoMiembros}
+                  />
+                )}
+                {activeTab === "Trabajadores" && (
+                  <Lideres
+                    lideres={trabajadores}
+                    onVerCelula={handleOpenCelula}
+                    onEditar={handleOpenEditLiderModal}
+                    rolUsuarioSesion={esSedeSesion ? "SEDE" : rol}
+                    onDataChange={fetchData}
+                    searchTerm={searchTerm}
+                    idUsuarioSesion={userId}
+                    isLoading={cargandoLideres}
+                    showRole={true}
+                  />
+                )}
+                {activeTab === "Administrativos" && (
+                  <Lideres
+                    lideres={administrativos}
+                    onVerCelula={handleOpenCelula}
+                    onEditar={handleOpenEditLiderModal}
+                    rolUsuarioSesion={esSedeSesion ? "SEDE" : rol}
+                    onDataChange={fetchData}
+                    searchTerm={searchTerm}
+                    idUsuarioSesion={userId}
+                    isLoading={cargandoLideres}
+                    showRole={true}
+                  />
+                )}
+                {activeTab === "Mensajes" && esAdminOSuper && (
+                  <Difusion usuarios={allUsers} />
+                )}
+              </>
             )}
           </>
         )}
@@ -541,19 +744,6 @@ export default function Ver() {
         </Dialog>
       </Transition>
 
-      {!esLider && (
-        <Celula
-          isOpen={isCelulaOpen}
-          onClose={handleCloseCelulaModal}
-          lider={liderParaCelula}
-          onEditar={handleOpenEditModal}
-          onAnadirAfiliado={handleOpenAnadirAfiliadoModal}
-          onDataChange={fetchData}
-          rolUsuarioSesion={rol ?? ""}
-          afiliadosSimulados={AFILIADOS_SIMULADOS}
-        />
-      )}
-
       <Form
         isOpen={isFormOpen}
         onClose={handleCloseFormModal}
@@ -584,6 +774,7 @@ export default function Ver() {
                   onClose={handleCloseSignupModal}
                   isModal={true}
                   rolSesion={rol}
+                  modoCrearSede={modoCrearSede}
                 />
               </DialogPanel>
             </div>

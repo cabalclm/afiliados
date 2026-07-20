@@ -30,8 +30,9 @@ export async function POST(req: Request) {
     usuario: {
       id: user.id,
       email: user.email,
-      nombre: perfil.nombre || '',
-      rol: perfil.roles?.nombre || null, 
+      nombres: perfil.nombres || "",
+      apellidos: perfil.apellidos || "",
+      rol: perfil.roles?.nombre || null,
       rol_id: perfil.rol_id || null,
       activo: perfil.activo ?? true,
     },
