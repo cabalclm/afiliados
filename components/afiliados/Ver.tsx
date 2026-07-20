@@ -1,45 +1,45 @@
 "use client";
 
-import { useState, Fragment } from "react";
-import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/lib/toast";
-import { Search, X, Building2 } from "lucide-react";
+import { Building2, Search, X } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
+import { useRouter } from "next/navigation";
+import { Fragment, useState } from "react";
 import {
-  PiCrownDuotone,
-  PiUsersThreeDuotone,
-  PiShieldCheckDuotone,
-  PiChatCircleDotsDuotone,
   PiBriefcaseDuotone,
   PiBuildingsDuotone,
+  PiChatCircleDotsDuotone,
+  PiMedalDuotone,
+  PiShieldCheckDuotone,
+  PiUsersThreeDuotone,
 } from "react-icons/pi";
 
+import ConfiguracionSistema from "../dashboard/ConfiguracionSistema";
 import EstadisticasEdades from "./estadisticas/Edades";
 import EstadisticasEmpadronados from "./estadisticas/Empadronados";
 import EstadisticasLugares from "./estadisticas/Lugares";
 import EstadisticasPoliticas from "./estadisticas/Politicas";
 import EstadisticasReligiones from "./estadisticas/Religion";
-import ConfiguracionSistema from "../dashboard/ConfiguracionSistema";
 
-import Lideres from "./Lideres";
-import AfiliadosGeneral from "./AfiliadosGeneral";
-import MetaGeneral from "./MetaGeneral";
-import Form from "./forms/afiliados/Afiliados";
-import Celula from "./Celula";
-import ModalBienvenida from "./ModalBienvenida";
-import Difusion from "./Difusion";
 import { SignupForm } from "@/components/admin/sign-up/SignForm";
-import type { Afiliado, Lider } from "./esquemas";
-import { esUsuarioSede } from "./esquemas";
 import {
   Dialog,
-  Transition,
-  TransitionChild,
   DialogPanel,
+  Transition
 } from "@headlessui/react";
+import AfiliadosGeneral from "./AfiliadosGeneral";
+import Celula from "./Celula";
+import Difusion from "./Difusion";
+import Lideres from "./Lideres";
+import MetaGeneral from "./MetaGeneral";
+import ModalBienvenida from "./ModalBienvenida";
+import type { Afiliado, Lider } from "./esquemas";
+import { esUsuarioSede } from "./esquemas";
+import Form from "./forms/afiliados/Afiliados";
 
-import { LIDER_SIMULADO, AFILIADOS_SIMULADOS } from "./datosSimulados";
 import { obtenerAfiliadosAction } from "./actions/afiliados";
+import { AFILIADOS_SIMULADOS, LIDER_SIMULADO } from "./datosSimulados";
 
 type Lugar = { id: number; nombre: string };
 type Tab =
@@ -59,6 +59,8 @@ const TAB_THEMES: Record<
     activeBorder: string;
     activeIconBg: string;
     activeIconText: string;
+    /** Mismo tono que activeBorder, para la línea de 3px */
+    lineBg: string;
   }
 > = {
   Sede: {
@@ -66,42 +68,50 @@ const TAB_THEMES: Record<
     activeBorder: "border-blue-300 dark:border-blue-700",
     activeIconBg: "bg-blue-100 dark:bg-blue-950/60",
     activeIconText: "text-blue-700 dark:text-blue-400",
+    lineBg: "bg-blue-300 dark:bg-blue-700",
   },
   Lideres: {
     activeText: "text-orange-600 dark:text-orange-400",
     activeBorder: "border-orange-300 dark:border-orange-700",
     activeIconBg: "bg-orange-100 dark:bg-orange-950/60",
     activeIconText: "text-orange-600 dark:text-orange-400",
+    lineBg: "bg-orange-300 dark:bg-orange-700",
   },
   Afiliados: {
     activeText: "text-sky-600 dark:text-sky-400",
     activeBorder: "border-sky-300 dark:border-sky-700",
     activeIconBg: "bg-sky-100 dark:bg-sky-950/60",
     activeIconText: "text-sky-600 dark:text-sky-400",
+    lineBg: "bg-sky-300 dark:bg-sky-700",
   },
   Trabajadores: {
     activeText: "text-violet-600 dark:text-violet-400",
     activeBorder: "border-violet-300 dark:border-violet-700",
     activeIconBg: "bg-violet-100 dark:bg-violet-950/60",
     activeIconText: "text-violet-600 dark:text-violet-400",
+    lineBg: "bg-violet-300 dark:bg-violet-700",
   },
   Administrativos: {
     activeText: "text-indigo-600 dark:text-indigo-400",
     activeBorder: "border-indigo-300 dark:border-indigo-700",
     activeIconBg: "bg-indigo-100 dark:bg-indigo-950/60",
     activeIconText: "text-indigo-600 dark:text-indigo-400",
+    lineBg: "bg-indigo-300 dark:bg-indigo-700",
   },
   Mensajes: {
     activeText: "text-green-600 dark:text-green-400",
     activeBorder: "border-green-300 dark:border-green-700",
     activeIconBg: "bg-green-100 dark:bg-green-950/60",
     activeIconText: "text-green-600 dark:text-green-400",
+    lineBg: "bg-green-300 dark:bg-green-700",
   },
 };
 
+const tabEase = [0.25, 0.46, 0.45, 0.94] as const;
+
 const tabBtnClass = (active: boolean, tab: Tab) => {
   const theme = TAB_THEMES[tab];
-  return `relative flex w-[9.5rem] md:w-52 shrink-0 flex-col md:flex-row items-center justify-center gap-1 md:gap-2 px-2 md:px-3 py-2.5 text-[10px] md:text-sm font-semibold transition-colors rounded-t-lg -mb-px border-b-0 ${
+  return `relative flex w-[9.5rem] md:w-52 shrink-0 flex-col md:flex-row items-center justify-center gap-1 md:gap-2 px-2 md:px-3 py-2.5 text-[10px] md:text-sm font-semibold rounded-t-lg -mb-px border-b-0 transition-colors duration-300 ${
     active
       ? `z-10 border-[3px] bg-white dark:bg-neutral-950 ${theme.activeBorder} ${theme.activeText}`
       : `z-0 border-[3px] border-transparent bg-white dark:bg-neutral-950 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-neutral-900`
@@ -110,7 +120,7 @@ const tabBtnClass = (active: boolean, tab: Tab) => {
 
 const tabIconClass = (active: boolean, tab: Tab) => {
   const theme = TAB_THEMES[tab];
-  return `p-1 md:p-1.5 rounded-md transition-colors shrink-0 ${
+  return `p-1 md:p-1.5 rounded-md transition-colors duration-300 shrink-0 ${
     active
       ? `${theme.activeIconBg} ${theme.activeIconText}`
       : "bg-gray-100 dark:bg-neutral-800 text-gray-500 dark:text-gray-400"
@@ -241,9 +251,10 @@ export default function Ver() {
   const administrativos = allUsers.filter((u) =>
     rolesAdmin.includes(u.rol || ""),
   );
-  const trabajadores = allUsers.filter(
-    (u) => (u.rol || "").toUpperCase() === "TRABAJADOR",
-  );
+  const trabajadores = allUsers.filter((u) => {
+    const r = (u.rol || "").toUpperCase();
+    return r === "EMPLEADO" || r === "TRABAJADOR";
+  });
   const totalAfiliadosTrabajadores = trabajadores.reduce(
     (acc, u) => acc + (u.conteoAfiliados || 0),
     0,
@@ -272,6 +283,14 @@ export default function Ver() {
       (l) => l.rol !== "DOCUMENTADOR" && !esUsuarioSede(l),
     );
   })();
+
+  const totalLideresRegistrados = allUsers.filter(
+    (u) => (u.rol || "").toUpperCase() === "LIDER",
+  ).length;
+  const totalEmpleadosRegistrados = trabajadores.length;
+  const totalAdministrativosRegistrados = administrativos.length;
+  const totalMiembrosGeneral =
+    totalAfiliadosSede + totalAfiliadosLideres + totalAfiliadosTrabajadores;
 
   const cargandoLideres = isDashboardLoading;
   const cargandoMiembros = isLoadingAfiliados || cargandoLideres;
@@ -484,204 +503,224 @@ export default function Ver() {
               totalLideres={totalAfiliadosLideres}
               totalTrabajadores={totalAfiliadosTrabajadores}
             />
-            <div className="flex items-end gap-0.5 overflow-x-auto border-b-2 border-gray-200 dark:border-neutral-700 mb-6 w-full min-w-0 bg-white dark:bg-neutral-950 pb-0">
-              <button
-                onClick={() => cambiarTab("Sede")}
-                className={tabBtnClass(activeTab === "Sede", "Sede")}
-              >
-                <span className={tabIconClass(activeTab === "Sede", "Sede")}>
-                  <PiBuildingsDuotone className="w-4 h-4 md:w-5 md:h-5 shrink-0" />
-                </span>
-                <span className="truncate max-w-full">Sede</span>
-              </button>
-              <button
-                onClick={() => cambiarTab("Lideres")}
-                className={tabBtnClass(activeTab === "Lideres", "Lideres")}
-              >
-                <span
-                  className={tabIconClass(activeTab === "Lideres", "Lideres")}
-                >
-                  <PiCrownDuotone className="w-4 h-4 md:w-5 md:h-5 shrink-0" />
-                </span>
-                <span className="truncate max-w-full">Líderes</span>
-              </button>
-              <button
-                onClick={() => cambiarTab("Trabajadores")}
-                className={tabBtnClass(
-                  activeTab === "Trabajadores",
-                  "Trabajadores",
-                )}
-              >
-                <span
-                  className={tabIconClass(
-                    activeTab === "Trabajadores",
-                    "Trabajadores",
-                  )}
-                >
-                  <PiBriefcaseDuotone className="w-4 h-4 md:w-5 md:h-5 shrink-0" />
-                </span>
-                <span className="truncate max-w-full">Trabajadores</span>
-              </button>
-              <button
-                onClick={() => cambiarTab("Afiliados")}
-                className={tabBtnClass(activeTab === "Afiliados", "Afiliados")}
-              >
-                <span
-                  className={tabIconClass(
-                    activeTab === "Afiliados",
-                    "Afiliados",
-                  )}
-                >
-                  <PiUsersThreeDuotone className="w-4 h-4 md:w-5 md:h-5 shrink-0" />
-                </span>
-                <span className="truncate max-w-full">Miembros</span>
-              </button>
-              {esAdminOSuper && (
-                <button
-                  onClick={() => cambiarTab("Mensajes")}
-                  className={tabBtnClass(activeTab === "Mensajes", "Mensajes")}
-                >
-                  <span
-                    className={tabIconClass(
-                      activeTab === "Mensajes",
-                      "Mensajes",
-                    )}
-                  >
-                    <PiChatCircleDotsDuotone className="w-4 h-4 md:w-5 md:h-5 shrink-0" />
-                  </span>
-                  <span className="truncate max-w-full">Mensajes</span>
-                </button>
-              )}
-              {esAdminOSuper && (
-                <button
-                  onClick={() => cambiarTab("Administrativos")}
-                  className={tabBtnClass(
-                    activeTab === "Administrativos",
-                    "Administrativos",
-                  )}
-                >
-                  <span
-                    className={tabIconClass(
-                      activeTab === "Administrativos",
-                      "Administrativos",
-                    )}
-                  >
-                    <PiShieldCheckDuotone className="w-4 h-4 md:w-5 md:h-5 shrink-0" />
-                  </span>
-                  <span className="truncate max-w-full">Administrativos</span>
-                </button>
-              )}
+            <div className="mb-6 w-full min-w-0 bg-white dark:bg-neutral-950">
+              <div className="flex items-end gap-0.5 overflow-x-auto w-full min-w-0 pb-0">
+                {(
+                  [
+                    {
+                      id: "Sede" as Tab,
+                      label: `Sede (${totalAfiliadosSede})`,
+                      icon: PiBuildingsDuotone,
+                      show: true,
+                    },
+                    {
+                      id: "Lideres" as Tab,
+                      label: `Líderes (${totalLideresRegistrados})`,
+                      icon: PiMedalDuotone,
+                      show: true,
+                    },
+                    {
+                      id: "Trabajadores" as Tab,
+                      label: `Empleados (${totalEmpleadosRegistrados})`,
+                      icon: PiBriefcaseDuotone,
+                      show: true,
+                    },
+                    {
+                      id: "Afiliados" as Tab,
+                      label: `Miembros (${totalMiembrosGeneral})`,
+                      icon: PiUsersThreeDuotone,
+                      show: true,
+                    },
+                    {
+                      id: "Administrativos" as Tab,
+                      label: `Administrativos (${totalAdministrativosRegistrados})`,
+                      icon: PiShieldCheckDuotone,
+                      show: esAdminOSuper,
+                    },
+                    {
+                      id: "Mensajes" as Tab,
+                      label: "Mensajes",
+                      icon: PiChatCircleDotsDuotone,
+                      show: esAdminOSuper,
+                    },
+                  ] as const
+                )
+                  .filter((t) => t.show)
+                  .map((tab) => {
+                    const Icon = tab.icon;
+                    const activo = activeTab === tab.id;
+                    return (
+                      <motion.button
+                        key={tab.id}
+                        type="button"
+                        onClick={() => cambiarTab(tab.id)}
+                        className={tabBtnClass(activo, tab.id)}
+                        whileHover={{ y: activo ? 0 : -2 }}
+                        whileTap={{ scale: 0.98 }}
+                        animate={
+                          activo
+                            ? { y: 0, scale: 1 }
+                            : { y: 0, scale: 1 }
+                        }
+                        transition={{ duration: 0.25, ease: tabEase }}
+                      >
+                        <motion.span
+                          className={tabIconClass(activo, tab.id)}
+                          animate={
+                            activo
+                              ? { scale: 1.08 }
+                              : { scale: 1 }
+                          }
+                          transition={{ duration: 0.25, ease: tabEase }}
+                        >
+                          <Icon className="w-4 h-4 md:w-5 md:h-5 shrink-0" />
+                        </motion.span>
+                        <span className="truncate max-w-full">{tab.label}</span>
+                      </motion.button>
+                    );
+                  })}
+              </div>
+              {/* Línea: mismo color y grosor (3px) que el borde de la pestaña */}
+              <div className="relative h-[3px] w-full overflow-hidden bg-gray-200 dark:bg-neutral-700">
+                <AnimatePresence mode="wait" initial={false}>
+                  <motion.div
+                    key={activeTab}
+                    className={`absolute inset-0 ${TAB_THEMES[activeTab].lineBg}`}
+                    initial={{ scaleX: 0.35, opacity: 0 }}
+                    animate={{ scaleX: 1, opacity: 1 }}
+                    exit={{ scaleX: 0.35, opacity: 0 }}
+                    transition={{ duration: 0.35, ease: tabEase }}
+                    style={{ transformOrigin: "center" }}
+                  />
+                </AnimatePresence>
+              </div>
             </div>
 
-            {liderParaCelula && activeTab !== "Sede" ? (
-              <Celula
-                embedded
-                isOpen
-                onClose={handleVolverDeCelula}
-                onBack={handleVolverDeCelula}
-                lider={liderParaCelula}
-                onEditar={handleOpenEditModal}
-                onAnadirAfiliado={handleOpenAnadirAfiliadoModal}
-                onDataChange={fetchData}
-                rolUsuarioSesion={esSedeSesion ? "SEDE" : rol}
-                afiliadosSimulados={AFILIADOS_SIMULADOS}
-              />
-            ) : (
-              <>
-                {activeTab === "Sede" &&
-                  (sedeUsuario ? (
-                    <Celula
-                      embedded
-                      isOpen
-                      onClose={() => {}}
-                      lider={sedeUsuario}
-                      onEditar={handleOpenEditModal}
-                      onAnadirAfiliado={handleOpenAnadirAfiliadoModal}
-                      onDataChange={fetchData}
-                      rolUsuarioSesion={esSedeSesion ? "SEDE" : rol}
-                    />
-                  ) : (
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl border border-dashed border-blue-400/70 dark:border-blue-700 bg-blue-50/80 dark:bg-blue-950/20 px-4 py-6">
-                      <div className="flex items-start gap-3 min-w-0">
-                        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400 shrink-0">
-                          <Building2 className="h-5 w-5" />
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-sm font-black text-blue-900 dark:text-blue-200">
-                            Aún no existe el usuario Sede
-                          </p>
-                          <p className="text-xs text-blue-800/80 dark:text-blue-300/80 mt-0.5">
-                            Créalo para afiliar desde sede y diferenciarlo del
-                            avance de los líderes.
-                          </p>
-                        </div>
-                      </div>
-                      {esAdminOSuper && (
-                        <Button
-                          type="button"
-                          onClick={handleOpenCrearSedeModal}
-                          className="shrink-0 bg-blue-600 hover:bg-blue-700 text-white"
-                        >
-                          <Building2 className="h-4 w-4 mr-2" />
-                          Crear Sede
-                        </Button>
-                      )}
-                    </div>
-                  ))}
-
-                {activeTab === "Lideres" && (
-                  <Lideres
-                    lideres={lideresVisibles}
-                    onVerCelula={handleOpenCelula}
-                    onEditar={handleOpenEditLiderModal}
-                    rolUsuarioSesion={esSedeSesion ? "SEDE" : rol}
-                    onDataChange={fetchData}
-                    searchTerm={searchTerm}
-                    idUsuarioSesion={userId}
-                    isLoading={cargandoLideres}
-                  />
-                )}
-                {activeTab === "Afiliados" && (
-                  <AfiliadosGeneral
-                    afiliados={afiliados}
-                    lideres={allUsers}
+            <AnimatePresence mode="wait" initial={false}>
+              {liderParaCelula && activeTab !== "Sede" ? (
+                <motion.div
+                  key={`celula-${liderParaCelula.id}`}
+                  initial={{ opacity: 0, y: 14 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.3, ease: tabEase }}
+                >
+                  <Celula
+                    embedded
+                    isOpen
+                    onClose={handleVolverDeCelula}
+                    onBack={handleVolverDeCelula}
+                    lider={liderParaCelula}
                     onEditar={handleOpenEditModal}
+                    onAnadirAfiliado={handleOpenAnadirAfiliadoModal}
                     onDataChange={fetchData}
-                    searchTerm={searchTerm}
-                    isLoading={cargandoMiembros}
-                  />
-                )}
-                {activeTab === "Trabajadores" && (
-                  <Lideres
-                    lideres={trabajadores}
-                    onVerCelula={handleOpenCelula}
-                    onEditar={handleOpenEditLiderModal}
                     rolUsuarioSesion={esSedeSesion ? "SEDE" : rol}
-                    onDataChange={fetchData}
-                    searchTerm={searchTerm}
-                    idUsuarioSesion={userId}
-                    isLoading={cargandoLideres}
-                    showRole={true}
+                    afiliadosSimulados={AFILIADOS_SIMULADOS}
                   />
-                )}
-                {activeTab === "Administrativos" && (
-                  <Lideres
-                    lideres={administrativos}
-                    onVerCelula={handleOpenCelula}
-                    onEditar={handleOpenEditLiderModal}
-                    rolUsuarioSesion={esSedeSesion ? "SEDE" : rol}
-                    onDataChange={fetchData}
-                    searchTerm={searchTerm}
-                    idUsuarioSesion={userId}
-                    isLoading={cargandoLideres}
-                    showRole={true}
-                  />
-                )}
-                {activeTab === "Mensajes" && esAdminOSuper && (
-                  <Difusion usuarios={allUsers} />
-                )}
-              </>
-            )}
+                </motion.div>
+              ) : (
+                <motion.div
+                  key={activeTab}
+                  initial={{ opacity: 0, y: 14 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.3, ease: tabEase }}
+                >
+                  {activeTab === "Sede" &&
+                    (sedeUsuario ? (
+                      <Celula
+                        embedded
+                        isOpen
+                        onClose={() => {}}
+                        lider={sedeUsuario}
+                        onEditar={handleOpenEditModal}
+                        onAnadirAfiliado={handleOpenAnadirAfiliadoModal}
+                        onDataChange={fetchData}
+                        rolUsuarioSesion={esSedeSesion ? "SEDE" : rol}
+                      />
+                    ) : (
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl border border-dashed border-blue-400/70 dark:border-blue-700 bg-blue-50/80 dark:bg-blue-950/20 px-4 py-6">
+                        <div className="flex items-start gap-3 min-w-0">
+                          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400 shrink-0">
+                            <Building2 className="h-5 w-5" />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-sm font-black text-blue-900 dark:text-blue-200">
+                              Aún no existe el usuario Sede
+                            </p>
+                            <p className="text-xs text-blue-800/80 dark:text-blue-300/80 mt-0.5">
+                              Créalo para afiliar desde sede y diferenciarlo del
+                              avance de los líderes.
+                            </p>
+                          </div>
+                        </div>
+                        {esAdminOSuper && (
+                          <Button
+                            type="button"
+                            onClick={handleOpenCrearSedeModal}
+                            className="shrink-0 bg-blue-600 hover:bg-blue-700 text-white"
+                          >
+                            <Building2 className="h-4 w-4 mr-2" />
+                            Crear Sede
+                          </Button>
+                        )}
+                      </div>
+                    ))}
+
+                  {activeTab === "Lideres" && (
+                    <Lideres
+                      lideres={lideresVisibles}
+                      onVerCelula={handleOpenCelula}
+                      onEditar={handleOpenEditLiderModal}
+                      rolUsuarioSesion={esSedeSesion ? "SEDE" : rol}
+                      onDataChange={fetchData}
+                      searchTerm={searchTerm}
+                      idUsuarioSesion={userId}
+                      isLoading={cargandoLideres}
+                    />
+                  )}
+                  {activeTab === "Afiliados" && (
+                    <AfiliadosGeneral
+                      afiliados={afiliados}
+                      lideres={allUsers}
+                      onEditar={handleOpenEditModal}
+                      onDataChange={fetchData}
+                      searchTerm={searchTerm}
+                      isLoading={cargandoMiembros}
+                    />
+                  )}
+                  {activeTab === "Trabajadores" && (
+                    <Lideres
+                      lideres={trabajadores}
+                      onVerCelula={handleOpenCelula}
+                      onEditar={handleOpenEditLiderModal}
+                      rolUsuarioSesion={esSedeSesion ? "SEDE" : rol}
+                      onDataChange={fetchData}
+                      searchTerm={searchTerm}
+                      idUsuarioSesion={userId}
+                      isLoading={cargandoLideres}
+                      showRole={true}
+                    />
+                  )}
+                  {activeTab === "Administrativos" && (
+                    <Lideres
+                      lideres={administrativos}
+                      onVerCelula={handleOpenCelula}
+                      onEditar={handleOpenEditLiderModal}
+                      rolUsuarioSesion={esSedeSesion ? "SEDE" : rol}
+                      onDataChange={fetchData}
+                      searchTerm={searchTerm}
+                      idUsuarioSesion={userId}
+                      isLoading={cargandoLideres}
+                      showRole={true}
+                    />
+                  )}
+                  {activeTab === "Mensajes" && esAdminOSuper && (
+                    <Difusion usuarios={allUsers} />
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </>
         )}
       </div>

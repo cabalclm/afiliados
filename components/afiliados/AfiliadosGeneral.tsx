@@ -1,11 +1,20 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, Building2, Briefcase, Crown } from "lucide-react";
+import {
+  ArrowLeft,
+  Building2,
+  Briefcase,
+  Download,
+  Medal,
+  Users,
+} from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
+import * as XLSX from "xlsx";
 import type { Afiliado, Lider } from "./esquemas";
 import { esUsuarioSede } from "./esquemas";
 import { formatearDpi, TelefonoInline } from "./contacto";
+import { Button } from "@/components/ui/button";
 
 interface Props {
   afiliados: Afiliado[];
@@ -16,12 +25,12 @@ interface Props {
   isLoading?: boolean;
 }
 
-type GrupoTipo = "sede" | "lider" | "trabajador";
+type GrupoTipo = "todos" | "sede" | "lider" | "trabajador";
 
 type GrupoAfiliados = {
   lider: Lider;
   afiliados: Afiliado[];
-  tipo: GrupoTipo;
+  tipo: Exclude<GrupoTipo, "todos">;
 };
 
 const CATEGORIAS: Array<{
@@ -32,6 +41,15 @@ const CATEGORIAS: Array<{
   idle: string;
   rowActive: string;
 }> = [
+  {
+    tipo: "todos",
+    titulo: "Todos",
+    icon: Users,
+    active:
+      "bg-sky-600 text-white border-sky-600 shadow-md shadow-sky-200/50 dark:shadow-none",
+    idle: "bg-white dark:bg-neutral-900 text-sky-700 dark:text-sky-400 border-sky-200 dark:border-sky-800 hover:bg-sky-50 dark:hover:bg-sky-950/40",
+    rowActive: "bg-sky-50 dark:bg-sky-950/40",
+  },
   {
     tipo: "sede",
     titulo: "Sede",
@@ -44,7 +62,7 @@ const CATEGORIAS: Array<{
   {
     tipo: "lider",
     titulo: "Líderes",
-    icon: Crown,
+    icon: Medal,
     active:
       "bg-orange-500 text-white border-orange-500 shadow-md shadow-orange-200/50 dark:shadow-none",
     idle: "bg-white dark:bg-neutral-900 text-orange-700 dark:text-orange-400 border-orange-200 dark:border-orange-800 hover:bg-orange-50 dark:hover:bg-orange-950/40",
@@ -52,7 +70,7 @@ const CATEGORIAS: Array<{
   },
   {
     tipo: "trabajador",
-    titulo: "Trabajadores",
+    titulo: "Empleado",
     icon: Briefcase,
     active:
       "bg-violet-600 text-white border-violet-600 shadow-md shadow-violet-200/50 dark:shadow-none",
@@ -61,18 +79,71 @@ const CATEGORIAS: Array<{
   },
 ];
 
-function tipoDeLider(lider: Lider): GrupoTipo {
+function esRolEmpleado(rol: string | null | undefined) {
+  const r = (rol || "").toUpperCase();
+  return r === "EMPLEADO" || r === "TRABAJADOR";
+}
+
+function tipoDeLider(lider: Lider): Exclude<GrupoTipo, "todos"> {
   if (esUsuarioSede(lider)) return "sede";
-  const rol = (lider.rol || "").toUpperCase();
-  if (rol === "TRABAJADOR") return "trabajador";
+  if (esRolEmpleado(lider.rol)) return "trabajador";
   return "lider";
+}
+
+function etiquetaGrupo(tipo: Exclude<GrupoTipo, "todos">) {
+  if (tipo === "sede") return "Sede";
+  if (tipo === "trabajador") return "Empleado";
+  return "Líder";
+}
+
+function normalizarNombre(texto: string) {
+  return texto
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim()
+    .toLowerCase();
+}
+
+function compararNombres(a: string, b: string) {
+  return normalizarNombre(a).localeCompare(normalizarNombre(b), "es");
+}
+
+function calcularEdad(fechaNacimiento: string) {
+  if (!fechaNacimiento) return "—";
+  const hoy = new Date();
+  const nacimiento = new Date(fechaNacimiento);
+  let edad = hoy.getFullYear() - nacimiento.getFullYear();
+  const mes = hoy.getMonth() - nacimiento.getMonth();
+  if (mes < 0 || (mes === 0 && hoy.getDate() < nacimiento.getDate())) {
+    edad--;
+  }
+  return `${edad} años`;
+}
+
+function filaExcel(
+  afiliado: Afiliado,
+  liderNombre: string,
+  grupo: string,
+) {
+  return {
+    Nombre: `${afiliado.nombres} ${afiliado.apellidos}`.trim(),
+    DPI: afiliado.dpi || "",
+    Teléfono: afiliado.telefono || "",
+    Edad: calcularEdad(afiliado.nacimiento),
+    Sexo: afiliado.sexo || "",
+    Ubicación: afiliado.lugar_nombre || "",
+    Empadronado: afiliado.empadronado ? "Sí" : "No",
+    "No. Padrón": afiliado.no_padron || "",
+    Líder: liderNombre,
+    Grupo: grupo,
+  };
 }
 
 function AfiliadosSkeleton() {
   return (
     <div className="animate-pulse space-y-4">
       <div className="flex gap-2">
-        {[1, 2, 3].map((i) => (
+        {[1, 2, 3, 4].map((i) => (
           <div
             key={i}
             className="h-12 w-36 bg-gray-100 dark:bg-neutral-800 rounded-xl"
@@ -90,22 +161,10 @@ export default function AfiliadosGeneral({
   searchTerm,
   isLoading = false,
 }: Props) {
-  const [categoria, setCategoria] = useState<GrupoTipo>("sede");
+  const [categoria, setCategoria] = useState<GrupoTipo>("todos");
   const [liderSeleccionadoId, setLiderSeleccionadoId] = useState<string | null>(
     null,
   );
-
-  const calcularEdad = (fechaNacimiento: string) => {
-    if (!fechaNacimiento) return "—";
-    const hoy = new Date();
-    const nacimiento = new Date(fechaNacimiento);
-    let edad = hoy.getFullYear() - nacimiento.getFullYear();
-    const mes = hoy.getMonth() - nacimiento.getMonth();
-    if (mes < 0 || (mes === 0 && hoy.getDate() < nacimiento.getDate())) {
-      edad--;
-    }
-    return `${edad} años`;
-  };
 
   const grupos = useMemo(() => {
     const term = searchTerm.toLowerCase();
@@ -139,7 +198,7 @@ export default function AfiliadosGeneral({
         });
         return;
       }
-      if (rol === "TRABAJADOR") {
+      if (esRolEmpleado(rol)) {
         result.push({
           lider,
           afiliados: grouped.get(lider.id) || [],
@@ -156,25 +215,55 @@ export default function AfiliadosGeneral({
       }
     });
 
-    return result.sort((a, b) => b.afiliados.length - a.afiliados.length);
+    return result.sort((a, b) =>
+      compararNombres(
+        `${a.lider.nombres} ${a.lider.apellidos}`,
+        `${b.lider.nombres} ${b.lider.apellidos}`,
+      ),
+    );
   }, [afiliados, lideres, searchTerm]);
 
   const conteosCategoria = useMemo(() => {
     const map: Record<GrupoTipo, number> = {
+      todos: 0,
       sede: 0,
       lider: 0,
       trabajador: 0,
     };
     grupos.forEach((g) => {
       map[g.tipo] += g.afiliados.length;
+      map.todos += g.afiliados.length;
     });
     return map;
   }, [grupos]);
 
-  const gruposDeCategoria = useMemo(
-    () => grupos.filter((g) => g.tipo === categoria),
-    [grupos, categoria],
-  );
+  const gruposDeCategoria = useMemo(() => {
+    if (categoria === "todos") return [];
+    return grupos.filter((g) => g.tipo === categoria);
+  }, [grupos, categoria]);
+
+  const miembrosTodos = useMemo(() => {
+    const rows: Array<{
+      afiliado: Afiliado;
+      liderNombre: string;
+      grupo: string;
+    }> = [];
+
+    grupos.forEach((g) => {
+      const liderNombre = `${g.lider.nombres} ${g.lider.apellidos}`.trim();
+      const grupo = etiquetaGrupo(g.tipo);
+      g.afiliados.forEach((a) => {
+        rows.push({ afiliado: a, liderNombre, grupo });
+      });
+    });
+
+    return rows.sort((a, b) =>
+      compararNombres(
+        `${a.afiliado.nombres} ${a.afiliado.apellidos}`,
+        `${b.afiliado.nombres} ${b.afiliado.apellidos}`,
+      ),
+    );
+  }, [grupos]);
 
   useEffect(() => {
     setLiderSeleccionadoId(null);
@@ -189,6 +278,57 @@ export default function AfiliadosGeneral({
   const categoriaCfg =
     CATEGORIAS.find((c) => c.tipo === categoria) || CATEGORIAS[0];
 
+  const descargarExcel = () => {
+    const porTipo = {
+      sede: [] as ReturnType<typeof filaExcel>[],
+      lider: [] as ReturnType<typeof filaExcel>[],
+      trabajador: [] as ReturnType<typeof filaExcel>[],
+    };
+
+    grupos.forEach((g) => {
+      const liderNombre = `${g.lider.nombres} ${g.lider.apellidos}`.trim();
+      const grupo = etiquetaGrupo(g.tipo);
+      const ordenados = [...g.afiliados].sort((a, b) =>
+        compararNombres(
+          `${a.nombres} ${a.apellidos}`,
+          `${b.nombres} ${b.apellidos}`,
+        ),
+      );
+      ordenados.forEach((a) => {
+        porTipo[g.tipo].push(filaExcel(a, liderNombre, grupo));
+      });
+    });
+
+    const todos = [...porTipo.sede, ...porTipo.lider, ...porTipo.trabajador].sort(
+      (a, b) => compararNombres(a.Nombre, b.Nombre),
+    );
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(
+      wb,
+      XLSX.utils.json_to_sheet(todos),
+      "Todos",
+    );
+    XLSX.utils.book_append_sheet(
+      wb,
+      XLSX.utils.json_to_sheet(porTipo.sede),
+      "Sede",
+    );
+    XLSX.utils.book_append_sheet(
+      wb,
+      XLSX.utils.json_to_sheet(porTipo.lider),
+      "Lideres",
+    );
+    XLSX.utils.book_append_sheet(
+      wb,
+      XLSX.utils.json_to_sheet(porTipo.trabajador),
+      "Empleados",
+    );
+
+    const fecha = new Date().toISOString().slice(0, 10);
+    XLSX.writeFile(wb, `miembros_${fecha}.xlsx`);
+  };
+
   if (isLoading) return <AfiliadosSkeleton />;
 
   if (grupos.every((g) => g.afiliados.length === 0) && afiliados.length === 0) {
@@ -201,41 +341,136 @@ export default function AfiliadosGeneral({
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-wrap gap-2">
-        {CATEGORIAS.map((cat) => {
-          const Icon = cat.icon;
-          const activo = categoria === cat.tipo;
-          const total = conteosCategoria[cat.tipo];
-          return (
-            <button
-              key={cat.tipo}
-              type="button"
-              onClick={() => {
-                setCategoria(cat.tipo);
-                setLiderSeleccionadoId(null);
-              }}
-              className={`inline-flex items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-bold transition-all ${
-                activo ? cat.active : cat.idle
-              }`}
-            >
-              <Icon className="h-4 w-4 shrink-0" />
-              <span>{cat.titulo}</span>
-              <span
-                className={`text-[11px] font-black px-2 py-0.5 rounded-md ${
-                  activo
-                    ? "bg-white/20 text-white"
-                    : "bg-gray-100 dark:bg-neutral-800 text-gray-600 dark:text-gray-300"
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div className="flex flex-wrap gap-2">
+          {CATEGORIAS.map((cat) => {
+            const Icon = cat.icon;
+            const activo = categoria === cat.tipo;
+            const total = conteosCategoria[cat.tipo];
+            return (
+              <button
+                key={cat.tipo}
+                type="button"
+                onClick={() => {
+                  setCategoria(cat.tipo);
+                  setLiderSeleccionadoId(null);
+                }}
+                className={`inline-flex items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-bold transition-all ${
+                  activo ? cat.active : cat.idle
                 }`}
               >
-                {total}
-              </span>
-            </button>
-          );
-        })}
+                <Icon className="h-4 w-4 shrink-0" />
+                <span>{cat.titulo}</span>
+                <span
+                  className={`text-[11px] font-black px-2 py-0.5 rounded-md ${
+                    activo
+                      ? "bg-white/20 text-white"
+                      : "bg-gray-100 dark:bg-neutral-800 text-gray-600 dark:text-gray-300"
+                  }`}
+                >
+                  {total}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
+        <Button
+          type="button"
+          variant="outline"
+          onClick={descargarExcel}
+          className="gap-2 font-bold border-emerald-300 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-700 dark:text-emerald-400 dark:hover:bg-emerald-950/40"
+        >
+          <Download className="h-4 w-4" />
+          Descargar Excel
+        </Button>
       </div>
 
       <AnimatePresence mode="wait" initial={false}>
-        {gruposDeCategoria.length === 0 ? (
+        {categoria === "todos" ? (
+          <motion.div
+            key="lista-todos"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -12 }}
+            transition={{ duration: 0.28, ease: [0.25, 0.46, 0.45, 0.94] }}
+            className="overflow-x-auto rounded-xl border border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 shadow-sm"
+          >
+            {miembrosTodos.length === 0 ? (
+              <div className="px-4 py-10 text-center text-sm text-gray-500 dark:text-gray-400">
+                No hay miembros{searchTerm ? " para esta búsqueda" : ""}.
+              </div>
+            ) : (
+              <table className="min-w-full text-xs">
+                <thead className="bg-sky-50 dark:bg-sky-950/40">
+                  <tr>
+                    <th className="px-4 py-2 text-left font-bold text-gray-600 dark:text-gray-300 uppercase">
+                      No.
+                    </th>
+                    <th className="px-4 py-2 text-left font-bold text-gray-600 dark:text-gray-300 uppercase">
+                      Nombre
+                    </th>
+                    <th className="px-4 py-2 text-left font-bold text-gray-600 dark:text-gray-300 uppercase">
+                      DPI
+                    </th>
+                    <th className="px-4 py-2 text-left font-bold text-gray-600 dark:text-gray-300 uppercase">
+                      Teléfono
+                    </th>
+                    <th className="px-4 py-2 text-left font-bold text-gray-600 dark:text-gray-300 uppercase">
+                      Edad
+                    </th>
+                    <th className="px-4 py-2 text-left font-bold text-gray-600 dark:text-gray-300 uppercase">
+                      Ubicación
+                    </th>
+                    <th className="px-4 py-2 text-left font-bold text-gray-600 dark:text-gray-300 uppercase">
+                      Líder
+                    </th>
+                    <th className="px-4 py-2 text-left font-bold text-gray-600 dark:text-gray-300 uppercase">
+                      Grupo
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200 dark:divide-neutral-700">
+                  {miembrosTodos.map((row, index) => (
+                    <tr
+                      key={row.afiliado.id}
+                      className="hover:bg-gray-50 dark:hover:bg-neutral-800/50 uppercase"
+                    >
+                      <td className="px-4 py-2 whitespace-nowrap text-gray-500 dark:text-gray-400">
+                        {index + 1}
+                      </td>
+                      <td className="px-4 py-2 whitespace-nowrap font-bold text-gray-900 dark:text-gray-100">
+                        {row.afiliado.nombres} {row.afiliado.apellidos}
+                      </td>
+                      <td className="px-4 py-2 whitespace-nowrap font-mono">
+                        {row.afiliado.dpi
+                          ? formatearDpi(row.afiliado.dpi)
+                          : "—"}
+                      </td>
+                      <td className="px-4 py-2 whitespace-nowrap font-mono normal-case">
+                        <TelefonoInline
+                          telefono={row.afiliado.telefono || ""}
+                        />
+                      </td>
+                      <td className="px-4 py-2 whitespace-nowrap font-bold">
+                        {calcularEdad(row.afiliado.nacimiento)}
+                      </td>
+                      <td className="px-4 py-2 whitespace-nowrap">
+                        {row.afiliado.lugar_nombre || "—"}
+                      </td>
+                      <td className="px-4 py-2 whitespace-nowrap font-semibold text-sky-700 dark:text-sky-400">
+                        {row.liderNombre}
+                      </td>
+                      <td className="px-4 py-2 whitespace-nowrap">
+                        {row.grupo}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </motion.div>
+        ) : gruposDeCategoria.length === 0 ? (
           <motion.div
             key="empty"
             initial={{ opacity: 0, y: 8 }}
@@ -357,38 +592,47 @@ export default function AfiliadosGeneral({
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200 dark:divide-neutral-700">
-                    {grupoActivo.afiliados.map((afiliado, index) => (
-                      <motion.tr
-                        key={afiliado.id}
-                        initial={{ opacity: 0, y: 6 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{
-                          duration: 0.22,
-                          delay: Math.min(index * 0.02, 0.24),
-                          ease: [0.25, 0.46, 0.45, 0.94],
-                        }}
-                        className="hover:bg-gray-50 dark:hover:bg-neutral-800/50 uppercase"
-                      >
-                        <td className="px-4 py-2 whitespace-nowrap text-gray-500 dark:text-gray-400">
-                          {index + 1}
-                        </td>
-                        <td className="px-4 py-2 whitespace-nowrap font-bold text-gray-900 dark:text-gray-100">
-                          {afiliado.nombres} {afiliado.apellidos}
-                        </td>
-                        <td className="px-4 py-2 whitespace-nowrap font-mono">
-                          {afiliado.dpi ? formatearDpi(afiliado.dpi) : "—"}
-                        </td>
-                        <td className="px-4 py-2 whitespace-nowrap font-mono normal-case">
-                          <TelefonoInline telefono={afiliado.telefono || ""} />
-                        </td>
-                        <td className="px-4 py-2 whitespace-nowrap font-bold">
-                          {calcularEdad(afiliado.nacimiento)}
-                        </td>
-                        <td className="px-4 py-2 whitespace-nowrap">
-                          {afiliado.lugar_nombre || "—"}
-                        </td>
-                      </motion.tr>
-                    ))}
+                    {[...grupoActivo.afiliados]
+                      .sort((a, b) =>
+                        compararNombres(
+                          `${a.nombres} ${a.apellidos}`,
+                          `${b.nombres} ${b.apellidos}`,
+                        ),
+                      )
+                      .map((afiliado, index) => (
+                        <motion.tr
+                          key={afiliado.id}
+                          initial={{ opacity: 0, y: 6 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{
+                            duration: 0.22,
+                            delay: Math.min(index * 0.02, 0.24),
+                            ease: [0.25, 0.46, 0.45, 0.94],
+                          }}
+                          className="hover:bg-gray-50 dark:hover:bg-neutral-800/50 uppercase"
+                        >
+                          <td className="px-4 py-2 whitespace-nowrap text-gray-500 dark:text-gray-400">
+                            {index + 1}
+                          </td>
+                          <td className="px-4 py-2 whitespace-nowrap font-bold text-gray-900 dark:text-gray-100">
+                            {afiliado.nombres} {afiliado.apellidos}
+                          </td>
+                          <td className="px-4 py-2 whitespace-nowrap font-mono">
+                            {afiliado.dpi ? formatearDpi(afiliado.dpi) : "—"}
+                          </td>
+                          <td className="px-4 py-2 whitespace-nowrap font-mono normal-case">
+                            <TelefonoInline
+                              telefono={afiliado.telefono || ""}
+                            />
+                          </td>
+                          <td className="px-4 py-2 whitespace-nowrap font-bold">
+                            {calcularEdad(afiliado.nacimiento)}
+                          </td>
+                          <td className="px-4 py-2 whitespace-nowrap">
+                            {afiliado.lugar_nombre || "—"}
+                          </td>
+                        </motion.tr>
+                      ))}
                   </tbody>
                 </table>
               )}

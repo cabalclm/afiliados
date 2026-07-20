@@ -2,7 +2,7 @@
 
 import { Building2 } from "lucide-react";
 import { motion } from "framer-motion";
-import { PiBriefcaseDuotone, PiCrownDuotone } from "react-icons/pi";
+import { PiBriefcaseDuotone, PiMedalDuotone } from "react-icons/pi";
 
 const OBJETIVO_GENERAL = 2250;
 
@@ -57,12 +57,12 @@ export default function MetaGeneral({
           Sede: {totalSede.toLocaleString()}
         </span>
         <span className="flex items-center gap-1.5 text-orange-600 dark:text-orange-400">
-          <PiCrownDuotone className="h-3.5 w-3.5 shrink-0" />
+          <PiMedalDuotone className="h-3.5 w-3.5 shrink-0" />
           Líderes: {totalLideres.toLocaleString()}
         </span>
         <span className="flex items-center gap-1.5 text-violet-600 dark:text-violet-400">
           <PiBriefcaseDuotone className="h-3.5 w-3.5 shrink-0" />
-          Trabajadores: {totalTrabajadores.toLocaleString()}
+          Empleados: {totalTrabajadores.toLocaleString()}
         </span>
         <span className="font-black text-gray-900 dark:text-gray-100 normal-case">
           Total: {total.toLocaleString()} ({progreso.toFixed(1)}%)
