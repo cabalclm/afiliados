@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogPanel } from "@headlessui/react";
 import { Download, Printer, X } from "lucide-react";
+import { toast } from "@/lib/toast";
 import type { Afiliado } from "./esquemas";
 import { formatearDpi } from "./contacto";
 
@@ -131,27 +132,162 @@ export default function CarnetAfiliacion({ afiliado, open, onClose }: Props) {
   const fechaNac = formatearFecha(afiliado.nacimiento);
   const edad = calcularEdad(afiliado.nacimiento);
 
+  const esperarImagenes = async (raiz: HTMLElement) => {
+    const imgs = Array.from(raiz.querySelectorAll("img"));
+    await Promise.all(
+      imgs.map(
+        (img) =>
+          new Promise<void>((resolve) => {
+            if (img.complete && img.naturalWidth > 0) {
+              resolve();
+              return;
+            }
+            const done = () => resolve();
+            img.addEventListener("load", done, { once: true });
+            img.addEventListener("error", done, { once: true });
+          }),
+      ),
+    );
+  };
+
+  /** Clona el carnet fuera del modal a tamaño fijo (como se ve en pantalla). */
   const capturarCarnetPng = async () => {
     const nodo = carnetRef.current;
     if (!nodo) throw new Error("No se encontró el carnet");
-    const { toPng } = await import("html-to-image");
-    return toPng(nodo, {
-      cacheBust: true,
-      pixelRatio: 3,
-      backgroundColor: "#ffffff",
-    });
+
+    await esperarImagenes(nodo);
+
+    const rect = nodo.getBoundingClientRect();
+    const ancho = Math.max(Math.round(rect.width), 320);
+    const alto = Math.round(ancho * (CARNET_HEIGHT_MM / CARNET_WIDTH_MM));
+
+    const host = document.createElement("div");
+    host.setAttribute("aria-hidden", "true");
+    host.style.cssText = [
+      "position:fixed",
+      "left:-10000px",
+      "top:0",
+      "z-index:-1",
+      "pointer-events:none",
+      "background:#ffffff",
+    ].join(";");
+
+    const clone = nodo.cloneNode(true) as HTMLElement;
+    clone.style.width = `${ancho}px`;
+    clone.style.height = `${alto}px`;
+    clone.style.maxWidth = "none";
+    clone.style.transform = "none";
+    clone.style.margin = "0";
+    host.appendChild(clone);
+    document.body.appendChild(host);
+
+    try {
+      await esperarImagenes(clone);
+      // Un frame para que el layout del clon asiente
+      await new Promise((r) => requestAnimationFrame(() => r(null)));
+
+      const { toPng } = await import("html-to-image");
+      return await toPng(clone, {
+        cacheBust: true,
+        pixelRatio: 3,
+        backgroundColor: "#ffffff",
+        width: ancho,
+        height: alto,
+        style: {
+          width: `${ancho}px`,
+          height: `${alto}px`,
+          transform: "none",
+          margin: "0",
+        },
+      });
+    } finally {
+      host.remove();
+    }
+  };
+
+  const dataUrlABlob = (dataUrl: string) => {
+    const [meta, data] = dataUrl.split(",");
+    const mime = meta.match(/:(.*?);/)?.[1] || "image/png";
+    const bin = atob(data);
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    return new Blob([bytes], { type: mime });
+  };
+
+  const esMovil = () =>
+    /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) ||
+    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+
+  const esIOS = () =>
+    /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+
+  const abrirImagenParaGuardar = (url: string, filename: string) => {
+    const win = window.open("");
+    if (win) {
+      win.document.write(
+        `<!DOCTYPE html><html><head><title>${filename}</title><meta name="viewport" content="width=device-width, initial-scale=1"/></head><body style="margin:0;background:#0a0a0a;display:flex;flex-direction:column;justify-content:center;align-items:center;min-height:100vh;gap:12px;font-family:system-ui,sans-serif"><img src="${url}" alt="Carnet" style="max-width:100%;height:auto;box-shadow:0 8px 32px rgba(0,0,0,.4)"/><p style="color:#fff;font-size:14px;opacity:.85;padding:0 16px;text-align:center">Mantén pulsada la imagen → Guardar en Fotos</p></body></html>`,
+      );
+      win.document.close();
+      toast.info("Mantén pulsada la imagen y elige Guardar");
+      return;
+    }
+    // Popup bloqueado: navegar a la imagen
+    window.location.href = url;
   };
 
   const descargarImagen = async () => {
     setGenerando(true);
     try {
       const dataUrl = await capturarCarnetPng();
+      const filename = `carnet-${slugNombreArchivo(nombreCompleto)}.png`;
+      const blob = dataUrlABlob(dataUrl);
+      const file = new File([blob], filename, { type: "image/png" });
+
+      // En móvil: Web Share API (iOS/Android) — el <a download> casi no funciona
+      if (
+        esMovil() &&
+        typeof navigator.canShare === "function" &&
+        navigator.canShare({ files: [file] })
+      ) {
+        try {
+          await navigator.share({
+            files: [file],
+            title: "Carnet de Afiliación",
+            text: nombreCompleto,
+          });
+          return;
+        } catch (shareErr) {
+          const name =
+            shareErr && typeof shareErr === "object" && "name" in shareErr
+              ? String((shareErr as { name: string }).name)
+              : "";
+          if (name === "AbortError") return;
+          // Si falla el share, seguimos con fallback
+        }
+      }
+
+      const url = URL.createObjectURL(blob);
+
+      if (esIOS()) {
+        abrirImagenParaGuardar(url, filename);
+        setTimeout(() => URL.revokeObjectURL(url), 120_000);
+        return;
+      }
+
       const a = document.createElement("a");
-      a.href = dataUrl;
-      a.download = `carnet-${slugNombreArchivo(nombreCompleto)}.png`;
+      a.href = url;
+      a.download = filename;
+      a.rel = "noopener";
+      a.style.display = "none";
+      document.body.appendChild(a);
       a.click();
+      document.body.removeChild(a);
+      toast.success("Imagen descargada");
+      setTimeout(() => URL.revokeObjectURL(url), 60_000);
     } catch (error) {
       console.error("Error generando imagen del carnet:", error);
+      toast.error("No se pudo generar la imagen. Intenta de nuevo.");
     } finally {
       setGenerando(false);
     }
@@ -252,6 +388,7 @@ export default function CarnetAfiliacion({ afiliado, open, onClose }: Props) {
                 <img
                   src={LOGO_URL}
                   alt="CABAL"
+                  crossOrigin="anonymous"
                   className="pointer-events-none absolute right-2 top-1 z-20 h-[5rem] w-auto object-contain drop-shadow-sm md:h-[5.5rem]"
                   draggable={false}
                 />

@@ -2,8 +2,8 @@
 
 import { Button } from "@/components/ui/button";
 import { toast } from "@/lib/toast";
-import { Building2, Search, X } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
+import { Building2, Search, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import {
   Fragment,
@@ -29,11 +29,7 @@ import EstadisticasPoliticas from "./estadisticas/Politicas";
 import EstadisticasReligiones from "./estadisticas/Religion";
 
 import { SignupForm } from "@/components/admin/sign-up/SignForm";
-import {
-  Dialog,
-  DialogPanel,
-  Transition
-} from "@headlessui/react";
+import { Dialog, DialogPanel, Transition } from "@headlessui/react";
 import AfiliadosGeneral from "./AfiliadosGeneral";
 import Celula from "./Celula";
 import Difusion from "./Difusion";
@@ -126,7 +122,7 @@ const TAB_ORDER: Tab[] = [
 
 const tabBtnClass = (active: boolean, tab: Tab) => {
   const theme = TAB_THEMES[tab];
-  return `relative flex w-[9.5rem] md:w-52 shrink-0 flex-col md:flex-row items-center justify-center gap-1 md:gap-2 px-2 md:px-3 py-2.5 text-[10px] md:text-sm font-semibold rounded-t-lg -mb-px border-[3px] border-transparent border-b-0 bg-white dark:bg-neutral-950 transition-colors duration-500 ${
+  return `relative flex w-full md:w-52 md:shrink-0 flex-row items-center justify-center gap-1 md:gap-2 px-1.5 md:px-3 py-1.5 md:py-2.5 text-[9px] leading-tight md:text-sm font-semibold rounded-t-md md:rounded-t-lg -mb-px border-2 md:border-[3px] border-transparent border-b-0 bg-white dark:bg-neutral-950 transition-colors duration-500 ${
     active
       ? `z-10 ${theme.activeText}`
       : `z-0 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-neutral-900`
@@ -135,7 +131,7 @@ const tabBtnClass = (active: boolean, tab: Tab) => {
 
 const tabIconClass = (active: boolean, tab: Tab) => {
   const theme = TAB_THEMES[tab];
-  return `p-1 md:p-1.5 rounded-md transition-colors duration-300 shrink-0 ${
+  return `p-0.5 md:p-1.5 rounded-md transition-colors duration-300 shrink-0 ${
     active
       ? `${theme.activeIconBg} ${theme.activeIconText}`
       : "bg-gray-100 dark:bg-neutral-800 text-gray-500 dark:text-gray-400"
@@ -150,9 +146,7 @@ export default function Ver() {
   const [tabLineOrigin, setTabLineOrigin] = useState("0%");
   const [tabSlideDir, setTabSlideDir] = useState(1);
   const tabsRowRef = useRef<HTMLDivElement>(null);
-  const tabBtnRefs = useRef<Partial<Record<Tab, HTMLButtonElement | null>>>(
-    {},
-  );
+  const tabBtnRefs = useRef<Partial<Record<Tab, HTMLButtonElement | null>>>({});
   const prevTabRef = useRef<Tab>("Sede");
 
   const medirOrigenLinea = useCallback((tab: Tab) => {
@@ -163,8 +157,7 @@ export default function Ver() {
     const btnRect = btn.getBoundingClientRect();
     if (rowRect.width <= 0) return;
     const centro =
-      ((btnRect.left + btnRect.width / 2 - rowRect.left) / rowRect.width) *
-      100;
+      ((btnRect.left + btnRect.width / 2 - rowRect.left) / rowRect.width) * 100;
     setTabLineOrigin(`${Math.min(100, Math.max(0, centro))}%`);
   }, []);
 
@@ -314,9 +307,7 @@ export default function Ver() {
 
   const lideresVisibles = (() => {
     const base = liderSimulado ? [liderSimulado, ...lideres] : lideres;
-    return base.filter(
-      (l) => l.rol !== "DOCUMENTADOR" && !esUsuarioSede(l),
-    );
+    return base.filter((l) => l.rol !== "DOCUMENTADOR" && !esUsuarioSede(l));
   })();
 
   const totalLideresRegistrados = allUsers.filter(
@@ -415,10 +406,7 @@ export default function Ver() {
   };
 
   const cambiarTab = (tab: Tab) => {
-    if (
-      soloLecturaSede &&
-      (tab === "Mensajes" || tab === "Administrativos")
-    ) {
+    if (soloLecturaSede && (tab === "Mensajes" || tab === "Administrativos")) {
       return;
     }
     const prev = prevTabRef.current;
@@ -472,7 +460,7 @@ export default function Ver() {
                 }`}
                 onClick={puedeSimular ? handleSimular : undefined}
               >
-                Gestión de Datos 📊
+                Gestión de Datos
               </h1>
               {puedeSimular && (
                 <span className="pointer-events-none absolute left-0 top-full z-50 mt-2 scale-95 whitespace-nowrap rounded-md bg-gray-900/95 dark:bg-gray-100 dark:text-gray-900 px-3 py-1.5 text-xs font-medium text-white opacity-0 shadow-lg translate-y-1 transition-all duration-300 ease-out group-hover:scale-100 group-hover:opacity-100 group-hover:translate-y-0 group-hover:delay-100">
@@ -563,7 +551,11 @@ export default function Ver() {
             <div className="mb-6 w-full min-w-0 bg-white dark:bg-neutral-950">
               <div
                 ref={tabsRowRef}
-                className="flex items-end gap-0.5 overflow-x-auto w-full min-w-0 pb-0"
+                className={`w-full min-w-0 pb-0 gap-0.5 ${
+                  esAdminOSuper
+                    ? "grid grid-cols-3 md:flex md:flex-nowrap md:items-end"
+                    : "grid grid-cols-2 md:flex md:flex-nowrap md:items-end"
+                }`}
               >
                 {(
                   [
@@ -625,7 +617,7 @@ export default function Ver() {
                         {activo && (
                           <motion.span
                             layoutId="pestana-orilla"
-                            className={`pointer-events-none absolute inset-0 z-0 rounded-t-lg border-[3px] border-b-0 ${TAB_THEMES[tab.id].activeBorder}`}
+                            className={`pointer-events-none absolute inset-0 z-0 rounded-t-md md:rounded-t-lg border-2 md:border-[3px] border-b-0 ${TAB_THEMES[tab.id].activeBorder}`}
                             transition={{
                               type: "spring",
                               stiffness: 260,
@@ -639,17 +631,17 @@ export default function Ver() {
                           animate={activo ? { scale: 1.08 } : { scale: 1 }}
                           transition={{ duration: 0.45, ease: tabEase }}
                         >
-                          <Icon className="w-4 h-4 md:w-5 md:h-5 shrink-0" />
+                          <Icon className="w-3.5 h-3.5 md:w-5 md:h-5 shrink-0" />
                         </motion.span>
-                        <span className="relative z-10 truncate max-w-full">
+                        <span className="relative z-10 truncate max-w-full text-center">
                           {tab.label}
                         </span>
                       </motion.button>
                     );
                   })}
               </div>
-              {/* Línea 3px: crece desde la pestaña elegida */}
-              <div className="relative h-[3px] w-full overflow-hidden bg-gray-200 dark:bg-neutral-700">
+              {/* Línea: crece desde la pestaña elegida */}
+              <div className="relative h-[2px] md:h-[3px] w-full overflow-hidden bg-gray-200 dark:bg-neutral-700">
                 <motion.div
                   key={activeTab}
                   className={`absolute inset-0 ${TAB_THEMES[activeTab].lineBg}`}
@@ -804,7 +796,7 @@ export default function Ver() {
               <div className="flex justify-between items-center px-6 py-3 border-b dark:border-neutral-800 shrink-0 bg-white dark:bg-neutral-900 z-10">
                 <div className="flex flex-col">
                   <h3 className="text-base md:text-xl font-bold uppercase leading-none text-gray-900 dark:text-gray-100">
-                    Estadísticas Generales 📊
+                    Estadísticas Generales
                   </h3>
                   <p className="text-[9px] text-gray-500 dark:text-gray-400 font-bold uppercase mt-1">
                     Análisis global de {afiliados.length} registros
