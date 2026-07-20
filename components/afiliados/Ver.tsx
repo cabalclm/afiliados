@@ -5,7 +5,13 @@ import { toast } from "@/lib/toast";
 import { Building2, Search, X } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useRouter } from "next/navigation";
-import { Fragment, useState } from "react";
+import {
+  Fragment,
+  useCallback,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import {
   PiBriefcaseDuotone,
   PiBuildingsDuotone,
@@ -109,12 +115,21 @@ const TAB_THEMES: Record<
 
 const tabEase = [0.25, 0.46, 0.45, 0.94] as const;
 
+const TAB_ORDER: Tab[] = [
+  "Sede",
+  "Lideres",
+  "Trabajadores",
+  "Afiliados",
+  "Administrativos",
+  "Mensajes",
+];
+
 const tabBtnClass = (active: boolean, tab: Tab) => {
   const theme = TAB_THEMES[tab];
-  return `relative flex w-[9.5rem] md:w-52 shrink-0 flex-col md:flex-row items-center justify-center gap-1 md:gap-2 px-2 md:px-3 py-2.5 text-[10px] md:text-sm font-semibold rounded-t-lg -mb-px border-b-0 transition-colors duration-300 ${
+  return `relative flex w-[9.5rem] md:w-52 shrink-0 flex-col md:flex-row items-center justify-center gap-1 md:gap-2 px-2 md:px-3 py-2.5 text-[10px] md:text-sm font-semibold rounded-t-lg -mb-px border-[3px] border-transparent border-b-0 bg-white dark:bg-neutral-950 transition-colors duration-500 ${
     active
-      ? `z-10 border-[3px] bg-white dark:bg-neutral-950 ${theme.activeBorder} ${theme.activeText}`
-      : `z-0 border-[3px] border-transparent bg-white dark:bg-neutral-950 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-neutral-900`
+      ? `z-10 ${theme.activeText}`
+      : `z-0 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-neutral-900`
   }`;
 };
 
@@ -132,6 +147,26 @@ export default function Ver() {
   const queryClient = useQueryClient();
 
   const [activeTab, setActiveTab] = useState<Tab>("Sede");
+  const [tabLineOrigin, setTabLineOrigin] = useState("0%");
+  const [tabSlideDir, setTabSlideDir] = useState(1);
+  const tabsRowRef = useRef<HTMLDivElement>(null);
+  const tabBtnRefs = useRef<Partial<Record<Tab, HTMLButtonElement | null>>>(
+    {},
+  );
+  const prevTabRef = useRef<Tab>("Sede");
+
+  const medirOrigenLinea = useCallback((tab: Tab) => {
+    const row = tabsRowRef.current;
+    const btn = tabBtnRefs.current[tab];
+    if (!row || !btn) return;
+    const rowRect = row.getBoundingClientRect();
+    const btnRect = btn.getBoundingClientRect();
+    if (rowRect.width <= 0) return;
+    const centro =
+      ((btnRect.left + btnRect.width / 2 - rowRect.left) / rowRect.width) *
+      100;
+    setTabLineOrigin(`${Math.min(100, Math.max(0, centro))}%`);
+  }, []);
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isEstadisticasOpen, setIsEstadisticasOpen] = useState(false);
@@ -292,6 +327,22 @@ export default function Ver() {
   const totalMiembrosGeneral =
     totalAfiliadosSede + totalAfiliadosLideres + totalAfiliadosTrabajadores;
 
+  useLayoutEffect(() => {
+    medirOrigenLinea(activeTab);
+    const onResize = () => medirOrigenLinea(activeTab);
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, [
+    activeTab,
+    medirOrigenLinea,
+    esAdminOSuper,
+    totalLideresRegistrados,
+    totalEmpleadosRegistrados,
+    totalAdministrativosRegistrados,
+    totalMiembrosGeneral,
+    totalAfiliadosSede,
+  ]);
+
   const cargandoLideres = isDashboardLoading;
   const cargandoMiembros = isLoadingAfiliados || cargandoLideres;
 
@@ -370,6 +421,12 @@ export default function Ver() {
     ) {
       return;
     }
+    const prev = prevTabRef.current;
+    const prevIdx = TAB_ORDER.indexOf(prev);
+    const nextIdx = TAB_ORDER.indexOf(tab);
+    setTabSlideDir(nextIdx >= prevIdx ? 1 : -1);
+    prevTabRef.current = tab;
+    medirOrigenLinea(tab);
     setActiveTab(tab);
     setLiderParaCelula(null);
   };
@@ -504,7 +561,10 @@ export default function Ver() {
               totalTrabajadores={totalAfiliadosTrabajadores}
             />
             <div className="mb-6 w-full min-w-0 bg-white dark:bg-neutral-950">
-              <div className="flex items-end gap-0.5 overflow-x-auto w-full min-w-0 pb-0">
+              <div
+                ref={tabsRowRef}
+                className="flex items-end gap-0.5 overflow-x-auto w-full min-w-0 pb-0"
+              >
                 {(
                   [
                     {
@@ -553,57 +613,63 @@ export default function Ver() {
                       <motion.button
                         key={tab.id}
                         type="button"
+                        ref={(el) => {
+                          tabBtnRefs.current[tab.id] = el;
+                        }}
                         onClick={() => cambiarTab(tab.id)}
                         className={tabBtnClass(activo, tab.id)}
                         whileHover={{ y: activo ? 0 : -2 }}
                         whileTap={{ scale: 0.98 }}
-                        animate={
-                          activo
-                            ? { y: 0, scale: 1 }
-                            : { y: 0, scale: 1 }
-                        }
-                        transition={{ duration: 0.25, ease: tabEase }}
+                        transition={{ duration: 0.45, ease: tabEase }}
                       >
+                        {activo && (
+                          <motion.span
+                            layoutId="pestana-orilla"
+                            className={`pointer-events-none absolute inset-0 z-0 rounded-t-lg border-[3px] border-b-0 ${TAB_THEMES[tab.id].activeBorder}`}
+                            transition={{
+                              type: "spring",
+                              stiffness: 260,
+                              damping: 28,
+                              mass: 0.85,
+                            }}
+                          />
+                        )}
                         <motion.span
-                          className={tabIconClass(activo, tab.id)}
-                          animate={
-                            activo
-                              ? { scale: 1.08 }
-                              : { scale: 1 }
-                          }
-                          transition={{ duration: 0.25, ease: tabEase }}
+                          className={`relative z-10 ${tabIconClass(activo, tab.id)}`}
+                          animate={activo ? { scale: 1.08 } : { scale: 1 }}
+                          transition={{ duration: 0.45, ease: tabEase }}
                         >
                           <Icon className="w-4 h-4 md:w-5 md:h-5 shrink-0" />
                         </motion.span>
-                        <span className="truncate max-w-full">{tab.label}</span>
+                        <span className="relative z-10 truncate max-w-full">
+                          {tab.label}
+                        </span>
                       </motion.button>
                     );
                   })}
               </div>
-              {/* Línea: mismo color y grosor (3px) que el borde de la pestaña */}
+              {/* Línea 3px: crece desde la pestaña elegida */}
               <div className="relative h-[3px] w-full overflow-hidden bg-gray-200 dark:bg-neutral-700">
-                <AnimatePresence mode="wait" initial={false}>
-                  <motion.div
-                    key={activeTab}
-                    className={`absolute inset-0 ${TAB_THEMES[activeTab].lineBg}`}
-                    initial={{ scaleX: 0.35, opacity: 0 }}
-                    animate={{ scaleX: 1, opacity: 1 }}
-                    exit={{ scaleX: 0.35, opacity: 0 }}
-                    transition={{ duration: 0.35, ease: tabEase }}
-                    style={{ transformOrigin: "center" }}
-                  />
-                </AnimatePresence>
+                <motion.div
+                  key={activeTab}
+                  className={`absolute inset-0 ${TAB_THEMES[activeTab].lineBg}`}
+                  initial={{ scaleX: 0 }}
+                  animate={{ scaleX: 1 }}
+                  transition={{ duration: 0.6, ease: tabEase }}
+                  style={{ transformOrigin: tabLineOrigin }}
+                />
               </div>
             </div>
 
-            <AnimatePresence mode="wait" initial={false}>
+            <AnimatePresence mode="wait" initial={false} custom={tabSlideDir}>
               {liderParaCelula && activeTab !== "Sede" ? (
                 <motion.div
                   key={`celula-${liderParaCelula.id}`}
-                  initial={{ opacity: 0, y: 14 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  transition={{ duration: 0.3, ease: tabEase }}
+                  custom={tabSlideDir}
+                  initial={{ opacity: 0, x: tabSlideDir * 36 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: tabSlideDir * -28 }}
+                  transition={{ duration: 0.45, ease: tabEase }}
                 >
                   <Celula
                     embedded
@@ -621,10 +687,11 @@ export default function Ver() {
               ) : (
                 <motion.div
                   key={activeTab}
-                  initial={{ opacity: 0, y: 14 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  transition={{ duration: 0.3, ease: tabEase }}
+                  custom={tabSlideDir}
+                  initial={{ opacity: 0, x: tabSlideDir * 40 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: tabSlideDir * -32 }}
+                  transition={{ duration: 0.45, ease: tabEase }}
                 >
                   {activeTab === "Sede" &&
                     (sedeUsuario ? (
