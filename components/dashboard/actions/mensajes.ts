@@ -53,6 +53,37 @@ async function resolverUserIdsPorNivel(nivel: string): Promise<string[]> {
     );
 }
 
+/** Devuelve los user_id cuyo rol (nombre) está en `roles`. */
+async function resolverUserIdsPorRol(roles: string[]): Promise<string[]> {
+  const rolesUpper = new Set(roles.map((r) => r.toUpperCase()));
+  const { data, error } = await supabaseAdmin
+    .from("info_perfil")
+    .select("user_id, roles!inner ( nombre )");
+
+  if (error) {
+    console.error("[mensajes] Error resolviendo usuarios por rol:", error.message);
+    return [];
+  }
+
+  return (data || [])
+    .filter((p: any) =>
+      rolesUpper.has(String(p.roles?.nombre || "").toUpperCase()),
+    )
+    .map((p: any) => p.user_id as string);
+}
+
+async function obtenerRolUsuario(userId: string): Promise<string> {
+  const { data } = await supabaseAdmin
+    .from("info_perfil")
+    .select("roles ( nombre )")
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  const roles = data?.roles as { nombre?: string } | { nombre?: string }[] | null;
+  if (Array.isArray(roles)) return roles[0]?.nombre || "";
+  return roles?.nombre || "";
+}
+
 export async function enviarMensajeAction(
   input: EnviarMensajeInput,
 ) {
@@ -93,6 +124,10 @@ export async function enviarMensajeAction(
       userIds = undefined;
     } else if (publico_objetivo === "Usuarios Específicos") {
       userIds = usuarios_especificos;
+    } else if (publico_objetivo === "Lideres") {
+      userIds = await resolverUserIdsPorRol(["LIDER"]);
+    } else if (publico_objetivo === "Empleados") {
+      userIds = await resolverUserIdsPorRol(["EMPLEADO", "TRABAJADOR"]);
     } else {
       userIds = await resolverUserIdsPorNivel(publico_objetivo);
     }
@@ -118,10 +153,18 @@ function mensajeAplicaAlUsuario(
   },
   userId: string,
   nivelCompromiso: string,
+  rolUsuario: string,
 ) {
   if (mensaje.publico_objetivo === "Todos") return true;
   if (mensaje.publico_objetivo === "Usuarios Específicos") {
     return mensaje.usuarios_especificos?.includes(userId) ?? false;
+  }
+  if (mensaje.publico_objetivo === "Lideres") {
+    return (rolUsuario || "").toUpperCase() === "LIDER";
+  }
+  if (mensaje.publico_objetivo === "Empleados") {
+    const r = (rolUsuario || "").toUpperCase();
+    return r === "EMPLEADO" || r === "TRABAJADOR";
   }
   return (
     mensaje.publico_objetivo?.toUpperCase() === nivelCompromiso?.toUpperCase()
@@ -141,16 +184,20 @@ async function obtenerMensajesPendientesParaUsuario(
 
   if (errorMensaje || !mensajes?.length) return [];
 
-  const { data: lecturas } = await supabase
-    .from("sis_mensajes_lecturas")
-    .select("mensaje_id")
-    .eq("user_id", userId);
+  const [{ data: lecturas }, rolUsuario] = await Promise.all([
+    supabase
+      .from("sis_mensajes_lecturas")
+      .select("mensaje_id")
+      .eq("user_id", userId),
+    obtenerRolUsuario(userId),
+  ]);
 
   const leidosIds = new Set((lecturas || []).map((l) => l.mensaje_id));
 
   return mensajes.filter(
     (m) =>
-      !leidosIds.has(m.id) && mensajeAplicaAlUsuario(m, userId, nivelCompromiso),
+      !leidosIds.has(m.id) &&
+      mensajeAplicaAlUsuario(m, userId, nivelCompromiso, rolUsuario),
   );
 }
 
