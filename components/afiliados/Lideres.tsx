@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { Button } from "@/components/ui/button";
 import Swal from "@/lib/swal";
 import {
   ChevronLeft,
@@ -44,7 +43,6 @@ interface Props {
   searchTerm: string;
   idUsuarioSesion: string;
   isLoading?: boolean;
-  showRole?: boolean;
 }
 
 function LideresSkeleton({ esAdminOSuper }: { esAdminOSuper: boolean }) {
@@ -76,7 +74,6 @@ export default function Lideres({
   searchTerm,
   idUsuarioSesion,
   isLoading = false,
-  showRole = false,
 }: Props) {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState<number | "all">(10);
@@ -164,11 +161,6 @@ export default function Lideres({
 
   return (
     <>
-      <div className="text-[10px] text-blue-500 font-bold mb-2">
-        {isLider ? "Haz click para ver tu célula 🤳" : "Haz click para ver una celula 🤳"}
-      </div>
-
-      {/* Lista de Tarjetas en una sola columna */}
       <div className="flex flex-col gap-3">
         <AnimatePresence initial={false}>
         {lideresPaginados.map((lider, index) => {
@@ -215,139 +207,141 @@ export default function Lideres({
                   : undefined
               }
               transition={{ duration: 0.45, ease: [0.25, 0.46, 0.45, 0.94] }}
-              className={`flex flex-row items-stretch md:items-center border rounded-xl overflow-hidden shadow-sm ${getRowClass(lider)}`}
+              className={`flex flex-col border rounded-xl overflow-hidden shadow-sm ${getRowClass(lider)}`}
             >
-              {/* Contenedor Principal */}
-              <div 
-                className={`flex-1 p-4 flex flex-col md:flex-row md:items-center gap-4 ${isLider && lider.id !== idUsuarioSesion ? "" : "cursor-pointer"}`}
+              <div
+                className={`p-4 pb-2 flex flex-col gap-3 ${isLider && lider.id !== idUsuarioSesion ? "" : "cursor-pointer"}`}
                 onClick={() => {
-                   if (isLider && lider.id !== idUsuarioSesion) return;
-                   onVerCelula(lider);
+                  if (isLider && lider.id !== idUsuarioSesion) return;
+                  onVerCelula(lider);
                 }}
               >
-                {/* No. y Nombre */}
-                <div className="flex items-center gap-3 min-w-0 md:w-1/3">
-                  <div className={`flex items-center justify-center w-8 h-8 rounded-lg text-xs font-black shrink-0 ${
-                    esSede
-                      ? "bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-400"
-                      : "bg-gray-50 dark:bg-neutral-800 text-gray-400 dark:text-gray-500"
-                  }`}>
-                    {esSede ? <Building2 className="h-4 w-4" /> : startIndex + index + 1}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <h3 className={`font-black text-sm md:text-base leading-tight truncate ${
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                    <div
+                      className={`flex items-center justify-center w-8 h-8 rounded-lg text-xs font-black shrink-0 ${
                         esSede
-                          ? "text-blue-900 dark:text-blue-300"
-                          : lider.id === idUsuarioSesion
-                            ? "text-blue-900 dark:text-blue-400"
-                            : "text-gray-900 dark:text-gray-100"
-                      }`}>
-                        {lider.nombres} {lider.apellidos}
-                      </h3>
-                      {esSede && (
-                        <span className="text-[8px] bg-blue-200 dark:bg-blue-900/60 text-blue-900 dark:text-blue-300 px-1.5 py-0.5 rounded-full font-black uppercase shrink-0">
-                          Sede
-                        </span>
+                          ? "bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-400"
+                          : "bg-blue-50 dark:bg-neutral-800 text-blue-600 dark:text-blue-400"
+                      }`}
+                    >
+                      {esSede ? (
+                        <Building2 className="h-4 w-4" />
+                      ) : (
+                        startIndex + index + 1
                       )}
                     </div>
-                    <div className="flex items-center gap-2 mt-1">
-                      <p className="text-[10px] md:text-xs text-gray-500 italic lowercase truncate">
-                        {lider.email}
-                      </p>
-                      {showRole && (
-                        <span className="text-[8px] bg-gray-100 dark:bg-neutral-800 text-gray-600 dark:text-gray-400 px-1.5 py-0.5 rounded-full font-bold uppercase shrink-0">
-                          {lider.rol}
-                        </span>
-                      )}
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <h3
+                          className={`font-black text-sm md:text-base leading-tight truncate ${
+                            esSede
+                              ? "text-blue-900 dark:text-blue-300"
+                              : lider.id === idUsuarioSesion
+                                ? "text-blue-900 dark:text-blue-400"
+                                : "text-gray-900 dark:text-gray-100"
+                          }`}
+                        >
+                          {lider.nombres} {lider.apellidos}
+                        </h3>
+                        {esSede && (
+                          <span className="text-[8px] bg-blue-200 dark:bg-blue-900/60 text-blue-900 dark:text-blue-300 px-1.5 py-0.5 rounded-full font-black uppercase shrink-0">
+                            Sede
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                {/* Meta / Progreso */}
-                <div className="flex-1 max-w-md">
-                  {esSede ? (
-                    <div className="flex items-center justify-between gap-3">
-                      <span className="text-[10px] font-black text-gray-400 uppercase">
-                        Afiliados en sede
-                      </span>
-                      <span className="text-sm md:text-base font-black text-blue-700 dark:text-blue-400">
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span className="text-sm md:text-base font-black tabular-nums">
+                      <span
+                        className={
+                          esSede
+                            ? "text-blue-600 dark:text-blue-400"
+                            : textoColor
+                        }
+                      >
                         {totalEnGrupo.toLocaleString()}
                       </span>
-                    </div>
-                  ) : (
-                    <>
-                      <div className="flex justify-between items-end mb-1">
-                        <span className="text-[10px] font-black text-gray-400 uppercase">
-                          Nivel de compromiso: <span className={textoColor}>{nivelCompromiso}</span>
-                        </span>
-                        <span className={`text-sm md:text-base font-black ${textoColor}`}>
-                          {totalEnGrupo}/{META_CELULA}
-                        </span>
+                      <span className="text-gray-900 dark:text-gray-100">
+                        /
+                        {esSede
+                          ? totalEnGrupo.toLocaleString()
+                          : META_CELULA}
+                      </span>
+                    </span>
+                    {puedeGestionarUsuarios && (
+                      <div onClick={(e) => e.stopPropagation()}>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <button
+                              type="button"
+                              className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 dark:hover:bg-neutral-800"
+                              aria-label="Acciones"
+                            >
+                              <MoreVertical className="h-4 w-4" />
+                            </button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-44">
+                            <DropdownMenuItem
+                              className="cursor-pointer gap-2"
+                              onClick={() => onEditar(lider)}
+                            >
+                              <Pencil className="h-4 w-4" />
+                              Editar
+                            </DropdownMenuItem>
+                            {esAdminOSuper && (
+                              <>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                  className="cursor-pointer gap-2 text-red-600 focus:text-red-600"
+                                  onClick={() => {
+                                    if (tieneAfiliados) {
+                                      Swal.fire({
+                                        icon: "error",
+                                        title: "Acción no permitida",
+                                        text: "Sólo se puede eliminar un líder sin integrantes",
+                                        confirmButtonColor: "#3b82f6",
+                                      });
+                                    } else {
+                                      eliminar(lider, onDataChange);
+                                    }
+                                  }}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                  Eliminar
+                                </DropdownMenuItem>
+                              </>
+                            )}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </div>
-                      <div className="w-full bg-gray-100 dark:bg-neutral-800 rounded-full h-2 border dark:border-neutral-700 overflow-hidden">
-                        <motion.div
-                          initial={{ width: 0 }}
-                          animate={{ width: `${progreso}%` }}
-                          className={`${colorBarra} h-full rounded-full shadow-sm`}
-                        />
-                      </div>
-                    </>
-                  )}
+                    )}
+                  </div>
                 </div>
 
+                <div className="w-full bg-gray-100 dark:bg-neutral-800 rounded-full h-2 border dark:border-neutral-700 overflow-hidden">
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{
+                      width: esSede ? "100%" : `${progreso}%`,
+                    }}
+                    className={`${esSede ? "bg-blue-500" : colorBarra} h-full rounded-full shadow-sm`}
+                  />
+                </div>
+
+                {!esSede && (
+                  <div className="flex justify-end">
+                    <span className="text-sm md:text-base tracking-wide text-right text-gray-500 dark:text-gray-400 font-bold normal-case">
+                      Nivel de compromiso:{" "}
+                      <span className={`font-black ${textoColor}`}>
+                        {nivelCompromiso}
+                      </span>
+                    </span>
+                  </div>
+                )}
               </div>
-
-              {puedeGestionarUsuarios && (
-                <div
-                  className="flex items-center justify-end px-3 py-2 md:border-l border-gray-100 dark:border-neutral-800"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <button
-                        type="button"
-                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 dark:hover:bg-neutral-800"
-                        aria-label="Acciones"
-                      >
-                        <MoreVertical className="h-5 w-5" />
-                      </button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-44">
-                      <DropdownMenuItem
-                        className="cursor-pointer gap-2"
-                        onClick={() => onEditar(lider)}
-                      >
-                        <Pencil className="h-4 w-4" />
-                        Editar
-                      </DropdownMenuItem>
-                      {esAdminOSuper && (
-                        <>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            className="cursor-pointer gap-2 text-red-600 focus:text-red-600"
-                            onClick={() => {
-                              if (tieneAfiliados) {
-                                Swal.fire({
-                                  icon: "error",
-                                  title: "Acción no permitida",
-                                  text: "Sólo se puede eliminar un líder sin integrantes",
-                                  confirmButtonColor: "#3b82f6",
-                                });
-                              } else {
-                                eliminar(lider, onDataChange);
-                              }
-                            }}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                            Eliminar
-                          </DropdownMenuItem>
-                        </>
-                      )}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-              )}
             </motion.div>
           );
         })}
@@ -355,45 +349,44 @@ export default function Lideres({
       </div>
 
       {/* Paginación */}
-      <div className="flex flex-col md:flex-row items-center justify-center gap-6 mt-8">
-        <div className="flex items-center gap-3">
-          <Button
-            size="sm"
-            variant="outline"
-            className="w-10 h-10 rounded-xl border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 hover:bg-blue-50 dark:hover:bg-blue-900/30 text-blue-600 dark:text-blue-400 transition-all shadow-sm"
+      <div className="flex items-center justify-center gap-4 mt-8 mb-12">
+        <div className="flex items-center gap-2 text-sm">
+          <button
+            type="button"
+            aria-label="Página anterior"
+            className="p-1 rounded text-blue-600 dark:text-blue-400 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-blue-50 dark:hover:bg-blue-950/40 transition-colors"
             onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
             disabled={currentPage === 1 || itemsPerPage === "all"}
           >
-            <ChevronLeft className="h-5 w-5" />
-          </Button>
-          <div className="bg-white dark:bg-neutral-900 px-4 py-2 rounded-xl border border-gray-100 dark:border-neutral-800 shadow-sm min-w-[120px] text-center">
-            <span className="text-sm font-black text-gray-900 dark:text-gray-100">{currentPage} / {totalPages || 1}</span>
-          </div>
-          <Button
-            size="sm"
-            variant="outline"
-            className="w-10 h-10 rounded-xl border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 hover:bg-blue-50 dark:hover:bg-blue-900/30 text-blue-600 dark:text-blue-400 transition-all shadow-sm"
+            <ChevronLeft className="h-4 w-4" />
+          </button>
+          <span className="font-semibold text-gray-800 dark:text-gray-200 tabular-nums min-w-[2.5rem] text-center">
+            {currentPage}/{totalPages || 1}
+          </span>
+          <button
+            type="button"
+            aria-label="Página siguiente"
+            className="p-1 rounded text-blue-600 dark:text-blue-400 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-blue-50 dark:hover:bg-blue-950/40 transition-colors"
             onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
             disabled={currentPage === totalPages || itemsPerPage === "all"}
           >
-            <ChevronRight className="h-5 w-5" />
-          </Button>
+            <ChevronRight className="h-4 w-4" />
+          </button>
         </div>
 
-        <div className="flex items-center gap-2 bg-white dark:bg-neutral-900 px-4 py-2 rounded-xl border border-gray-100 dark:border-neutral-800 shadow-sm">
-          <select
-            value={itemsPerPage}
-            onChange={(e) => {
-              const val = e.target.value;
-              setItemsPerPage(val === "all" ? "all" : parseInt(val));
-            }}
-            className="text-sm font-black outline-none bg-transparent cursor-pointer uppercase text-blue-600 dark:text-blue-400 focus:ring-0"
-          >
-            <option value={10}>10</option>
-            <option value={50}>50</option>
-            <option value="all">Todos</option>
-          </select>
-        </div>
+        <select
+          value={itemsPerPage}
+          onChange={(e) => {
+            const val = e.target.value;
+            setItemsPerPage(val === "all" ? "all" : parseInt(val));
+          }}
+          className="text-sm border border-gray-200 dark:border-neutral-700 rounded-md px-2 py-1 bg-white dark:bg-neutral-900 text-gray-700 dark:text-gray-300 outline-none cursor-pointer"
+          aria-label="Cantidad por página"
+        >
+          <option value={10}>10</option>
+          <option value={50}>50</option>
+          <option value="all">Todos</option>
+        </select>
       </div>
     </>
   );

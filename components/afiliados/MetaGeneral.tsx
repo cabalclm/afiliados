@@ -4,7 +4,7 @@ import { Building2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { PiBriefcaseDuotone, PiMedalDuotone } from "react-icons/pi";
 
-const OBJETIVO_GENERAL = 2250;
+const OBJETIVO_GENERAL = 3000;
 
 interface Props {
   totalSede: number;
@@ -22,16 +22,19 @@ export default function MetaGeneral({
   const progreso = pct(total);
 
   return (
-    <div className="mb-4 w-full space-y-2">
-      <div className="flex justify-between items-end">
-        <span className="text-xs font-bold uppercase text-gray-600 dark:text-gray-400 font-sans">
+    <div className="mb-4 w-full rounded-xl border border-gray-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-4 shadow-sm">
+      <div className="flex justify-between items-end gap-3 mb-2">
+        <span className="text-xs font-bold uppercase tracking-wide text-blue-800 dark:text-blue-400">
           Meta General de Afiliación
         </span>
-        <span className="text-sm font-black text-blue-700 dark:text-blue-400">
-          {total.toLocaleString()} / {OBJETIVO_GENERAL.toLocaleString()}
+        <span className="text-sm md:text-base font-black text-blue-700 dark:text-blue-400 whitespace-nowrap">
+          {total.toLocaleString()} / {OBJETIVO_GENERAL.toLocaleString()}{" "}
+          <span className="text-gray-500 dark:text-gray-400 font-bold">
+            ({progreso.toFixed(1)}%)
+          </span>
         </span>
       </div>
-      <div className="w-full bg-gray-200 dark:bg-neutral-800 rounded-full h-2.5 overflow-hidden flex items-center relative">
+      <div className="w-full bg-gray-200 dark:bg-neutral-800 rounded-full h-3 overflow-hidden flex items-center relative">
         <motion.div
           initial={{ width: 0 }}
           animate={{ width: `${pct(totalSede)}%` }}
@@ -51,21 +54,23 @@ export default function MetaGeneral({
           className="bg-violet-500 h-full shrink-0"
         />
       </div>
-      <div className="flex flex-wrap items-center gap-4 text-[11px] font-bold uppercase">
-        <span className="flex items-center gap-1.5 text-blue-700 dark:text-blue-400">
-          <Building2 className="h-3.5 w-3.5 shrink-0" />
-          Sede: {totalSede.toLocaleString()}
-        </span>
-        <span className="flex items-center gap-1.5 text-orange-600 dark:text-orange-400">
-          <PiMedalDuotone className="h-3.5 w-3.5 shrink-0" />
-          Líderes: {totalLideres.toLocaleString()}
-        </span>
-        <span className="flex items-center gap-1.5 text-violet-600 dark:text-violet-400">
-          <PiBriefcaseDuotone className="h-3.5 w-3.5 shrink-0" />
-          Empleados: {totalTrabajadores.toLocaleString()}
-        </span>
-        <span className="font-black text-gray-900 dark:text-gray-100 normal-case">
-          Total: {total.toLocaleString()} ({progreso.toFixed(1)}%)
+      <div className="flex flex-wrap items-center justify-between gap-3 mt-2.5 text-[11px] font-bold uppercase">
+        <div className="flex flex-wrap items-center gap-4">
+          <span className="flex items-center gap-1.5 text-blue-700 dark:text-blue-400">
+            <Building2 className="h-3.5 w-3.5 shrink-0" />
+            Sede: {totalSede.toLocaleString()}
+          </span>
+          <span className="flex items-center gap-1.5 text-orange-600 dark:text-orange-400">
+            <PiMedalDuotone className="h-3.5 w-3.5 shrink-0" />
+            Líderes: {totalLideres.toLocaleString()}
+          </span>
+          <span className="flex items-center gap-1.5 text-violet-600 dark:text-violet-400">
+            <PiBriefcaseDuotone className="h-3.5 w-3.5 shrink-0" />
+            Empleados: {totalTrabajadores.toLocaleString()}
+          </span>
+        </div>
+        <span className="font-black text-gray-900 dark:text-gray-100 normal-case text-xs">
+          Total: {total.toLocaleString()}
         </span>
       </div>
     </div>

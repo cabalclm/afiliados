@@ -3,19 +3,19 @@
 import { Button } from "@/components/ui/button";
 import { toast } from "@/lib/toast";
 import { AnimatePresence, motion } from "framer-motion";
-import { Building2, Search, X } from "lucide-react";
-import { useRouter } from "next/navigation";
 import {
-  Fragment,
-  useCallback,
-  useLayoutEffect,
-  useRef,
-  useState,
-} from "react";
+  BarChart3,
+  Building2,
+  Search,
+  X,
+} from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Fragment, useRef, useState, type ReactNode } from "react";
 import {
   PiBriefcaseDuotone,
   PiBuildingsDuotone,
   PiChatCircleDotsDuotone,
+  PiCodeDuotone,
   PiMedalDuotone,
   PiShieldCheckDuotone,
   PiUsersThreeDuotone,
@@ -58,54 +58,60 @@ const TAB_THEMES: Record<
   Tab,
   {
     activeText: string;
-    activeBorder: string;
     activeIconBg: string;
     activeIconText: string;
-    /** Mismo tono que activeBorder, para la línea de 3px */
+    activeBadgeBg: string;
+    activeBadgeText: string;
     lineBg: string;
   }
 > = {
   Sede: {
-    activeText: "text-blue-700 dark:text-blue-400",
-    activeBorder: "border-blue-300 dark:border-blue-700",
+    activeText: "text-blue-600 dark:text-blue-400",
     activeIconBg: "bg-blue-100 dark:bg-blue-950/60",
-    activeIconText: "text-blue-700 dark:text-blue-400",
-    lineBg: "bg-blue-300 dark:bg-blue-700",
+    activeIconText: "text-blue-600 dark:text-blue-400",
+    activeBadgeBg: "bg-blue-100 dark:bg-blue-950/60",
+    activeBadgeText: "text-blue-700 dark:text-blue-300",
+    lineBg: "bg-blue-500 dark:bg-blue-400",
   },
   Lideres: {
     activeText: "text-orange-600 dark:text-orange-400",
-    activeBorder: "border-orange-300 dark:border-orange-700",
     activeIconBg: "bg-orange-100 dark:bg-orange-950/60",
     activeIconText: "text-orange-600 dark:text-orange-400",
-    lineBg: "bg-orange-300 dark:bg-orange-700",
+    activeBadgeBg: "bg-orange-100 dark:bg-orange-950/60",
+    activeBadgeText: "text-orange-700 dark:text-orange-300",
+    lineBg: "bg-orange-500 dark:bg-orange-400",
   },
   Afiliados: {
     activeText: "text-sky-600 dark:text-sky-400",
-    activeBorder: "border-sky-300 dark:border-sky-700",
     activeIconBg: "bg-sky-100 dark:bg-sky-950/60",
     activeIconText: "text-sky-600 dark:text-sky-400",
-    lineBg: "bg-sky-300 dark:bg-sky-700",
+    activeBadgeBg: "bg-sky-100 dark:bg-sky-950/60",
+    activeBadgeText: "text-sky-700 dark:text-sky-300",
+    lineBg: "bg-sky-500 dark:bg-sky-400",
   },
   Trabajadores: {
     activeText: "text-violet-600 dark:text-violet-400",
-    activeBorder: "border-violet-300 dark:border-violet-700",
     activeIconBg: "bg-violet-100 dark:bg-violet-950/60",
     activeIconText: "text-violet-600 dark:text-violet-400",
-    lineBg: "bg-violet-300 dark:bg-violet-700",
+    activeBadgeBg: "bg-violet-100 dark:bg-violet-950/60",
+    activeBadgeText: "text-violet-700 dark:text-violet-300",
+    lineBg: "bg-violet-500 dark:bg-violet-400",
   },
   Administrativos: {
     activeText: "text-indigo-600 dark:text-indigo-400",
-    activeBorder: "border-indigo-300 dark:border-indigo-700",
     activeIconBg: "bg-indigo-100 dark:bg-indigo-950/60",
     activeIconText: "text-indigo-600 dark:text-indigo-400",
-    lineBg: "bg-indigo-300 dark:bg-indigo-700",
+    activeBadgeBg: "bg-indigo-100 dark:bg-indigo-950/60",
+    activeBadgeText: "text-indigo-700 dark:text-indigo-300",
+    lineBg: "bg-indigo-500 dark:bg-indigo-400",
   },
   Mensajes: {
     activeText: "text-green-600 dark:text-green-400",
-    activeBorder: "border-green-300 dark:border-green-700",
     activeIconBg: "bg-green-100 dark:bg-green-950/60",
     activeIconText: "text-green-600 dark:text-green-400",
-    lineBg: "bg-green-300 dark:bg-green-700",
+    activeBadgeBg: "bg-green-100 dark:bg-green-950/60",
+    activeBadgeText: "text-green-700 dark:text-green-300",
+    lineBg: "bg-green-500 dark:bg-green-400",
   },
 };
 
@@ -122,50 +128,104 @@ const TAB_ORDER: Tab[] = [
 
 const tabBtnClass = (active: boolean, tab: Tab) => {
   const theme = TAB_THEMES[tab];
-  return `relative flex w-full md:w-52 md:shrink-0 flex-row items-center justify-center gap-1 md:gap-2 px-1.5 md:px-3 py-1.5 md:py-2.5 text-[9px] leading-tight md:text-sm font-semibold rounded-t-md md:rounded-t-lg -mb-px border-2 md:border-[3px] border-transparent border-b-0 bg-white dark:bg-neutral-950 transition-colors duration-500 ${
+  return `relative flex w-full md:w-auto md:shrink-0 flex-row items-center justify-center gap-1.5 md:gap-2 px-2 md:px-4 py-2 md:py-3 text-[10px] md:text-sm font-semibold transition-colors duration-300 ${
     active
-      ? `z-10 ${theme.activeText}`
-      : `z-0 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-neutral-900`
+      ? theme.activeText
+      : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
   }`;
 };
 
 const tabIconClass = (active: boolean, tab: Tab) => {
   const theme = TAB_THEMES[tab];
-  return `p-0.5 md:p-1.5 rounded-md transition-colors duration-300 shrink-0 ${
+  return `p-1 md:p-1.5 rounded-md transition-colors duration-300 shrink-0 ${
     active
       ? `${theme.activeIconBg} ${theme.activeIconText}`
+      : "bg-gray-100 dark:bg-neutral-800 text-gray-400 dark:text-gray-500"
+  }`;
+};
+
+const tabBadgeClass = (active: boolean, tab: Tab) => {
+  const theme = TAB_THEMES[tab];
+  return `inline-flex items-center justify-center min-w-[1.125rem] md:min-w-[1.375rem] h-[1.125rem] md:h-[1.375rem] px-1 rounded-full text-[9px] md:text-[11px] font-bold leading-none shrink-0 ${
+    active
+      ? `${theme.activeBadgeBg} ${theme.activeBadgeText}`
       : "bg-gray-100 dark:bg-neutral-800 text-gray-500 dark:text-gray-400"
   }`;
 };
+
+const OBJETIVO_LIDERES = 200;
+
+type RolNuevo = "LIDER" | "EMPLEADO" | "ADMINISTRADOR" | "SUPER";
+
+function BtnNuevoTab({
+  label,
+  icon,
+  onClick,
+  className,
+}: {
+  label: string;
+  icon: ReactNode;
+  onClick: () => void;
+  className: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`inline-flex h-10 items-center justify-center gap-1.5 rounded-lg border px-3 text-xs md:text-sm font-normal whitespace-nowrap transition-colors ${className}`}
+    >
+      <span className="shrink-0 [&>svg]:w-4 [&>svg]:h-4">{icon}</span>
+      {label}
+    </button>
+  );
+}
+
+function BarraPestana({
+  placeholder,
+  value,
+  onChange,
+  acciones,
+}: {
+  placeholder: string;
+  value: string;
+  onChange: (value: string) => void;
+  acciones?: ReactNode;
+}) {
+  return (
+    <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-4">
+      <div className="relative flex-1 min-w-0">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+        <input
+          type="text"
+          placeholder={placeholder}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className="pl-9 pr-4 py-2 h-10 border border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 rounded-lg w-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+      </div>
+      {acciones ? (
+        <div className="flex flex-wrap items-center gap-2 shrink-0">
+          {acciones}
+        </div>
+      ) : null}
+    </div>
+  );
+}
 
 export default function Ver() {
   const router = useRouter();
   const queryClient = useQueryClient();
 
   const [activeTab, setActiveTab] = useState<Tab>("Sede");
-  const [tabLineOrigin, setTabLineOrigin] = useState("0%");
   const [tabSlideDir, setTabSlideDir] = useState(1);
-  const tabsRowRef = useRef<HTMLDivElement>(null);
-  const tabBtnRefs = useRef<Partial<Record<Tab, HTMLButtonElement | null>>>({});
   const prevTabRef = useRef<Tab>("Sede");
-
-  const medirOrigenLinea = useCallback((tab: Tab) => {
-    const row = tabsRowRef.current;
-    const btn = tabBtnRefs.current[tab];
-    if (!row || !btn) return;
-    const rowRect = row.getBoundingClientRect();
-    const btnRect = btn.getBoundingClientRect();
-    if (rowRect.width <= 0) return;
-    const centro =
-      ((btnRect.left + btnRect.width / 2 - rowRect.left) / rowRect.width) * 100;
-    setTabLineOrigin(`${Math.min(100, Math.max(0, centro))}%`);
-  }, []);
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isEstadisticasOpen, setIsEstadisticasOpen] = useState(false);
   const [isSignupModalOpen, setIsSignupModalOpen] = useState(false);
   const [signupFormKey, setSignupFormKey] = useState(0);
   const [modoCrearSede, setModoCrearSede] = useState(false);
+  const [rolNuevoUsuario, setRolNuevoUsuario] = useState<RolNuevo | null>(null);
 
   const [afiliadoParaEditar, setAfiliadoParaEditar] = useState<Afiliado | null>(
     null,
@@ -177,8 +237,15 @@ export default function Ver() {
   >(null);
 
   const [isFirstMemberAddition, setIsFirstMemberAddition] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [busquedaPorTab, setBusquedaPorTab] = useState<Partial<Record<Tab, string>>>(
+    {},
+  );
   const [liderSimulado, setLiderSimulado] = useState<Lider | null>(null);
+
+  const busquedaTab = (tab: Tab) => busquedaPorTab[tab] ?? "";
+  const setBusquedaTab = (tab: Tab, value: string) => {
+    setBusquedaPorTab((prev) => ({ ...prev, [tab]: value }));
+  };
 
   // =====================================================
   // UN SOLO fetch que trae TODO: sesión + usuarios + lugares
@@ -274,10 +341,12 @@ export default function Ver() {
           conteoAfiliados: 0,
         }
       : null);
-  const rolesAdmin =
-    rol === "SUPER" ? ["ADMINISTRADOR", "SUPER"] : ["ADMINISTRADOR"];
+  const rolesAdminVisibles =
+    rolUpper === "SUPER"
+      ? ["ADMIN", "ADMINISTRADOR", "SUPER"]
+      : ["ADMIN", "ADMINISTRADOR"];
   const administrativos = allUsers.filter((u) =>
-    rolesAdmin.includes(u.rol || ""),
+    rolesAdminVisibles.includes((u.rol || "").toUpperCase()),
   );
   const trabajadores = allUsers.filter((u) => {
     const r = (u.rol || "").toUpperCase();
@@ -318,21 +387,18 @@ export default function Ver() {
   const totalMiembrosGeneral =
     totalAfiliadosSede + totalAfiliadosLideres + totalAfiliadosTrabajadores;
 
-  useLayoutEffect(() => {
-    medirOrigenLinea(activeTab);
-    const onResize = () => medirOrigenLinea(activeTab);
-    window.addEventListener("resize", onResize);
-    return () => window.removeEventListener("resize", onResize);
-  }, [
-    activeTab,
-    medirOrigenLinea,
-    esAdminOSuper,
-    totalLideresRegistrados,
-    totalEmpleadosRegistrados,
-    totalAdministrativosRegistrados,
-    totalMiembrosGeneral,
-    totalAfiliadosSede,
-  ]);
+  const cambiarTab = (tab: Tab) => {
+    if (soloLecturaSede && (tab === "Mensajes" || tab === "Administrativos")) {
+      return;
+    }
+    const prev = prevTabRef.current;
+    const prevIdx = TAB_ORDER.indexOf(prev);
+    const nextIdx = TAB_ORDER.indexOf(tab);
+    setTabSlideDir(nextIdx >= prevIdx ? 1 : -1);
+    prevTabRef.current = tab;
+    setActiveTab(tab);
+    setLiderParaCelula(null);
+  };
 
   const cargandoLideres = isDashboardLoading;
   const cargandoMiembros = isLoadingAfiliados || cargandoLideres;
@@ -343,9 +409,10 @@ export default function Ver() {
     queryClient.invalidateQueries({ queryKey: ["afiliados-gl"] });
   };
 
-  const handleOpenCreateLiderModal = () => {
+  const abrirNuevoUsuario = (rol: RolNuevo) => {
     setLiderAEditar(null);
     setModoCrearSede(false);
+    setRolNuevoUsuario(rol);
     setSignupFormKey((k) => k + 1);
     setIsSignupModalOpen(true);
   };
@@ -353,6 +420,7 @@ export default function Ver() {
   const handleOpenCrearSedeModal = () => {
     setLiderAEditar(null);
     setModoCrearSede(true);
+    setRolNuevoUsuario(null);
     setSignupFormKey((k) => k + 1);
     setIsSignupModalOpen(true);
   };
@@ -360,6 +428,7 @@ export default function Ver() {
   const handleOpenEditLiderModal = (lider: Lider) => {
     setLiderAEditar(lider);
     setModoCrearSede(false);
+    setRolNuevoUsuario(null);
     setSignupFormKey((k) => k + 1);
     setIsSignupModalOpen(true);
   };
@@ -368,6 +437,7 @@ export default function Ver() {
     setIsSignupModalOpen(false);
     setLiderAEditar(null);
     setModoCrearSede(false);
+    setRolNuevoUsuario(null);
     queryClient.invalidateQueries({ queryKey: ["lideres"] });
     queryClient.invalidateQueries({ queryKey: ["administrativos"] });
     fetchData();
@@ -377,6 +447,7 @@ export default function Ver() {
     setIsSignupModalOpen(false);
     setLiderAEditar(null);
     setModoCrearSede(false);
+    setRolNuevoUsuario(null);
   };
 
   const handleOpenAnadirAfiliadoModal = (
@@ -405,20 +476,6 @@ export default function Ver() {
     setLiderParaCelula(null);
   };
 
-  const cambiarTab = (tab: Tab) => {
-    if (soloLecturaSede && (tab === "Mensajes" || tab === "Administrativos")) {
-      return;
-    }
-    const prev = prevTabRef.current;
-    const prevIdx = TAB_ORDER.indexOf(prev);
-    const nextIdx = TAB_ORDER.indexOf(tab);
-    setTabSlideDir(nextIdx >= prevIdx ? 1 : -1);
-    prevTabRef.current = tab;
-    medirOrigenLinea(tab);
-    setActiveTab(tab);
-    setLiderParaCelula(null);
-  };
-
   const handleCloseFormModal = () => {
     setIsFormOpen(false);
   };
@@ -438,6 +495,92 @@ export default function Ver() {
     }
   };
 
+  const lideresFaltantes = Math.max(
+    0,
+    OBJETIVO_LIDERES - totalLideresRegistrados,
+  );
+
+  const renderBarraPestana = (tab: Tab) => {
+    const placeholders: Record<Tab, string> = {
+      Sede: "Buscar por nombre o DPI...",
+      Lideres: "Buscar por nombre",
+      Trabajadores: "Buscar por nombre",
+      Afiliados: "Buscar por nombre o DPI",
+      Administrativos: "Buscar por nombre",
+      Mensajes: "Buscar por nombre",
+    };
+
+    let acciones: ReactNode = null;
+
+    if (tab === "Lideres" && puedeCrearLider && !soloLecturaSede) {
+      acciones = (
+        <BtnNuevoTab
+          label="Nuevo Líder"
+          icon={<PiMedalDuotone />}
+          onClick={() => abrirNuevoUsuario("LIDER")}
+          className="border-orange-400 bg-orange-50 text-orange-600 hover:bg-orange-100 dark:border-orange-500 dark:bg-orange-950/50 dark:text-orange-400 dark:hover:bg-orange-950/70"
+        />
+      );
+    }
+
+    if (tab === "Trabajadores" && puedeCrearLider && !soloLecturaSede) {
+      acciones = (
+        <BtnNuevoTab
+          label="Nuevo Empleado"
+          icon={<PiBriefcaseDuotone />}
+          onClick={() => abrirNuevoUsuario("EMPLEADO")}
+          className="border-violet-500 bg-violet-50 text-violet-600 hover:bg-violet-100 dark:border-violet-500 dark:bg-violet-950/50 dark:text-violet-400 dark:hover:bg-violet-950/70"
+        />
+      );
+    }
+
+    if (tab === "Administrativos" && esAdminOSuper) {
+      acciones = (
+        <>
+          <BtnNuevoTab
+            label="Nuevo Admin"
+            icon={<PiShieldCheckDuotone />}
+            onClick={() => abrirNuevoUsuario("ADMINISTRADOR")}
+            className="border-blue-400 bg-blue-50 text-blue-600 hover:bg-blue-100 dark:border-blue-500 dark:bg-blue-950/50 dark:text-blue-400 dark:hover:bg-blue-950/70"
+          />
+          {rolUpper === "SUPER" && (
+            <BtnNuevoTab
+              label="Nuevo Super"
+              icon={<PiCodeDuotone />}
+              onClick={() => abrirNuevoUsuario("SUPER")}
+              className="border-green-500 bg-green-50 text-green-600 hover:bg-green-100 dark:border-green-500 dark:bg-green-950/50 dark:text-green-400 dark:hover:bg-green-950/70"
+            />
+          )}
+        </>
+      );
+    }
+
+    if (
+      tab === "Sede" &&
+      esAdminOSuper &&
+      !sedeUsuario &&
+      activeTab === "Sede"
+    ) {
+      acciones = (
+        <BtnNuevoTab
+          label="Crear Sede"
+          icon={<Building2 />}
+          onClick={handleOpenCrearSedeModal}
+          className="border-blue-400 bg-blue-50 text-blue-600 hover:bg-blue-100 dark:border-blue-500 dark:bg-blue-950/50 dark:text-blue-400 dark:hover:bg-blue-950/70"
+        />
+      );
+    }
+
+    return (
+      <BarraPestana
+        placeholder={placeholders[tab]}
+        value={busquedaTab(tab)}
+        onChange={(v) => setBusquedaTab(tab, v)}
+        acciones={acciones}
+      />
+    );
+  };
+
   return (
     <>
       {!isDashboardLoading && userId && (
@@ -448,60 +591,53 @@ export default function Ver() {
         />
       )}
       <div className="px-2 md:px-6 max-w-full overflow-x-hidden min-w-0 w-full">
-        <ConfiguracionSistema />
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4 min-w-0">
-          <div className="flex items-center gap-4 w-full md:w-auto min-w-0">
-            <div className={`relative min-w-0 ${puedeSimular ? "group" : ""}`}>
-              <h1
-                className={`text-lg font-bold text-black dark:text-white md:text-3xl truncate md:whitespace-nowrap ${
-                  puedeSimular
-                    ? "cursor-pointer underline decoration-transparent underline-offset-[6px] decoration-2 transition-[text-decoration-color] duration-300 ease-in-out group-hover:decoration-black dark:group-hover:decoration-white"
-                    : ""
-                }`}
-                onClick={puedeSimular ? handleSimular : undefined}
+        {!vistaConPestanas && <ConfiguracionSistema />}
+
+        <div className="mb-4 space-y-3 min-w-0">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 shrink-0">
+                <BarChart3 className="w-4 h-4" />
+              </span>
+              <div
+                className={`min-w-0 ${puedeSimular ? "group relative" : ""}`}
               >
-                Gestión de Datos
-              </h1>
-              {puedeSimular && (
-                <span className="pointer-events-none absolute left-0 top-full z-50 mt-2 scale-95 whitespace-nowrap rounded-md bg-gray-900/95 dark:bg-gray-100 dark:text-gray-900 px-3 py-1.5 text-xs font-medium text-white opacity-0 shadow-lg translate-y-1 transition-all duration-300 ease-out group-hover:scale-100 group-hover:opacity-100 group-hover:translate-y-0 group-hover:delay-100">
-                  Click para simular un registro
-                </span>
-              )}
-            </div>
-          </div>
-          {vistaConPestanas && (
-            <div className="relative w-full md:w-96">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Search className="h-5 w-5 text-gray-400" />
+                <h1
+                  className={`text-base md:text-xl font-black text-gray-900 dark:text-white truncate ${
+                    puedeSimular
+                      ? "cursor-pointer underline decoration-transparent underline-offset-4 decoration-2 transition-[text-decoration-color] duration-300 group-hover:decoration-gray-900 dark:group-hover:decoration-white"
+                      : ""
+                  }`}
+                  onClick={puedeSimular ? handleSimular : undefined}
+                >
+                  Gestión de Datos
+                </h1>
+                {puedeSimular && (
+                  <span className="pointer-events-none absolute left-0 top-full z-50 mt-1 scale-95 whitespace-nowrap rounded-md bg-gray-900/95 dark:bg-gray-100 dark:text-gray-900 px-3 py-1.5 text-xs font-medium text-white opacity-0 shadow-lg translate-y-1 transition-all duration-300 group-hover:scale-100 group-hover:opacity-100 group-hover:translate-y-0">
+                    Click para simular un registro
+                  </span>
+                )}
               </div>
-              <input
-                type="text"
-                placeholder="Buscar por nombre"
-                className="pl-10 pr-4 py-2 border border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 rounded-md w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
             </div>
-          )}
-          <div className="flex flex-col md:flex-row items-stretch md:items-center justify-end gap-2 w-full md:w-auto">
+
             {vistaConPestanas && (
-              <Button
+              <button
+                type="button"
                 onClick={() => setIsEstadisticasOpen(true)}
-                variant="outline"
-                className="gap-2 w-full text-xs md:text-xl"
+                className="inline-flex h-10 w-[9.75rem] md:w-[10.25rem] items-center justify-center gap-1.5 rounded-lg border border-blue-400 bg-blue-50 px-3 text-xs md:text-sm font-normal text-blue-600 transition-colors hover:bg-blue-100 dark:border-blue-500 dark:bg-blue-950/50 dark:text-blue-400 dark:hover:bg-blue-950/70 shrink-0 self-end sm:self-auto"
               >
-                📊 Estadísticas Generales
-              </Button>
-            )}
-            {puedeCrearLider && vistaConPestanas && (
-              <Button
-                onClick={handleOpenCreateLiderModal}
-                className="gap-2 w-full text-sm md:text-xl"
-              >
-                Nuevo Líder
-              </Button>
+                <BarChart3 className="w-4 h-4 shrink-0" />
+                Estadísticas
+              </button>
             )}
           </div>
+
+          {vistaConPestanas && (
+            <p className="text-center text-xs md:text-sm font-bold uppercase tracking-wide text-blue-600 dark:text-blue-400">
+              Se requieren {lideresFaltantes.toLocaleString()} líderes/empleados
+              para la meta
+            </p>
+          )}
         </div>
 
         {isDashboardLoading ? (
@@ -548,50 +684,55 @@ export default function Ver() {
               totalLideres={totalAfiliadosLideres}
               totalTrabajadores={totalAfiliadosTrabajadores}
             />
-            <div className="mb-6 w-full min-w-0 bg-white dark:bg-neutral-950">
+            <div className="mb-6 w-full min-w-0 border-b border-gray-200 dark:border-neutral-800">
               <div
-                ref={tabsRowRef}
-                className={`w-full min-w-0 pb-0 gap-0.5 ${
+                className={`w-full min-w-0 gap-0 ${
                   esAdminOSuper
-                    ? "grid grid-cols-3 md:flex md:flex-nowrap md:items-end"
-                    : "grid grid-cols-2 md:flex md:flex-nowrap md:items-end"
+                    ? "grid grid-cols-3 md:flex md:flex-nowrap md:overflow-x-auto"
+                    : "grid grid-cols-2 md:flex md:flex-nowrap md:overflow-x-auto"
                 }`}
               >
                 {(
                   [
                     {
                       id: "Sede" as Tab,
-                      label: `Sede (${totalAfiliadosSede})`,
+                      label: "Sede",
+                      count: totalAfiliadosSede,
                       icon: PiBuildingsDuotone,
                       show: true,
                     },
                     {
                       id: "Lideres" as Tab,
-                      label: `Líderes (${totalLideresRegistrados})`,
+                      label: "Líderes",
+                      count: totalLideresRegistrados,
                       icon: PiMedalDuotone,
                       show: true,
                     },
                     {
                       id: "Trabajadores" as Tab,
-                      label: `Empleados (${totalEmpleadosRegistrados})`,
+                      label: "Empleados",
+                      count: totalEmpleadosRegistrados,
                       icon: PiBriefcaseDuotone,
                       show: true,
                     },
                     {
                       id: "Afiliados" as Tab,
-                      label: `Miembros (${totalMiembrosGeneral})`,
+                      label: "Miembros",
+                      count: totalMiembrosGeneral,
                       icon: PiUsersThreeDuotone,
                       show: true,
                     },
                     {
                       id: "Administrativos" as Tab,
-                      label: `Administrativos (${totalAdministrativosRegistrados})`,
+                      label: "Administrativos",
+                      count: totalAdministrativosRegistrados,
                       icon: PiShieldCheckDuotone,
                       show: esAdminOSuper,
                     },
                     {
                       id: "Mensajes" as Tab,
                       label: "Mensajes",
+                      count: null as number | null,
                       icon: PiChatCircleDotsDuotone,
                       show: esAdminOSuper,
                     },
@@ -601,55 +742,39 @@ export default function Ver() {
                   .map((tab) => {
                     const Icon = tab.icon;
                     const activo = activeTab === tab.id;
+                    const theme = TAB_THEMES[tab.id];
                     return (
                       <motion.button
                         key={tab.id}
                         type="button"
-                        ref={(el) => {
-                          tabBtnRefs.current[tab.id] = el;
-                        }}
                         onClick={() => cambiarTab(tab.id)}
                         className={tabBtnClass(activo, tab.id)}
-                        whileHover={{ y: activo ? 0 : -2 }}
                         whileTap={{ scale: 0.98 }}
-                        transition={{ duration: 0.45, ease: tabEase }}
+                        transition={{ duration: 0.2 }}
                       >
+                        <span className={tabIconClass(activo, tab.id)}>
+                          <Icon className="w-3.5 h-3.5 md:w-[18px] md:h-[18px] shrink-0" />
+                        </span>
+                        <span className="truncate">{tab.label}</span>
+                        {tab.count !== null && (
+                          <span className={tabBadgeClass(activo, tab.id)}>
+                            {tab.count}
+                          </span>
+                        )}
                         {activo && (
                           <motion.span
-                            layoutId="pestana-orilla"
-                            className={`pointer-events-none absolute inset-0 z-0 rounded-t-md md:rounded-t-lg border-2 md:border-[3px] border-b-0 ${TAB_THEMES[tab.id].activeBorder}`}
+                            layoutId="pestana-subrayado"
+                            className={`absolute bottom-0 left-2 right-2 md:left-3 md:right-3 h-[2px] md:h-[3px] rounded-full ${theme.lineBg}`}
                             transition={{
                               type: "spring",
-                              stiffness: 260,
-                              damping: 28,
-                              mass: 0.85,
+                              stiffness: 380,
+                              damping: 32,
                             }}
                           />
                         )}
-                        <motion.span
-                          className={`relative z-10 ${tabIconClass(activo, tab.id)}`}
-                          animate={activo ? { scale: 1.08 } : { scale: 1 }}
-                          transition={{ duration: 0.45, ease: tabEase }}
-                        >
-                          <Icon className="w-3.5 h-3.5 md:w-5 md:h-5 shrink-0" />
-                        </motion.span>
-                        <span className="relative z-10 truncate max-w-full text-center">
-                          {tab.label}
-                        </span>
                       </motion.button>
                     );
                   })}
-              </div>
-              {/* Línea: crece desde la pestaña elegida */}
-              <div className="relative h-[2px] md:h-[3px] w-full overflow-hidden bg-gray-200 dark:bg-neutral-700">
-                <motion.div
-                  key={activeTab}
-                  className={`absolute inset-0 ${TAB_THEMES[activeTab].lineBg}`}
-                  initial={{ scaleX: 0 }}
-                  animate={{ scaleX: 1 }}
-                  transition={{ duration: 0.6, ease: tabEase }}
-                  style={{ transformOrigin: tabLineOrigin }}
-                />
               </div>
             </div>
 
@@ -663,6 +788,7 @@ export default function Ver() {
                   exit={{ opacity: 0, x: tabSlideDir * -28 }}
                   transition={{ duration: 0.45, ease: tabEase }}
                 >
+                  {renderBarraPestana(activeTab)}
                   <Celula
                     embedded
                     isOpen
@@ -674,6 +800,9 @@ export default function Ver() {
                     onDataChange={fetchData}
                     rolUsuarioSesion={esSedeSesion ? "SEDE" : rol}
                     afiliadosSimulados={AFILIADOS_SIMULADOS}
+                    busqueda={busquedaTab(activeTab)}
+                    onBusquedaChange={(v) => setBusquedaTab(activeTab, v)}
+                    ocultarBuscador
                   />
                 </motion.div>
               ) : (
@@ -687,18 +816,26 @@ export default function Ver() {
                 >
                   {activeTab === "Sede" &&
                     (sedeUsuario ? (
-                      <Celula
-                        embedded
-                        isOpen
-                        onClose={() => {}}
-                        lider={sedeUsuario}
-                        onEditar={handleOpenEditModal}
-                        onAnadirAfiliado={handleOpenAnadirAfiliadoModal}
-                        onDataChange={fetchData}
-                        rolUsuarioSesion={esSedeSesion ? "SEDE" : rol}
-                      />
+                      <>
+                        {renderBarraPestana("Sede")}
+                        <Celula
+                          embedded
+                          isOpen
+                          onClose={() => {}}
+                          lider={sedeUsuario}
+                          onEditar={handleOpenEditModal}
+                          onAnadirAfiliado={handleOpenAnadirAfiliadoModal}
+                          onDataChange={fetchData}
+                          rolUsuarioSesion={esSedeSesion ? "SEDE" : rol}
+                          busqueda={busquedaTab("Sede")}
+                          onBusquedaChange={(v) => setBusquedaTab("Sede", v)}
+                          ocultarBuscador
+                        />
+                      </>
                     ) : (
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl border border-dashed border-blue-400/70 dark:border-blue-700 bg-blue-50/80 dark:bg-blue-950/20 px-4 py-6">
+                      <>
+                        {renderBarraPestana("Sede")}
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl border border-dashed border-blue-400/70 dark:border-blue-700 bg-blue-50/80 dark:bg-blue-950/20 px-4 py-6">
                         <div className="flex items-start gap-3 min-w-0">
                           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400 shrink-0">
                             <Building2 className="h-5 w-5" />
@@ -713,69 +850,73 @@ export default function Ver() {
                             </p>
                           </div>
                         </div>
-                        {esAdminOSuper && (
-                          <Button
-                            type="button"
-                            onClick={handleOpenCrearSedeModal}
-                            className="shrink-0 bg-blue-600 hover:bg-blue-700 text-white"
-                          >
-                            <Building2 className="h-4 w-4 mr-2" />
-                            Crear Sede
-                          </Button>
-                        )}
-                      </div>
+                        </div>
+                      </>
                     ))}
 
                   {activeTab === "Lideres" && (
-                    <Lideres
-                      lideres={lideresVisibles}
-                      onVerCelula={handleOpenCelula}
-                      onEditar={handleOpenEditLiderModal}
-                      rolUsuarioSesion={esSedeSesion ? "SEDE" : rol}
-                      onDataChange={fetchData}
-                      searchTerm={searchTerm}
-                      idUsuarioSesion={userId}
-                      isLoading={cargandoLideres}
-                    />
+                    <>
+                      {renderBarraPestana("Lideres")}
+                      <Lideres
+                        lideres={lideresVisibles}
+                        onVerCelula={handleOpenCelula}
+                        onEditar={handleOpenEditLiderModal}
+                        rolUsuarioSesion={esSedeSesion ? "SEDE" : rol}
+                        onDataChange={fetchData}
+                        searchTerm={busquedaTab("Lideres")}
+                        idUsuarioSesion={userId}
+                        isLoading={cargandoLideres}
+                      />
+                    </>
                   )}
                   {activeTab === "Afiliados" && (
-                    <AfiliadosGeneral
-                      afiliados={afiliados}
-                      lideres={allUsers}
-                      onEditar={handleOpenEditModal}
-                      onDataChange={fetchData}
-                      searchTerm={searchTerm}
-                      isLoading={cargandoMiembros}
-                    />
+                    <>
+                      {renderBarraPestana("Afiliados")}
+                      <AfiliadosGeneral
+                        afiliados={afiliados}
+                        lideres={allUsers}
+                        onEditar={handleOpenEditModal}
+                        onDataChange={fetchData}
+                        searchTerm={busquedaTab("Afiliados")}
+                        isLoading={cargandoMiembros}
+                      />
+                    </>
                   )}
                   {activeTab === "Trabajadores" && (
-                    <Lideres
-                      lideres={trabajadores}
-                      onVerCelula={handleOpenCelula}
-                      onEditar={handleOpenEditLiderModal}
-                      rolUsuarioSesion={esSedeSesion ? "SEDE" : rol}
-                      onDataChange={fetchData}
-                      searchTerm={searchTerm}
-                      idUsuarioSesion={userId}
-                      isLoading={cargandoLideres}
-                      showRole={true}
-                    />
+                    <>
+                      {renderBarraPestana("Trabajadores")}
+                      <Lideres
+                        lideres={trabajadores}
+                        onVerCelula={handleOpenCelula}
+                        onEditar={handleOpenEditLiderModal}
+                        rolUsuarioSesion={esSedeSesion ? "SEDE" : rol}
+                        onDataChange={fetchData}
+                        searchTerm={busquedaTab("Trabajadores")}
+                        idUsuarioSesion={userId}
+                        isLoading={cargandoLideres}
+                      />
+                    </>
                   )}
                   {activeTab === "Administrativos" && (
-                    <Lideres
-                      lideres={administrativos}
-                      onVerCelula={handleOpenCelula}
-                      onEditar={handleOpenEditLiderModal}
-                      rolUsuarioSesion={esSedeSesion ? "SEDE" : rol}
-                      onDataChange={fetchData}
-                      searchTerm={searchTerm}
-                      idUsuarioSesion={userId}
-                      isLoading={cargandoLideres}
-                      showRole={true}
-                    />
+                    <>
+                      {renderBarraPestana("Administrativos")}
+                      <Lideres
+                        lideres={administrativos}
+                        onVerCelula={handleOpenCelula}
+                        onEditar={handleOpenEditLiderModal}
+                        rolUsuarioSesion={esSedeSesion ? "SEDE" : rol}
+                        onDataChange={fetchData}
+                        searchTerm={busquedaTab("Administrativos")}
+                        idUsuarioSesion={userId}
+                        isLoading={cargandoLideres}
+                      />
+                    </>
                   )}
                   {activeTab === "Mensajes" && esAdminOSuper && (
-                    <Difusion usuarios={allUsers} />
+                    <>
+                      {renderBarraPestana("Mensajes")}
+                      <Difusion usuarios={allUsers} />
+                    </>
                   )}
                 </motion.div>
               )}
@@ -873,6 +1014,7 @@ export default function Ver() {
                   isModal={true}
                   rolSesion={rol}
                   modoCrearSede={modoCrearSede}
+                  rolPredefinido={rolNuevoUsuario ?? undefined}
                 />
               </DialogPanel>
             </div>
