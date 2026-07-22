@@ -360,9 +360,19 @@ export default function Ver() {
     allUsers.find((u) => esUsuarioSede(u)) ||
     (esSedeSesion && miPerfilGlobal ? miPerfilGlobal : null);
   const totalAfiliadosSede = sedeUsuario?.conteoAfiliados || 0;
-  const totalAfiliadosLideres = allUsers
-    .filter((u) => (u.rol || "").toUpperCase() === "LIDER")
-    .reduce((acc, u) => acc + (u.conteoAfiliados || 0), 0);
+  const idsUsuariosLider = new Set(
+    allUsers
+      .filter((u) => (u.rol || "").toUpperCase() === "LIDER")
+      .map((u) => u.id),
+  );
+  const totalAfiliadosLideres =
+    afiliados.length > 0
+      ? afiliados.filter(
+          (a) => a.lider_id && idsUsuariosLider.has(a.lider_id),
+        ).length
+      : allUsers
+          .filter((u) => idsUsuariosLider.has(u.id))
+          .reduce((acc, u) => acc + (u.conteoAfiliados || 0), 0);
   const lugares = (dashboardData?.lugares || []) as Lugar[];
 
   const lideres = (() => {
@@ -681,6 +691,7 @@ export default function Ver() {
               totalSede={totalAfiliadosSede}
               totalLideres={totalAfiliadosLideres}
               totalTrabajadores={totalAfiliadosTrabajadores}
+              usuariosLideres={totalLideresRegistrados}
             />
             {miPerfilGlobal ? (
               <Celula
@@ -705,6 +716,7 @@ export default function Ver() {
               totalSede={totalAfiliadosSede}
               totalLideres={totalAfiliadosLideres}
               totalTrabajadores={totalAfiliadosTrabajadores}
+              usuariosLideres={totalLideresRegistrados}
             />
             <div className="mb-6 w-full min-w-0 border-b border-gray-200 dark:border-neutral-800">
               <div

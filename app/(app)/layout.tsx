@@ -1,6 +1,6 @@
 import HeaderAuth from "@/components/header-auth";
-import LogoLink from "@/components/ui/LogoLink";
 import FechaHoraActual from "@/components/ui/FechaHoraActual";
+import LogoLink from "@/components/ui/LogoLink";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -39,7 +39,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
           <div className="text-right text-xs md:text-sm leading-tight">
             <p>© {new Date().getFullYear()} - Todos los derechos reservados.</p>
-            <p className="text-[10px] md:text-xs mt-1">Versión 1.0.0</p>
+            <p className="text-[10px] md:text-xs mt-1">Versión 2.0</p>
           </div>
         </div>
       </footer>

@@ -8,14 +8,18 @@ const OBJETIVO_GENERAL = 3000;
 
 interface Props {
   totalSede: number;
+  /** Miembros afiliados bajo líderes (barra de progreso). */
   totalLideres: number;
   totalTrabajadores: number;
+  /** Usuarios con rol LIDER (leyenda). */
+  usuariosLideres?: number;
 }
 
 export default function MetaGeneral({
   totalSede,
   totalLideres,
   totalTrabajadores,
+  usuariosLideres,
 }: Props) {
   const total = totalSede + totalLideres + totalTrabajadores;
   const pct = (n: number) => Math.min((n / OBJETIVO_GENERAL) * 100, 100);
@@ -62,7 +66,7 @@ export default function MetaGeneral({
           </span>
           <span className="flex items-center gap-1.5 text-orange-600 dark:text-orange-400">
             <PiMedalDuotone className="h-3.5 w-3.5 shrink-0" />
-            Líderes: {totalLideres.toLocaleString()}
+            Líderes: {(usuariosLideres ?? totalLideres).toLocaleString()}
           </span>
           <span className="flex items-center gap-1.5 text-violet-600 dark:text-violet-400">
             <PiBriefcaseDuotone className="h-3.5 w-3.5 shrink-0" />
