@@ -166,15 +166,22 @@ export default function AfiliadosForm({
 
   if (!isOpen) return null;
 
+  const fieldClass = "text-base sm:text-sm h-11 sm:h-10";
+  const selectClass =
+    "w-full h-11 sm:h-10 px-3 border dark:border-neutral-700 rounded-md text-base sm:text-sm bg-white dark:bg-neutral-900";
+  const labelClass =
+    "text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase block leading-none mb-1";
+
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4 font-sans">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 p-0 sm:p-4">
       <motion.div
-        className="bg-white dark:bg-neutral-900 border dark:border-neutral-800 rounded-lg shadow-xl w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto"
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
+        className="bg-white dark:bg-neutral-900 border dark:border-neutral-800 rounded-t-2xl sm:rounded-lg shadow-xl w-full sm:max-w-lg p-4 sm:p-6 max-h-[92dvh] sm:max-h-[90vh] overflow-y-auto overscroll-contain"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.2 }}
       >
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold uppercase">
+        <div className="flex justify-between items-center mb-4 gap-3">
+          <h2 className="text-lg sm:text-xl font-bold uppercase leading-tight">
             {isEditMode ? "Editar Afiliado" : step === 1 ? "Validar DPI" : "Nuevo Afiliado"}
           </h2>
           <Button size="icon" variant="ghost" onClick={onClose}>
@@ -192,7 +199,7 @@ export default function AfiliadosForm({
                 {...register("dpi")} 
                 placeholder="DPI (13 dígitos)" 
                 maxLength={13} 
-                className={`h-12 text-lg text-center font-bold tracking-widest ${dpiError ? "border-red-500 bg-red-50 dark:bg-red-900/20" : ""}`}
+                className={`h-12 text-base sm:text-lg text-center font-bold tracking-widest ${dpiError ? "border-red-500 bg-red-50 dark:bg-red-900/20" : ""}`}
                 autoFocus
               />
               {dpiError && <p className="text-xs font-bold text-red-500 text-center">{dpiError}</p>}
@@ -218,20 +225,20 @@ export default function AfiliadosForm({
                 <Input 
                   {...register("dpi")} 
                   placeholder="Ingrese el DPI (Primero los 13 dígitos)" 
-                  maxLength={13} 
-                  className={dpiError ? "border-red-500 bg-red-50 dark:bg-red-900/20" : ""}
+                  maxLength={13}
+                  className={`${fieldClass} ${dpiError ? "border-red-500 bg-red-50 dark:bg-red-900/20" : ""}`}
                 />
                 {dpiError && <p className="text-[10px] font-bold text-red-500">{dpiError}</p>}
               </div>
             )}
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1">
                 <Input
                   {...register("nombres")}
                   placeholder="Nombres"
                   readOnly={isFirstMember}
-                  className={isFirstMember ? "bg-gray-100 dark:bg-neutral-800" : ""}
+                  className={`${fieldClass} ${isFirstMember ? "bg-gray-100 dark:bg-neutral-800" : ""}`}
                 />
                 {errors.nombres && <p className="text-[10px] font-bold text-red-500">{errors.nombres.message}</p>}
               </div>
@@ -240,47 +247,45 @@ export default function AfiliadosForm({
                   {...register("apellidos")}
                   placeholder="Apellidos"
                   readOnly={isFirstMember}
-                  className={isFirstMember ? "bg-gray-100 dark:bg-neutral-800" : ""}
+                  className={`${fieldClass} ${isFirstMember ? "bg-gray-100 dark:bg-neutral-800" : ""}`}
                 />
                 {errors.apellidos && <p className="text-[10px] font-bold text-red-500">{errors.apellidos.message}</p>}
               </div>
             </div>
 
-          <div className="grid grid-cols-1 gap-4">
-            <div className="space-y-1">
-              <Input {...register("telefono")} placeholder="Teléfono" />
+          <div className="space-y-1">
+              <Input {...register("telefono")} placeholder="Teléfono" className={fieldClass} />
               {errors.telefono && <p className="text-[10px] font-bold text-red-500">{errors.telefono.message}</p>}
             </div>
-          </div>
 
-            <div className="grid grid-cols-2 gap-4 items-end">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-end">
             <div className="space-y-1">
-              <label className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase block leading-none">
+              <label className={labelClass}>
                 Nacimiento
               </label>
               <Input
                 type="date"
                 {...register("nacimiento")}
-                className="h-9 text-xs"
+                className={`${fieldClass} sm:h-9 sm:text-xs`}
               />
               {errors.nacimiento && <p className="text-[10px] font-bold text-red-500">{errors.nacimiento.message}</p>}
             </div>
             <div className="space-y-1">
-              <label className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase block leading-none">
+              <label className={labelClass}>
                 Sexo
               </label>
-              <div className="flex rounded-md border dark:border-neutral-700 p-1 bg-gray-50 dark:bg-neutral-800 h-9">
+              <div className="flex rounded-md border dark:border-neutral-700 p-1 bg-gray-50 dark:bg-neutral-800 h-11 sm:h-9">
                 <button
                   type="button"
                   onClick={() => setValue("sexo", "M")}
-                  className={`flex-1 rounded text-[10px] font-black transition-all ${sexoActual === "M" ? "bg-blue-600 text-white shadow-sm" : "text-gray-400 hover:bg-gray-200"}`}
+                  className={`flex-1 rounded text-xs sm:text-[10px] font-black transition-all ${sexoActual === "M" ? "bg-blue-600 text-white shadow-sm" : "text-gray-400 hover:bg-gray-200"}`}
                 >
                   M
                 </button>
                 <button
                   type="button"
                   onClick={() => setValue("sexo", "F")}
-                  className={`flex-1 rounded text-[10px] font-black transition-all ${sexoActual === "F" ? "bg-pink-600 text-white shadow-sm" : "text-gray-400 hover:bg-gray-200"}`}
+                  className={`flex-1 rounded text-xs sm:text-[10px] font-black transition-all ${sexoActual === "F" ? "bg-pink-600 text-white shadow-sm" : "text-gray-400 hover:bg-gray-200"}`}
                 >
                   F
                 </button>
@@ -288,11 +293,11 @@ export default function AfiliadosForm({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1">
               <select
                 {...register("lugar_id", { valueAsNumber: true })}
-                className="w-full h-10 px-3 border dark:border-neutral-700 rounded-md text-sm bg-white dark:bg-neutral-900"
+                className={selectClass}
               >
                 <option value={0}>Seleccione lugar...</option>
                 {lugares.map((l) => (
@@ -306,7 +311,7 @@ export default function AfiliadosForm({
             <div className="space-y-1">
               <select
               {...register("politica")}
-              className="w-full h-10 px-3 border dark:border-neutral-700 rounded-md text-sm bg-white dark:bg-neutral-900"
+              className={selectClass}
             >
               <option value="">Interés Político...</option>
               {POLITICAS.map((p) => (
@@ -321,7 +326,7 @@ export default function AfiliadosForm({
           <Button
             type="button"
             variant="outline"
-            className="w-full text-blue-600 border-blue-200 text-[10px] font-bold uppercase h-10 shadow-sm"
+            className="w-full text-blue-600 border-blue-200 text-xs sm:text-[10px] font-bold uppercase h-11 sm:h-10 shadow-sm"
             onClick={() =>
               window.open(
                 "https://tse.org.gt/reg-ciudadanos/sistema-de-estadisticas/consulta-de-afiliacion",
@@ -332,68 +337,62 @@ export default function AfiliadosForm({
             Verificar en TSE
           </Button>
 
-          <div className="grid grid-cols-2 gap-4 items-end">
-            <div className="space-y-1">
-              <label className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase">
-                No. Padrón
-              </label>
-              <Input {...register("no_padron")} placeholder="No. Padrón" />
-              {errors.no_padron && <p className="text-[10px] font-bold text-red-500">{errors.no_padron.message}</p>}
-            </div>
+          <div className="space-y-1">
+            <label className={labelClass}>No. Padrón</label>
+            <Input {...register("no_padron")} placeholder="No. Padrón" className={fieldClass} />
+            {errors.no_padron && <p className="text-[10px] font-bold text-red-500">{errors.no_padron.message}</p>}
+          </div>
 
-            <div className="flex flex-col">
-              <label className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase">
-                Religión
-              </label>
-              <div className="flex gap-2 h-10">
-                {!mostrandoNuevaReligion ? (
-                  <>
-                    <select
-                      {...register("religion")}
-                      className="flex-1 px-3 border dark:border-neutral-700 rounded-md text-sm bg-white dark:bg-neutral-900"
-                    >
-                      <option value="">Seleccione...</option>
-                      <option value="Católico">Católico</option>
-                      <option value="Evangélico">Evangélico</option>
-                      {religionesExistentes.map((r) => (
-                        <option key={r as string} value={r as string}>
-                          {r as string}
-                        </option>
-                      ))}
-                    </select>
-                    <Button
-                      type="button"
-                      size="icon"
-                      variant="outline"
-                      className="shrink-0 border-green-200 text-green-600 h-10 w-10"
-                      onClick={() => setMostrandoNuevaReligion(true)}
-                    >
-                      <Plus className="w-5 h-5" />
-                    </Button>
-                  </>
-                ) : (
-                  <div className="flex gap-2 w-full">
-                    <Input
-                      {...register("religion_otra")}
-                      placeholder="Religión..."
-                      className="flex-1"
-                      autoFocus
-                    />
-                    <Button
-                      type="button"
-                      size="icon"
-                      variant="ghost"
-                      className="shrink-0 text-red-500 h-10 w-10"
-                      onClick={() => {
-                        setMostrandoNuevaReligion(false);
-                        setValue("religion_otra", "");
-                      }}
-                    >
-                      <X className="w-5 h-5" />
-                    </Button>
-                  </div>
-                )}
-              </div>
+          <div className="space-y-1">
+            <label className={labelClass}>Religión</label>
+            <div className="flex gap-2 min-h-11 sm:min-h-10">
+              {!mostrandoNuevaReligion ? (
+                <>
+                  <select
+                    {...register("religion")}
+                    className={`flex-1 min-w-0 ${selectClass}`}
+                  >
+                    <option value="">Seleccione...</option>
+                    <option value="Católico">Católico</option>
+                    <option value="Evangélico">Evangélico</option>
+                    {religionesExistentes.map((r) => (
+                      <option key={r as string} value={r as string}>
+                        {r as string}
+                      </option>
+                    ))}
+                  </select>
+                  <Button
+                    type="button"
+                    size="icon"
+                    variant="outline"
+                    className="shrink-0 border-green-200 text-green-600 h-11 w-11 sm:h-10 sm:w-10"
+                    onClick={() => setMostrandoNuevaReligion(true)}
+                  >
+                    <Plus className="w-5 h-5" />
+                  </Button>
+                </>
+              ) : (
+                <div className="flex gap-2 w-full">
+                  <Input
+                    {...register("religion_otra")}
+                    placeholder="Religión..."
+                    className={`flex-1 min-w-0 ${fieldClass}`}
+                    autoFocus
+                  />
+                  <Button
+                    type="button"
+                    size="icon"
+                    variant="ghost"
+                    className="shrink-0 text-red-500 h-11 w-11 sm:h-10 sm:w-10"
+                    onClick={() => {
+                      setMostrandoNuevaReligion(false);
+                      setValue("religion_otra", "");
+                    }}
+                  >
+                    <X className="w-5 h-5" />
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
 
@@ -403,27 +402,28 @@ export default function AfiliadosForm({
             value={liderPredefinidoId || ""}
           />
 
-          <div className="flex justify-between items-center pt-4 border-t dark:border-neutral-800 mt-2">
+          <div className="flex flex-col-reverse sm:flex-row sm:justify-between sm:items-center gap-3 pt-4 border-t dark:border-neutral-800 mt-2">
             <Image
               src="/gif/afiliados/gif0.gif"
               alt="Animación"
               width={45}
               height={45}
               unoptimized
+              className="hidden sm:block"
             />
-            <div className="flex gap-2">
+            <div className="flex gap-2 w-full sm:w-auto">
               <Button
                 type="button"
                 variant="ghost"
                 onClick={onClose}
-                className="text-xs font-bold uppercase"
+                className="text-xs font-bold uppercase flex-1 sm:flex-none"
               >
                 Cancelar
               </Button>
               <Button
                 type="submit"
                 disabled={isSubmitting || !!dpiError}
-                className={`text-xs font-bold uppercase px-8 h-10 ${dpiError ? 'bg-gray-400 text-gray-200' : 'bg-green-600 text-white hover:bg-green-700'}`}
+                className={`text-xs font-bold uppercase flex-1 sm:flex-none sm:px-8 h-11 sm:h-10 ${dpiError ? "bg-gray-400 text-gray-200" : "bg-green-600 text-white hover:bg-green-700"}`}
               >
                 {isSubmitting ? "Guardando..." : "Guardar"}
               </Button>

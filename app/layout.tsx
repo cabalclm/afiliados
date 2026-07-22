@@ -1,7 +1,16 @@
 import "./globals.css";
 import { Geist } from "next/font/google";
+import type { Viewport } from "next";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: "cover",
+};
 
 export const metadata = {
   title: "SOTE - Sistema de Organización Territorial Estratégica",
@@ -17,13 +26,6 @@ export const metadata = {
     capable: true,
     statusBarStyle: "default",
     title: "SOTE",
-  },
-  viewport: {
-    width: "device-width",
-    initialScale: 1,
-    maximumScale: 1,
-    userScalable: false,
-    viewportFit: "cover",
   },
 };
 
