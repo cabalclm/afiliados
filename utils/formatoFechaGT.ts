@@ -60,6 +60,44 @@ export function formatearFechaDMY(
   return `${String(p.d).padStart(2, "0")}/${String(p.m).padStart(2, "0")}/${p.y}`;
 }
 
+/** Parsea entrada manual `dd/mm/aaaa` o `d/m/aaaa`. */
+export function parseFechaDMYInput(
+  valor: string | null | undefined,
+): FechaCalendario | null {
+  if (!valor) return null;
+  const m = String(valor).trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (!m) return null;
+  const d = Number(m[1]);
+  const mo = Number(m[2]);
+  const y = Number(m[3]);
+  if (!y || mo < 1 || mo > 12 || d < 1 || d > 31) return null;
+  return { y, m: mo, d };
+}
+
+export function fechaCalendarioAISO(p: FechaCalendario): string {
+  return `${p.y}-${String(p.m).padStart(2, "0")}-${String(p.d).padStart(2, "0")}`;
+}
+
+/** Acepta `YYYY-MM-DD` o `dd/mm/aaaa` y devuelve ISO para guardar. */
+export function normalizarNacimientoForm(valor: string): string {
+  const trimmed = valor.trim();
+  if (!trimmed) return "";
+  if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) return trimmed;
+  const p = parseFechaDMYInput(trimmed);
+  if (p) return fechaCalendarioAISO(p);
+  return trimmed;
+}
+
+/** Máscara progresiva mientras se escribe: `12061992` → `12/06/1992`. */
+export function formatearEntradaDMY(raw: string): string {
+  const digits = raw.replace(/\D/g, "").slice(0, 8);
+  if (digits.length <= 2) return digits;
+  if (digits.length <= 4) {
+    return `${digits.slice(0, 2)}/${digits.slice(2)}`;
+  }
+  return `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
+}
+
 export function calcularEdadAnios(
   valor: string | null | undefined,
   referencia: Date = new Date(),

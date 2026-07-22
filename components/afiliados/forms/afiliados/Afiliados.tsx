@@ -16,6 +16,14 @@ import {
   useInicializarFormulario,
   useBuscadorLider,
 } from "./hooks";
+import {
+  fechaCalendarioAISO,
+  formatearEntradaDMY,
+  formatearFechaDMY,
+  normalizarNacimientoForm,
+  parseFechaCalendario,
+  parseFechaDMYInput,
+} from "@/utils/formatoFechaGT";
 
 type Lugar = { id: number; nombre: string };
 type Lider = {
@@ -66,8 +74,47 @@ export default function AfiliadosForm({
   const sexoActual = watch("sexo");
   const religionActual = watch("religion");
   const dpiActual = watch("dpi");
+  const nacimientoValor = watch("nacimiento");
   const [dpiError, setDpiError] = useState<string | null>(null);
   const [step, setStep] = useState<number>(isEditMode || isFirstMember ? 2 : 1);
+  const [esMovil, setEsMovil] = useState(() =>
+    typeof window !== "undefined"
+      ? window.matchMedia("(max-width: 639px)").matches
+      : false,
+  );
+  const [nacimientoTexto, setNacimientoTexto] = useState("");
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const mq = window.matchMedia("(max-width: 639px)");
+    const sync = () => setEsMovil(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const prevBody = document.body.style.overflow;
+    const prevHtmlX = document.documentElement.style.overflowX;
+    document.body.style.overflow = "hidden";
+    document.documentElement.style.overflowX = "hidden";
+    return () => {
+      document.body.style.overflow = prevBody;
+      document.documentElement.style.overflowX = prevHtmlX;
+    };
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const v = nacimientoValor || "";
+    if (/^\d{4}-\d{2}-\d{2}$/.test(v)) {
+      const dmy = formatearFechaDMY(v);
+      setNacimientoTexto(dmy === "—" ? "" : dmy);
+      return;
+    }
+    setNacimientoTexto(v);
+  }, [isOpen, nacimientoValor, step]);
 
   useEffect(() => {
     if (isOpen) {
@@ -132,8 +179,19 @@ export default function AfiliadosForm({
   }, [isOpen, isEditMode, afiliadoAEditar, setValue]);
 
   const onSubmit = async (formData: AfiliadoFormData) => {
+    const nacimientoNorm = normalizarNacimientoForm(formData.nacimiento);
+    if (!parseFechaCalendario(nacimientoNorm)) {
+      setError("nacimiento", {
+        type: "manual",
+        message: "Use formato dd/mm/aaaa",
+      });
+      toast.error("Fecha de nacimiento inválida");
+      return;
+    }
+
     const datosProcesados = {
       ...formData,
+      nacimiento: nacimientoNorm,
       religion: mostrandoNuevaReligion
         ? formData.religion_otra
         : formData.religion,
@@ -164,6 +222,26 @@ export default function AfiliadosForm({
     new Set((afiliados || []).map((a) => a.religion).filter(Boolean)),
   ).filter((r) => r !== "Católico" && r !== "Evangélico");
 
+  const handleNacimientoMobile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatearEntradaDMY(e.target.value);
+    setNacimientoTexto(formatted);
+
+    if (!formatted) {
+      setValue("nacimiento", "", { shouldValidate: true });
+      return;
+    }
+
+    if (formatted.length === 10) {
+      const p = parseFechaDMYInput(formatted);
+      if (p) {
+        setValue("nacimiento", fechaCalendarioAISO(p), { shouldValidate: true });
+        return;
+      }
+    }
+
+    setValue("nacimiento", formatted, { shouldValidate: false });
+  };
+
   if (!isOpen) return null;
 
   const fieldClass = "text-base sm:text-sm h-11 sm:h-10";
@@ -173,9 +251,9 @@ export default function AfiliadosForm({
     "text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase block leading-none mb-1";
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 p-0 sm:p-4">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 p-0 sm:p-4 overflow-hidden overscroll-none">
       <motion.div
-        className="bg-white dark:bg-neutral-900 border dark:border-neutral-800 rounded-t-2xl sm:rounded-lg shadow-xl w-full sm:max-w-lg p-4 sm:p-6 max-h-[92dvh] sm:max-h-[90vh] overflow-y-auto overscroll-contain"
+        className="bg-white dark:bg-neutral-900 border dark:border-neutral-800 rounded-t-2xl sm:rounded-lg shadow-xl w-full max-w-full sm:max-w-lg min-w-0 mx-auto p-4 sm:p-6 max-h-[92dvh] sm:max-h-[90vh] overflow-x-hidden overflow-y-auto overscroll-y-contain touch-pan-y"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.2 }}
@@ -219,7 +297,7 @@ export default function AfiliadosForm({
             </div>
           </div>
         ) : (
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 min-w-0 max-w-full overflow-x-hidden">
             {!isEditMode && (
               <div className="space-y-1">
                 <Input 
@@ -232,8 +310,8 @@ export default function AfiliadosForm({
               </div>
             )}
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-1">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 min-w-0">
+              <div className="space-y-1 min-w-0">
                 <Input
                   {...register("nombres")}
                   placeholder="Nombres"
@@ -242,7 +320,7 @@ export default function AfiliadosForm({
                 />
                 {errors.nombres && <p className="text-[10px] font-bold text-red-500">{errors.nombres.message}</p>}
               </div>
-              <div className="space-y-1">
+              <div className="space-y-1 min-w-0">
                 <Input
                   {...register("apellidos")}
                   placeholder="Apellidos"
@@ -258,19 +336,32 @@ export default function AfiliadosForm({
               {errors.telefono && <p className="text-[10px] font-bold text-red-500">{errors.telefono.message}</p>}
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-end">
-            <div className="space-y-1">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-end min-w-0">
+            <div className="space-y-1 min-w-0">
               <label className={labelClass}>
                 Nacimiento
               </label>
-              <Input
-                type="date"
-                {...register("nacimiento")}
-                className={`${fieldClass} sm:h-9 sm:text-xs`}
-              />
+              {esMovil ? (
+                <Input
+                  type="text"
+                  inputMode="numeric"
+                  placeholder="dd/mm/aaaa"
+                  maxLength={10}
+                  value={nacimientoTexto}
+                  onChange={handleNacimientoMobile}
+                  className={`${fieldClass} min-w-0 w-full max-w-full`}
+                  autoComplete="bday"
+                />
+              ) : (
+                <Input
+                  type="date"
+                  {...register("nacimiento")}
+                  className={`${fieldClass} min-w-0 w-full max-w-full`}
+                />
+              )}
               {errors.nacimiento && <p className="text-[10px] font-bold text-red-500">{errors.nacimiento.message}</p>}
             </div>
-            <div className="space-y-1">
+            <div className="space-y-1 min-w-0">
               <label className={labelClass}>
                 Sexo
               </label>
@@ -293,8 +384,8 @@ export default function AfiliadosForm({
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-1">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 min-w-0">
+            <div className="space-y-1 min-w-0">
               <select
                 {...register("lugar_id", { valueAsNumber: true })}
                 className={selectClass}
@@ -308,7 +399,7 @@ export default function AfiliadosForm({
               </select>
               {errors.lugar_id && <p className="text-[10px] font-bold text-red-500">{errors.lugar_id.message}</p>}
             </div>
-            <div className="space-y-1">
+            <div className="space-y-1 min-w-0">
               <select
               {...register("politica")}
               className={selectClass}
