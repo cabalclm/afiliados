@@ -53,6 +53,21 @@ async function resolverUserIdsPorNivel(nivel: string): Promise<string[]> {
     );
 }
 
+type RolJoin = { nombre?: string } | { nombre?: string }[] | null | undefined;
+
+function nombreRolDesdeJoin(roles: RolJoin): string {
+  if (Array.isArray(roles)) return roles[0]?.nombre || "";
+  return roles?.nombre || "";
+}
+
+function coincideRolFiltro(nombreRol: string, rolesUpper: Set<string>): boolean {
+  const nombre = nombreRol.toUpperCase();
+  if (rolesUpper.has(nombre)) return true;
+  if (rolesUpper.has("EMPLEADO") && nombre === "TRABAJADOR") return true;
+  if (rolesUpper.has("ADMINISTRADOR") && nombre === "ADMIN") return true;
+  return false;
+}
+
 /** Devuelve los user_id cuyo rol (nombre) está en `roles`. */
 async function resolverUserIdsPorRol(roles: string[]): Promise<string[]> {
   const rolesUpper = new Set(roles.map((r) => r.toUpperCase()));
@@ -65,11 +80,13 @@ async function resolverUserIdsPorRol(roles: string[]): Promise<string[]> {
     return [];
   }
 
-  return (data || [])
-    .filter((p: any) =>
-      rolesUpper.has(String(p.roles?.nombre || "").toUpperCase()),
+  type PerfilConRol = { user_id: string; roles: RolJoin };
+
+  return ((data || []) as PerfilConRol[])
+    .filter((p) =>
+      coincideRolFiltro(nombreRolDesdeJoin(p.roles), rolesUpper),
     )
-    .map((p: any) => p.user_id as string);
+    .map((p) => p.user_id);
 }
 
 async function obtenerRolUsuario(userId: string): Promise<string> {
@@ -79,9 +96,8 @@ async function obtenerRolUsuario(userId: string): Promise<string> {
     .eq("user_id", userId)
     .maybeSingle();
 
-  const roles = data?.roles as { nombre?: string } | { nombre?: string }[] | null;
-  if (Array.isArray(roles)) return roles[0]?.nombre || "";
-  return roles?.nombre || "";
+  const roles = data?.roles as RolJoin;
+  return nombreRolDesdeJoin(roles);
 }
 
 export async function enviarMensajeAction(

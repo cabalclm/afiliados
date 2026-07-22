@@ -379,6 +379,28 @@ export default function Ver() {
     return base.filter((l) => l.rol !== "DOCUMENTADOR" && !esUsuarioSede(l));
   })();
 
+  /** Líderes y empleados pueden tener célula (afiliados bajo su user_id). */
+  const usuariosConCelula = allUsers.filter((u) => {
+    const r = (u.rol || "").toUpperCase();
+    return (
+      r === "LIDER" ||
+      r === "EMPLEADO" ||
+      r === "TRABAJADOR" ||
+      r === "SEDE" ||
+      esUsuarioSede(u)
+    );
+  });
+
+  const resolverUsuarioCelula = (
+    id: string | null | undefined,
+  ): Lider | null => {
+    if (!id) return null;
+    return (
+      allUsers.find((l) => l.id === id) ??
+      (miPerfilGlobal?.id === id ? miPerfilGlobal : null)
+    );
+  };
+
   const totalLideresRegistrados = allUsers.filter(
     (u) => (u.rol || "").toUpperCase() === "LIDER",
   ).length;
@@ -990,10 +1012,10 @@ export default function Ver() {
         afiliadoAEditar={afiliadoParaEditar}
         liderPredefinidoId={liderParaNuevoAfiliado}
         lugares={lugares}
-        lideres={lideres}
+        lideres={usuariosConCelula}
         afiliados={afiliados}
         isFirstMember={isFirstMemberAddition}
-        datosLider={lideres.find((l) => l.id === liderParaNuevoAfiliado)}
+        datosLider={resolverUsuarioCelula(liderParaNuevoAfiliado)}
       />
 
       <Transition show={isSignupModalOpen} as={Fragment}>

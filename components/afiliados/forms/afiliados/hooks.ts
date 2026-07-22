@@ -65,9 +65,17 @@ export function useInicializarFormulario(
             : "",
         );
       } else {
-        const nombresIniciales = isFirstMember && datosLider ? datosLider.nombres : "";
-        const apellidosIniciales = isFirstMember && datosLider ? datosLider.apellidos : "";
-        const telefonoInicial = isFirstMember && datosLider?.telefono ? datosLider.telefono : "";
+        const perfilCelula =
+          datosLider ??
+          (liderPredefinidoId
+            ? lideres.find((l) => l.id === liderPredefinidoId)
+            : null);
+        const nombresIniciales =
+          isFirstMember && perfilCelula ? perfilCelula.nombres : "";
+        const apellidosIniciales =
+          isFirstMember && perfilCelula ? perfilCelula.apellidos : "";
+        const telefonoInicial =
+          isFirstMember && perfilCelula?.telefono ? perfilCelula.telefono : "";
 
         methods.reset({
           nombres: nombresIniciales,
