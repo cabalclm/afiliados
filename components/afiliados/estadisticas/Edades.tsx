@@ -13,6 +13,7 @@ import {
 } from "recharts";
 import { useState, useEffect } from "react";
 import type { Afiliado } from "../esquemas";
+import { calcularEdadAnios } from "@/utils/formatoFechaGT";
 import { chartStyles, useChartTheme } from "./utils";
 
 interface Props {
@@ -37,8 +38,8 @@ export default function Edades({ afiliados }: Props) {
   ];
 
   afiliados.forEach((af) => {
-    const nacimiento = new Date(af.nacimiento);
-    const edad = new Date().getFullYear() - nacimiento.getFullYear();
+    const edad = calcularEdadAnios(af.nacimiento);
+    if (edad === null) return;
     const rango = rangos.find((r) => edad >= r.min && edad <= r.max);
     if (rango) {
       if (af.sexo === "M") rango.hombres++;

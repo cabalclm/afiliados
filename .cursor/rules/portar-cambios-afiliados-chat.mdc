@@ -1,0 +1,226 @@
+---
+description: Resumen de cambios del chat (roles SEDE/EMPLEADO, pestañas, miembros, Swal, carnet, emails) para replicar en otro proyecto
+alwaysApply: false
+---
+
+# Portar cambios — sesión afiliados / roles / UI
+
+Guía para aplicar en otro repo los mismos cambios hechos en este chat del proyecto `afiliadosclm`.
+
+## Dependencias
+
+```bash
+pnpm add xlsx
+# ya usados: sweetalert2, html-to-image, framer-motion
+```
+
+---
+
+## 1. Usuario de acceso vacío al editar perfil
+
+**Problema:** Al editar, nombres/rol cargaban pero “Usuario de acceso” quedaba vacío.
+
+**Causa:** En `/api/dashboard` (y actions similares) el email iba hardcodeado como `""` porque no se leía de Auth.
+
+**Fix:**
+
+- Usar `getCachedAuthUsers()` (`listUsers` admin + caché 5 min) y mapear `email` por `user_id`.
+- Archivos: `app/api/dashboard/route.ts`, `components/afiliados/actions/dashboard.ts`, `components/afiliados/actions/usuarios.ts`.
+- En `SignForm.tsx` el usuario se muestra como local-part: `email.replace(/@.*$/, "")`.
+- En `app/api/users/ver/route.ts` devolver `nombres` / `apellidos` (no solo `nombre`) para `EditarUsuarioForm`.
+
+---
+
+## 2. SweetAlert: Maximum call stack size exceeded
+
+**Archivo:** `lib/swal.ts`
+
+**Causa:** `Object.assign(Swal, { fire })` hacía que `fire` se llamara a sí mismo.
+
+**Fix:** Guardar referencia al fire nativo **antes** del override:
+
+```ts
+const nativeFire = SwalBase.fire.bind(SwalBase);
+// dentro del wrapper: return nativeFire(withTheme(...));
+```
+
+---
+
+## 3. Rol SEDE: ver pestañas, solo lectura
+
+**Reglas de negocio:**
+
+| Rol | Vista |
+|-----|--------|
+| SUPER / ADMIN | Todas las pestañas + editar |
+| SEDE | Sede, Líderes, Empleados, Miembros — **solo ver** |
+| Resto (LIDER, etc.) | Meta + su célula |
+
+**Detección SEDE:** rol `SEDE` **o** `esUsuarioSede({ nombres, apellidos, email, rol })` (nombre “Sede …”, email `sede@…`).
+
+**Solo lectura SEDE:**
+
+- `Lideres.tsx`: menú editar/eliminar solo si `ADMIN/SUPER/DOCUMENTADOR` (no SEDE).
+- `Celula.tsx`: ocultar “Añadir integrante” si rol sesión `SEDE`.
+- `Tabla.tsx`: ocultar menú Editar/Eliminar si `SEDE`.
+- Pasar `rolUsuarioSesion={esSedeSesion ? "SEDE" : rol}` cuando se detecta sede por nombre.
+
+**Perfil no encontrado:** si el usuario no está en `allUsers` (RLS/`roles!inner`), armar fallback desde `session` y usar como `miPerfilGlobal` / `sedeUsuario`.
+
+---
+
+## 4. Rol EMPLEADO (antes TRABAJADOR)
+
+El filtro de UI usaba `TRABAJADOR` pero en BD el rol es `EMPLEADO`.
+
+```ts
+const esRolEmpleado = (rol?: string | null) => {
+  const r = (rol || "").toUpperCase();
+  return r === "EMPLEADO" || r === "TRABAJADOR"; // compat
+};
+```
+
+Usar en:
+
+- Lista pestaña Empleados (`Ver.tsx`)
+- Agrupación en `AfiliadosGeneral.tsx`
+- Contadores / meta
+
+**Label UI:** “Empleado(s)” no “Trabajadores”.
+
+---
+
+## 5. Pestañas (`Ver.tsx`)
+
+**Orden:** Sede → Líderes → Empleados → Miembros → Administrativos → Mensajes
+
+**Contadores en el label:**
+
+| Pestaña | Contador |
+|---------|----------|
+| Sede | `conteoAfiliados` del usuario sede |
+| Líderes | # usuarios rol `LIDER` |
+| Empleados | # usuarios rol `EMPLEADO` |
+| Miembros | total afiliados (sede + líderes + empleados) |
+| Administrativos | # usuarios ADMIN/SUPER |
+
+**Iconos:** medalla (`PiMedalDuotone` / `Medal`) para líderes; no corona.
+
+**Línea bajo pestañas:**
+
+- Grosor igual al borde de pestaña (`2px` móvil / `3px` desktop).
+- Color = tema de la pestaña activa.
+- Animación: crece desde el **centro de la pestaña clicada** (`transformOrigin` medido con refs), no desde el medio de la barra.
+- Borde de pestaña activa con `layoutId` (framer-motion) para deslizar orilla.
+
+**Contenido:** `AnimatePresence` + slide horizontal según dirección del cambio de tab.
+
+**Móvil (sin scroll horizontal):**
+
+- Grid 2 filas: `grid-cols-3` si admin (6 tabs), `grid-cols-2` si no (4 tabs).
+- Desktop: `md:flex` fila única.
+- Letra/ícono/padding más chicos en móvil (`text-[9px]`, `py-1.5`, icon `w-3.5`).
+
+---
+
+## 6. Miembros — `AfiliadosGeneral.tsx`
+
+**Filtros:** Todos (celeste/sky) | Sede | Líderes | Empleado
+
+**Flujo:**
+
+1. Tabla de líderes del grupo (No., Nombre, Miembros), orden **alfabético**.
+2. Click → tabla de miembros de ese líder (animación suave framer-motion).
+3. “Todos” → listado plano de todos los afiliados A–Z (columnas: nombre, dpi, tel, edad, lugar, líder, grupo).
+
+**Excel (`xlsx`):** botón “Descargar Excel” con 4 hojas: `Todos`, `Sede`, `Lideres`, `Empleados`.
+
+---
+
+## 7. Vista lista/tabla en cada célula (`Celula.tsx` + `Tabla.tsx`)
+
+Dentro de **cada célula** (pestaña Sede, click a un líder/empleado, o vista embebida) el usuario puede alternar cómo se ven los integrantes:
+
+| Modo | UI | Default |
+|------|-----|---------|
+| **Tarjetas** | Grid de cards (como antes) | Sí |
+| **Lista** | Tabla densa (filas) | No |
+
+**En `Celula.tsx`:**
+
+- Estado: `formatoVista: FormatoVista` (`"tarjetas" | "tabla"`), default `"tarjetas"`.
+- Toggle junto al buscador (segmented control):
+  - Icono `LayoutGrid` → Tarjetas
+  - Icono `Table2` → Lista (label “Lista”)
+- Pasar a `<Tabla formato={formatoVista} ... />`.
+
+**En `Tabla.tsx`:**
+
+```ts
+export type FormatoVista = "tarjetas" | "tabla";
+// prop opcional: formato?: FormatoVista  (default "tarjetas")
+```
+
+- Si `formato === "tabla"`: renderizar `<table>` con columnas  
+  **No. | Nombre | DPI | Teléfono | Edad | Sexo | Ubicación | Padrón | Acciones**  
+  (Acciones solo si puede editar/eliminar; SEDE no ve esa columna).
+- Si `formato === "tarjetas"`: grid de tarjetas con el mismo menú de acciones / carnet / teléfono.
+- Mismo orden de afiliados en ambos modos (líder primero, luego por fecha/nombre).
+- Contacto reutilizable: `TelefonoInline` / footer de llamada-WhatsApp-carnet.
+
+**Nota:** Aplica a todas las células (Sede, líderes, empleados) porque todas usan `Celula` → `Tabla`.
+
+---
+
+## 8. Carnet — descarga en móvil (`CarnetAfiliacion.tsx`)
+
+**Problema:** En iPhone/Android `<a download>` con dataURL no hace nada.
+
+**Fix:**
+
+1. Clonar el nodo del carnet off-screen a tamaño fijo (mismo aspect CR80) y capturar con `html-to-image` → se ve igual que el modal.
+2. Esperar carga de imágenes (`crossOrigin="anonymous"` en logo).
+3. Guardar:
+   - Móvil + `navigator.canShare({ files })` → Web Share (Guardar en Fotos).
+   - iOS sin share → abrir imagen en ventana nueva + “mantener pulsado → Guardar”.
+   - Desktop → blob + `<a download>` clásico.
+4. Toast de error/éxito; ignorar `AbortError` si el usuario cancela el share.
+
+---
+
+## 9. Archivos tocados (checklist port)
+
+```
+lib/swal.ts
+app/api/dashboard/route.ts
+app/api/users/ver/route.ts
+components/afiliados/actions/dashboard.ts
+components/afiliados/actions/usuarios.ts
+components/afiliados/actions/cache.ts          # getCachedAuthUsers (si no existe)
+components/afiliados/Ver.tsx
+components/afiliados/Lideres.tsx
+components/afiliados/Celula.tsx                # toggle Tarjetas / Lista
+components/afiliados/Tabla.tsx                 # FormatoVista + render tabla|tarjetas
+components/afiliados/contacto.tsx              # tel / DPI helpers (si aplica)
+components/afiliados/AfiliadosGeneral.tsx
+components/afiliados/MetaGeneral.tsx
+components/afiliados/esquemas.ts               # esUsuarioSede
+components/afiliados/CarnetAfiliacion.tsx
+components/admin/sign-up/SignForm.tsx          # modal editar perfil (si aplica)
+package.json                                   # + xlsx
+```
+
+---
+
+## 10. Criterios de aceptación al portar
+
+- [ ] Editar líder/empleado muestra usuario de acceso (sin `@dominio`).
+- [ ] Swal no crashea al actualizar.
+- [ ] Usuario SEDE ve Sede / Líderes / Empleados / Miembros; no edita ni añade.
+- [ ] Usuario con rol `EMPLEADO` aparece en pestaña Empleados.
+- [ ] Contadores en pestañas correctos; orden con Mensajes al final.
+- [ ] Línea y borde de pestaña animados desde la pestaña elegida.
+- [ ] En teléfono: 2 filas de pestañas, sin scroll horizontal.
+- [ ] Miembros: Todos + tablas + Excel 4 hojas.
+- [ ] En cada célula: toggle **Tarjetas / Lista**; la lista muestra tabla con No., Nombre, DPI, Tel, Edad, Sexo, Ubicación, Padrón (± Acciones).
+- [ ] Carnet: en móvil se puede guardar/compartir imagen igual al modal.

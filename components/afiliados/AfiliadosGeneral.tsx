@@ -15,6 +15,7 @@ import type { Afiliado, Lider } from "./esquemas";
 import { esUsuarioSede } from "./esquemas";
 import { formatearDpi, TelefonoInline } from "./contacto";
 import { Button } from "@/components/ui/button";
+import { calcularEdadLabel } from "@/utils/formatoFechaGT";
 
 interface Props {
   afiliados: Afiliado[];
@@ -108,18 +109,6 @@ function compararNombres(a: string, b: string) {
   return normalizarNombre(a).localeCompare(normalizarNombre(b), "es");
 }
 
-function calcularEdad(fechaNacimiento: string) {
-  if (!fechaNacimiento) return "—";
-  const hoy = new Date();
-  const nacimiento = new Date(fechaNacimiento);
-  let edad = hoy.getFullYear() - nacimiento.getFullYear();
-  const mes = hoy.getMonth() - nacimiento.getMonth();
-  if (mes < 0 || (mes === 0 && hoy.getDate() < nacimiento.getDate())) {
-    edad--;
-  }
-  return `${edad} años`;
-}
-
 function filaExcel(
   afiliado: Afiliado,
   liderNombre: string,
@@ -129,7 +118,7 @@ function filaExcel(
     Nombre: `${afiliado.nombres} ${afiliado.apellidos}`.trim(),
     DPI: afiliado.dpi || "",
     Teléfono: afiliado.telefono || "",
-    Edad: calcularEdad(afiliado.nacimiento),
+    Edad: calcularEdadLabel(afiliado.nacimiento),
     Sexo: afiliado.sexo || "",
     Ubicación: afiliado.lugar_nombre || "",
     Empadronado: afiliado.empadronado ? "Sí" : "No",
@@ -453,7 +442,7 @@ export default function AfiliadosGeneral({
                         />
                       </td>
                       <td className="px-4 py-2 whitespace-nowrap font-bold">
-                        {calcularEdad(row.afiliado.nacimiento)}
+                        {calcularEdadLabel(row.afiliado.nacimiento)}
                       </td>
                       <td className="px-4 py-2 whitespace-nowrap">
                         {row.afiliado.lugar_nombre || "—"}
@@ -626,7 +615,7 @@ export default function AfiliadosGeneral({
                             />
                           </td>
                           <td className="px-4 py-2 whitespace-nowrap font-bold">
-                            {calcularEdad(afiliado.nacimiento)}
+                            {calcularEdadLabel(afiliado.nacimiento)}
                           </td>
                           <td className="px-4 py-2 whitespace-nowrap">
                             {afiliado.lugar_nombre || "—"}

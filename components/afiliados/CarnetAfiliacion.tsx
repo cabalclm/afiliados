@@ -7,6 +7,10 @@ import { Download, Printer, X } from "lucide-react";
 import { toast } from "@/lib/toast";
 import type { Afiliado } from "./esquemas";
 import { formatearDpi } from "./contacto";
+import {
+  calcularEdadLabel,
+  formatearFechaDMY,
+} from "@/utils/formatoFechaGT";
 
 interface Props {
   afiliado: Afiliado | null;
@@ -28,27 +32,6 @@ function slugNombreArchivo(nombre: string) {
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/^-+|-+$/g, "") || "afiliado"
   );
-}
-
-function calcularEdad(nacimiento: string | null | undefined): string {
-  if (!nacimiento) return "—";
-  const fecha = new Date(nacimiento);
-  if (Number.isNaN(fecha.getTime())) return "—";
-  const hoy = new Date();
-  let edad = hoy.getFullYear() - fecha.getFullYear();
-  const m = hoy.getMonth() - fecha.getMonth();
-  if (m < 0 || (m === 0 && hoy.getDate() < fecha.getDate())) edad -= 1;
-  return `${edad} años`;
-}
-
-function formatearFecha(nacimiento: string | null | undefined): string {
-  if (!nacimiento) return "—";
-  const fecha = new Date(nacimiento);
-  if (Number.isNaN(fecha.getTime())) return "—";
-  const dd = String(fecha.getDate()).padStart(2, "0");
-  const mm = String(fecha.getMonth() + 1).padStart(2, "0");
-  const yyyy = fecha.getFullYear();
-  return `${dd}/${mm}/${yyyy}`;
 }
 
 function etiquetaGenero(sexo: string | null | undefined): string {
@@ -129,8 +112,8 @@ export default function CarnetAfiliacion({ afiliado, open, onClose }: Props) {
     !!dpiNorm && !!padronNorm && dpiNorm === padronNorm;
   const lugar = afiliado.lugar_nombre || "—";
   const genero = etiquetaGenero(afiliado.sexo);
-  const fechaNac = formatearFecha(afiliado.nacimiento);
-  const edad = calcularEdad(afiliado.nacimiento);
+  const fechaNac = formatearFechaDMY(afiliado.nacimiento);
+  const edad = calcularEdadLabel(afiliado.nacimiento);
 
   const esperarImagenes = async (raiz: HTMLElement) => {
     const imgs = Array.from(raiz.querySelectorAll("img"));

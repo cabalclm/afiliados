@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useForm, UseFormReturn } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { aFechaInput } from "@/utils/formatoFechaGT";
 import { afiliadoSchema, type AfiliadoFormData } from "./schemas";
 
 type Lider = {
@@ -46,7 +47,7 @@ export function useInicializarFormulario(
         methods.reset({
           ...afiliadoAEditar,
           nacimiento: afiliadoAEditar.nacimiento
-            ? new Date(afiliadoAEditar.nacimiento).toISOString().split("T")[0]
+            ? aFechaInput(afiliadoAEditar.nacimiento)
             : "",
           religion: afiliadoAEditar.religion || "",
           religion_otra: "",

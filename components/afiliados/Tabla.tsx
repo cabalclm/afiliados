@@ -29,6 +29,7 @@ import {
   linkWhatsapp,
   TelefonoInline,
 } from "./contacto";
+import { calcularEdadLabel } from "@/utils/formatoFechaGT";
 
 export type FormatoVista = "tarjetas" | "tabla";
 
@@ -147,18 +148,6 @@ export default function Tabla({
     );
   });
 
-  const calcularEdad = (fechaNacimiento: string) => {
-    if (!fechaNacimiento) return "—";
-    const hoy = new Date();
-    const nacimiento = new Date(fechaNacimiento);
-    let edad = hoy.getFullYear() - nacimiento.getFullYear();
-    const mes = hoy.getMonth() - nacimiento.getMonth();
-    if (mes < 0 || (mes === 0 && hoy.getDate() < nacimiento.getDate())) {
-      edad--;
-    }
-    return `${edad} años`;
-  };
-
   const MenuAcciones = ({ afiliado }: { afiliado: Afiliado }) => {
     if (!puedeEditar && !puedeEliminar) return null;
 
@@ -262,7 +251,7 @@ export default function Tabla({
                     <TelefonoInline telefono={afiliado.telefono || ""} />
                   </td>
                   <td className="px-3 py-2 whitespace-nowrap font-bold">
-                    {calcularEdad(afiliado.nacimiento)}
+                    {calcularEdadLabel(afiliado.nacimiento)}
                   </td>
                   <td className="px-3 py-2 whitespace-nowrap font-bold">
                     {afiliado.sexo || "—"}
@@ -338,7 +327,7 @@ export default function Tabla({
                 <span className="inline-flex shrink-0 items-center gap-1 rounded border border-white/60 bg-white/70 px-2 py-0.5 dark:border-white/10 dark:bg-black/20">
                   <Calendar className="h-3 w-3 text-gray-500 dark:text-gray-300" />
                   <span className="text-[10px] font-bold text-gray-700 dark:text-gray-200">
-                    {calcularEdad(afiliado.nacimiento)}
+                    {calcularEdadLabel(afiliado.nacimiento)}
                   </span>
                 </span>
                 <span
