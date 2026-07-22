@@ -454,7 +454,7 @@ export function SignupForm({
         <div>
           <Label>Asignar Rol</Label>
           <input type="hidden" name="rol_id" value={rol_id} />
-          <div className="mt-1 flex flex-col gap-2">
+          <div className="mt-1 grid grid-cols-1 md:grid-cols-2 gap-2">
             {rolBloqueado && rolSeleccionado ? (
               <RolChip rol={rolSeleccionado} seleccionado bloqueado />
             ) : (
