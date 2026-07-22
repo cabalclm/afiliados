@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { X, Plus } from "lucide-react";
@@ -83,6 +83,18 @@ export default function AfiliadosForm({
       : false,
   );
   const [nacimientoTexto, setNacimientoTexto] = useState("");
+  const modalRef = useRef<HTMLDivElement>(null);
+  const [modalViewport, setModalViewport] = useState<{
+    maxHeight?: string;
+    transform?: string;
+  }>({});
+
+  const scrollInputAlFoco = (el: HTMLElement) => {
+    if (!esMovil) return;
+    window.setTimeout(() => {
+      el.scrollIntoView({ block: "center", behavior: "smooth" });
+    }, 350);
+  };
 
   useEffect(() => {
     if (!isOpen) return;
@@ -104,6 +116,48 @@ export default function AfiliadosForm({
       document.documentElement.style.overflowX = prevHtmlX;
     };
   }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen || !esMovil) {
+      setModalViewport({});
+      return;
+    }
+
+    const vv = window.visualViewport;
+    if (!vv) return;
+
+    const update = () => {
+      const teclado = window.innerHeight - vv.height;
+      if (teclado > 80) {
+        setModalViewport({
+          maxHeight: `${Math.floor(vv.height * 0.9)}px`,
+          transform: `translateY(-${Math.min(teclado * 0.35, 120)}px)`,
+        });
+      } else {
+        setModalViewport({});
+      }
+    };
+
+    vv.addEventListener("resize", update);
+    vv.addEventListener("scroll", update);
+    update();
+    return () => {
+      vv.removeEventListener("resize", update);
+      vv.removeEventListener("scroll", update);
+      setModalViewport({});
+    };
+  }, [isOpen, esMovil, step]);
+
+  useEffect(() => {
+    if (!isOpen || step !== 1 || isEditMode || isFirstMember) return;
+    const t = window.setTimeout(() => {
+      const input = document.getElementById("dpi-validar-input") as
+        | HTMLInputElement
+        | null;
+      input?.focus({ preventScroll: true });
+    }, esMovil ? 400 : 150);
+    return () => window.clearTimeout(t);
+  }, [isOpen, step, esMovil, isEditMode, isFirstMember]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -251,10 +305,16 @@ export default function AfiliadosForm({
     "text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase block leading-none mb-1";
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 p-0 sm:p-4 overflow-hidden overscroll-none">
+    <div
+      className={`fixed inset-0 z-50 flex justify-center bg-black/50 overflow-hidden overscroll-none px-4 py-4 sm:p-4 ${
+        step === 1 && esMovil ? "items-start pt-[8vh]" : "items-center"
+      } sm:items-center`}
+    >
       <motion.div
-        className="bg-white dark:bg-neutral-900 border dark:border-neutral-800 rounded-t-2xl sm:rounded-lg shadow-xl w-full max-w-full sm:max-w-lg min-w-0 mx-auto p-4 sm:p-6 max-h-[92dvh] sm:max-h-[90vh] overflow-x-hidden overflow-y-auto overscroll-y-contain touch-pan-y"
-        initial={{ opacity: 0, y: 20 }}
+        ref={modalRef}
+        style={modalViewport}
+        className="bg-white dark:bg-neutral-900 border dark:border-neutral-800 rounded-2xl shadow-xl w-full max-w-full sm:max-w-lg min-w-0 mx-auto p-4 sm:p-6 max-h-[88dvh] sm:max-h-[90vh] overflow-x-hidden overflow-y-auto overscroll-y-contain touch-pan-y"
+        initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.2 }}
       >
@@ -274,23 +334,30 @@ export default function AfiliadosForm({
                 Ingrese el DPI del Afiliado
               </label>
               <Input 
+                id="dpi-validar-input"
                 {...register("dpi")} 
                 placeholder="DPI (13 dígitos)" 
-                maxLength={13} 
+                maxLength={13}
+                inputMode="numeric"
+                onFocus={(e) => scrollInputAlFoco(e.currentTarget)}
                 className={`h-12 text-base sm:text-lg text-center font-bold tracking-widest ${dpiError ? "border-red-500 bg-red-50 dark:bg-red-900/20" : ""}`}
-                autoFocus
               />
               {dpiError && <p className="text-xs font-bold text-red-500 text-center">{dpiError}</p>}
             </div>
-            <div className="flex justify-end gap-2 pt-4">
-              <Button type="button" variant="ghost" onClick={onClose} className="uppercase font-bold text-xs">
+            <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 pt-4">
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={onClose}
+                className="uppercase font-bold text-xs w-full sm:w-auto"
+              >
                 Cancelar
               </Button>
               <Button 
                 type="button" 
                 onClick={irSiguientePaso} 
                 disabled={!!dpiError || !dpiActual || dpiActual.length !== 13}
-                className="bg-blue-600 hover:bg-blue-700 text-white uppercase font-bold text-xs"
+                className="bg-blue-600 hover:bg-blue-700 text-white uppercase font-bold text-xs w-full sm:w-auto"
               >
                 Siguiente
               </Button>
