@@ -10,6 +10,7 @@ import {
   BarChart3,
   LayoutGrid,
   Loader2,
+  Pencil,
   Search,
   Table2,
   UserPlus,
@@ -57,6 +58,8 @@ interface Props {
   onClose: () => void;
   lider: Lider | null;
   onEditar: (afiliado: Afiliado) => void;
+  /** Editar perfil del líder/sede (solo admin/super). */
+  onEditarUsuario?: (lider: Lider) => void;
   onAnadirAfiliado: (liderId: string, isFirstMember?: boolean) => void;
   onDataChange: () => void;
   rolUsuarioSesion: string;
@@ -77,6 +80,7 @@ export default function Celula({
   onClose,
   lider,
   onEditar,
+  onEditarUsuario,
   onAnadirAfiliado,
   onDataChange,
   rolUsuarioSesion,
@@ -96,8 +100,14 @@ export default function Celula({
 
   const esSimulado = !!lider?.simulado;
   const esSede = !!lider && esUsuarioSede(lider);
-  const soloLectura =
-    (rolUsuarioSesion || "").toUpperCase() === "SEDE";
+  const rolUpper = (rolUsuarioSesion || "").toUpperCase();
+  const esAdminOSuper =
+    rolUpper === "ADMINISTRADOR" ||
+    rolUpper === "ADMIN" ||
+    rolUpper === "SUPER";
+  const esSedeSesion = rolUpper === "SEDE";
+  /** SEDE: gestiona integrantes solo en la célula Sede; en el resto solo consulta. */
+  const puedeGestionarIntegrantes = !esSedeSesion || esSede;
 
   useEffect(() => {
     if (!esSede) return;
@@ -217,6 +227,18 @@ export default function Celula({
           <h3 className="text-sm md:text-xl font-bold uppercase truncate dark:text-white">
             {lider.nombres} {lider.apellidos}
           </h3>
+          {esSede && esAdminOSuper && onEditarUsuario && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => onEditarUsuario(lider)}
+              className="shrink-0 h-8 gap-1.5 font-bold uppercase text-[10px] border-blue-400 bg-blue-50 text-blue-600 hover:bg-blue-100 dark:border-blue-500 dark:bg-blue-950/50 dark:text-blue-400 dark:hover:bg-blue-950/70"
+            >
+              <Pencil className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Editar Sede</span>
+            </Button>
+          )}
           {isLoading && (
             <Loader2 className="w-4 h-4 animate-spin text-blue-600 shrink-0" />
           )}
@@ -382,7 +404,7 @@ export default function Celula({
                       <span className="hidden sm:inline">Lista</span>
                     </button>
                   </div>
-                  {!soloLectura && (
+                  {puedeGestionarIntegrantes && (
                     <Button
                       variant="outline"
                       className={`font-bold h-[42px] px-4 uppercase text-xs bg-transparent border-blue-600 text-blue-600 hover:bg-blue-50 dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-950/40 flex-1 md:flex-none ${

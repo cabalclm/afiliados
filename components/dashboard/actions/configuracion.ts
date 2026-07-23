@@ -23,7 +23,8 @@ export async function actualizarConfiguracionAction(
   lugar: string,
   frase: string,
   meta_celula: number = 15,
-  meta_celula_minima: number = 10
+  meta_celula_minima: number = 10,
+  meta_general: number = 3000
 ) {
   const supabase = await createClient();
 
@@ -36,6 +37,7 @@ export async function actualizarConfiguracionAction(
       frase,
       meta_celula,
       meta_celula_minima,
+      meta_general,
       updated_at: new Date().toISOString() 
     })
     .select()

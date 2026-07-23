@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { eliminar } from "./acciones";
 import type { Afiliado, Lider } from "./esquemas";
+import { esUsuarioSede } from "./esquemas";
 import CarnetAfiliacion from "./CarnetAfiliacion";
 import {
   DropdownMenu,
@@ -42,9 +43,10 @@ interface Props {
   formato?: FormatoVista;
 }
 
-function puedeEliminarAfiliado(rol: string) {
+function puedeEliminarAfiliado(rol: string, esCelulaSede: boolean) {
   const r = (rol || "").toUpperCase();
-  return r === "ADMINISTRADOR" || r === "ADMIN" || r === "SUPER";
+  if (r === "ADMINISTRADOR" || r === "ADMIN" || r === "SUPER") return true;
+  return r === "SEDE" && esCelulaSede;
 }
 
 function TelefonoFooter({
@@ -109,9 +111,12 @@ export default function Tabla({
   formato = "tarjetas",
 }: Props) {
   const [afiliadoCarnet, setAfiliadoCarnet] = useState<Afiliado | null>(null);
-  const puedeEliminar = puedeEliminarAfiliado(rolUsuarioSesion);
-  const soloLectura = (rolUsuarioSesion || "").toUpperCase() === "SEDE";
-  const puedeEditar = !soloLectura;
+  const rolUpper = (rolUsuarioSesion || "").toUpperCase();
+  const esSedeSesion = rolUpper === "SEDE";
+  const esCelulaSede = esUsuarioSede(lider);
+  const puedeGestionarSede = esSedeSesion && esCelulaSede;
+  const puedeEliminar = puedeEliminarAfiliado(rolUsuarioSesion, esCelulaSede);
+  const puedeEditar = !esSedeSesion || puedeGestionarSede;
 
   if (afiliados.length === 0) {
     return (

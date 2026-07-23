@@ -14,6 +14,7 @@ create table if not exists public.sis_configuracion (
   frase text not null default '',
   meta_celula integer not null default 15,
   meta_celula_minima integer not null default 10,
+  meta_general integer not null default 3000,
   updated_at timestamptz not null default now(),
   constraint sis_configuracion_singleton check (id = 1),
   constraint sis_configuracion_meta_check check (meta_celula_minima < meta_celula)
@@ -133,3 +134,6 @@ alter table public.sis_mensajes
 
 alter table public.sis_mensajes
   add column if not exists activo boolean not null default true;
+
+alter table public.sis_configuracion
+  add column if not exists meta_general integer not null default 3000;

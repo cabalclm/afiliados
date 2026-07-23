@@ -12,6 +12,7 @@ import PasswordSection from "@/components/admin/sign-up/PasswordSection";
 import useUserData from "@/hooks/sesion/useUserData";
 import { createClient } from "@/utils/supabase/client";
 import { NUEVO_LIDER_SIMULADO } from "@/components/afiliados/datosSimulados";
+import { esUsuarioSede } from "@/components/afiliados/esquemas";
 import {
   PiBriefcaseDuotone,
   PiCodeDuotone,
@@ -286,26 +287,29 @@ export function SignupForm({
   const esSuperSesion = rolUsuarioSesion?.toUpperCase() === "SUPER";
   const editandoSede =
     isEdit &&
-    ((initialData?.rol || "").toUpperCase() === "SEDE" ||
+    (esUsuarioSede(initialData || {}) ||
+      (initialData?.rol || "").toUpperCase() === "SEDE" ||
       Number(initialData?.rol_id) === 5);
   const rolesParaSelector = rolesDisponibles.filter((r) => {
     const nombre = normalizarRolNombre(r.nombre);
     if (!esSuperSesion && nombre === "SUPER") return false;
-    if (modoCrearSede) return nombre === "SEDE" || r.id === 5;
-    if (editandoSede) return true;
+    if (modoCrearSede || editandoSede) return nombre === "SEDE" || r.id === 5;
     if (!isEdit && rolPredefinido) {
       return coincideRolPredefinido(r.nombre, rolPredefinido);
     }
     return nombre !== "SEDE";
   });
 
-  const rolBloqueado = !isEdit && (modoCrearSede || !!rolPredefinido);
+  const rolBloqueado =
+    editandoSede || (!isEdit && (modoCrearSede || !!rolPredefinido));
   const rolSeleccionado = rolesDisponibles.find(
     (r) => r.id.toString() === rol_id,
   );
 
   const tituloModal = isEdit
-    ? "Editar Perfil de Acceso"
+    ? editandoSede
+      ? "Editar Usuario Sede"
+      : "Editar Perfil de Acceso"
     : modoCrearSede
       ? "Crear Usuario Sede"
       : modoSimulacion

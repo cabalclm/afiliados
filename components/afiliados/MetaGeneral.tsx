@@ -3,8 +3,8 @@
 import { Building2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { PiBriefcaseDuotone, PiMedalDuotone } from "react-icons/pi";
-
-const OBJETIVO_GENERAL = 3000;
+import { useQuery } from "@tanstack/react-query";
+import { obtenerConfiguracionAction } from "@/components/dashboard/actions/configuracion";
 
 interface Props {
   totalSede: number;
@@ -21,8 +21,14 @@ export default function MetaGeneral({
   totalTrabajadores,
   usuariosLideres,
 }: Props) {
+  const { data: config } = useQuery({
+    queryKey: ["config_sistema"],
+    queryFn: () => obtenerConfiguracionAction(),
+  });
+
+  const objetivoGeneral = config?.meta_general ?? 3000;
   const total = totalSede + totalLideres + totalTrabajadores;
-  const pct = (n: number) => Math.min((n / OBJETIVO_GENERAL) * 100, 100);
+  const pct = (n: number) => Math.min((n / objetivoGeneral) * 100, 100);
   const progreso = pct(total);
 
   return (
@@ -32,7 +38,7 @@ export default function MetaGeneral({
           Meta General de Afiliación
         </span>
         <span className="text-sm md:text-base font-black text-blue-700 dark:text-blue-400 whitespace-nowrap">
-          {total.toLocaleString()} / {OBJETIVO_GENERAL.toLocaleString()}{" "}
+          {total.toLocaleString()} / {objetivoGeneral.toLocaleString()}{" "}
           <span className="text-gray-500 dark:text-gray-400 font-bold">
             ({progreso.toFixed(1)}%)
           </span>

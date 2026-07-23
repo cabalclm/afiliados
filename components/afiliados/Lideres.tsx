@@ -291,7 +291,7 @@ export default function Lideres({
                               <Pencil className="h-4 w-4" />
                               Editar
                             </DropdownMenuItem>
-                            {esAdminOSuper && (
+                            {esAdminOSuper && !esSede && (
                               <>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem

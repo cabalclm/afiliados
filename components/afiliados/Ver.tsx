@@ -486,6 +486,13 @@ export default function Ver() {
     liderId: string,
     isFirstMember = false,
   ) => {
+    if (
+      esSedeSesion &&
+      sedeUsuario?.id &&
+      liderId !== sedeUsuario.id
+    ) {
+      return;
+    }
     setAfiliadoParaEditar(null);
     setLiderParaNuevoAfiliado(liderId);
     setIsFirstMemberAddition(isFirstMember);
@@ -493,6 +500,13 @@ export default function Ver() {
   };
 
   const handleOpenEditModal = (afiliado: Afiliado) => {
+    if (
+      esSedeSesion &&
+      sedeUsuario?.id &&
+      afiliado.lider_id !== sedeUsuario.id
+    ) {
+      return;
+    }
     setAfiliadoParaEditar(afiliado);
     setLiderParaNuevoAfiliado(null);
     setIsFirstMemberAddition(false);
@@ -623,7 +637,7 @@ export default function Ver() {
         />
       )}
       <div className="px-2 md:px-6 max-w-full overflow-x-hidden min-w-0 w-full">
-        {!vistaConPestanas && <ConfiguracionSistema />}
+        <ConfiguracionSistema />
 
         <div className="mb-4 space-y-3 min-w-0">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -822,7 +836,6 @@ export default function Ver() {
                   exit={{ opacity: 0, x: tabSlideDir * -28 }}
                   transition={{ duration: 0.45, ease: tabEase }}
                 >
-                  {renderBarraPestana(activeTab)}
                   <Celula
                     embedded
                     isOpen
@@ -834,8 +847,6 @@ export default function Ver() {
                     onDataChange={fetchData}
                     rolUsuarioSesion={esSedeSesion ? "SEDE" : rol}
                     afiliadosSimulados={AFILIADOS_SIMULADOS}
-                    busqueda={busquedaTab(activeTab)}
-                    onBusquedaChange={(v) => setBusquedaTab(activeTab, v)}
                     ocultarBuscador
                   />
                 </motion.div>
@@ -858,6 +869,9 @@ export default function Ver() {
                           onClose={() => {}}
                           lider={sedeUsuario}
                           onEditar={handleOpenEditModal}
+                          onEditarUsuario={
+                            esAdminOSuper ? handleOpenEditLiderModal : undefined
+                          }
                           onAnadirAfiliado={handleOpenAnadirAfiliadoModal}
                           onDataChange={fetchData}
                           rolUsuarioSesion={esSedeSesion ? "SEDE" : rol}
