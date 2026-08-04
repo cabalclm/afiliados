@@ -8,6 +8,8 @@ import { useQuery } from "@tanstack/react-query";
 import {
   ArrowLeft,
   BarChart3,
+  ChevronLeft,
+  ChevronRight,
   LayoutGrid,
   Loader2,
   Pencil,
@@ -18,7 +20,7 @@ import {
   X,
 } from "lucide-react";
 import Image from "next/image";
-import { Fragment, useEffect, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import type { Afiliado, Lider } from "./esquemas";
 import { esUsuarioSede } from "./esquemas";
 import EstadisticasEdades from "./estadisticas/Edades";
@@ -51,6 +53,38 @@ function elegirGifAleatorio(excluido?: string) {
   return (
     opciones[Math.floor(Math.random() * opciones.length)] || GIFS_DISPONIBLES[0]
   );
+}
+
+function normalizarNombreAfiliado(texto: string) {
+  return texto
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, " ");
+}
+
+function ordenarAfiliados(afiliados: Afiliado[], lider: Lider) {
+  const nombreLider = normalizarNombreAfiliado(
+    `${lider.nombres} ${lider.apellidos}`,
+  );
+  const esAfiliadoLider = (afiliado: Afiliado) =>
+    normalizarNombreAfiliado(`${afiliado.nombres} ${afiliado.apellidos}`) ===
+    nombreLider;
+
+  return [...afiliados].sort((a, b) => {
+    const aEsLider = esAfiliadoLider(a);
+    const bEsLider = esAfiliadoLider(b);
+    if (aEsLider !== bEsLider) return aEsLider ? -1 : 1;
+
+    const fechaA = a.created_at ? new Date(a.created_at).getTime() : 0;
+    const fechaB = b.created_at ? new Date(b.created_at).getTime() : 0;
+    if (fechaA !== fechaB) return fechaA - fechaB;
+
+    return normalizarNombreAfiliado(`${a.nombres} ${a.apellidos}`).localeCompare(
+      normalizarNombreAfiliado(`${b.nombres} ${b.apellidos}`),
+    );
+  });
 }
 
 interface Props {
@@ -97,6 +131,8 @@ export default function Celula({
   const setBusqueda = onBusquedaChange ?? setBusquedaLocal;
   const [formatoVista, setFormatoVista] = useState<FormatoVista>("tarjetas");
   const [gifSede, setGifSede] = useState(() => elegirGifAleatorio());
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState<number | "all">(15);
 
   const esSimulado = !!lider?.simulado;
   const esSede = !!lider && esUsuarioSede(lider);
@@ -141,17 +177,54 @@ export default function Celula({
     : afiliadosQuery;
   const isLoading = esSimulado ? false : isLoadingQuery;
 
-  if (!lider) return null;
-
   const term = busqueda.trim().toLowerCase();
-  const afiliadosFiltrados = term
-    ? afiliadosDelLider.filter(
-        (a: Afiliado) =>
-          a.nombres.toLowerCase().includes(term) ||
-          a.apellidos.toLowerCase().includes(term) ||
-          a.dpi.includes(term),
-      )
-    : afiliadosDelLider;
+  const afiliadosFiltrados = useMemo(() => {
+    if (!term) return afiliadosDelLider;
+    return afiliadosDelLider.filter(
+      (a: Afiliado) =>
+        a.nombres.toLowerCase().includes(term) ||
+        a.apellidos.toLowerCase().includes(term) ||
+        a.dpi.includes(term),
+    );
+  }, [afiliadosDelLider, term]);
+
+  const afiliadosOrdenados = useMemo(
+    () => (lider ? ordenarAfiliados(afiliadosFiltrados, lider) : []),
+    [afiliadosFiltrados, lider],
+  );
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [busqueda, itemsPerPage, lider?.id, formatoVista]);
+
+  const effectiveItemsPerPage =
+    itemsPerPage === "all"
+      ? Math.max(afiliadosOrdenados.length, 1)
+      : itemsPerPage;
+  const totalPages = Math.max(
+    1,
+    Math.ceil(afiliadosOrdenados.length / effectiveItemsPerPage),
+  );
+
+  useEffect(() => {
+    if (currentPage > totalPages) setCurrentPage(totalPages);
+  }, [currentPage, totalPages]);
+
+  const afiliadosPaginados = useMemo(() => {
+    if (itemsPerPage === "all") return afiliadosOrdenados;
+    const startIndex = (currentPage - 1) * effectiveItemsPerPage;
+    return afiliadosOrdenados.slice(
+      startIndex,
+      startIndex + effectiveItemsPerPage,
+    );
+  }, [
+    afiliadosOrdenados,
+    currentPage,
+    itemsPerPage,
+    effectiveItemsPerPage,
+  ]);
+
+  if (!lider) return null;
 
   const totalEnGrupo = afiliadosDelLider.length;
   const objetivo = META_CELULA;
@@ -233,9 +306,9 @@ export default function Celula({
               variant="outline"
               size="sm"
               onClick={() => onEditarUsuario(lider)}
-              className="shrink-0 h-8 gap-1.5 font-bold uppercase text-[10px] border-blue-400 bg-blue-50 text-blue-600 hover:bg-blue-100 dark:border-blue-500 dark:bg-blue-950/50 dark:text-blue-400 dark:hover:bg-blue-950/70"
+              className="shrink-0 h-10 md:h-11 gap-2 font-bold uppercase text-xs md:text-sm border-blue-400 bg-blue-50 text-blue-600 hover:bg-blue-100 dark:border-blue-500 dark:bg-blue-950/50 dark:text-blue-400 dark:hover:bg-blue-950/70"
             >
-              <Pencil className="h-3.5 w-3.5" />
+              <Pencil className="h-4 w-4 md:h-5 md:w-5" />
               <span className="hidden sm:inline">Editar Sede</span>
             </Button>
           )}
@@ -244,18 +317,18 @@ export default function Celula({
           )}
         </div>
 
-        <div className="flex bg-gray-200 dark:bg-neutral-800 p-1 rounded-lg gap-1 shrink-0">
+        <div className="flex bg-gray-200 dark:bg-neutral-800 p-1 md:p-1.5 rounded-lg gap-1 shrink-0">
           {TABS.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setVistaActual(tab.id as Vista)}
-              className={`flex items-center justify-center gap-1.5 px-2.5 md:px-3 py-1.5 rounded-md text-[10px] font-bold transition-all whitespace-nowrap ${
+              className={`flex items-center justify-center gap-2 px-3 md:px-4 py-2 md:py-2.5 rounded-md text-sm md:text-base font-bold transition-all whitespace-nowrap ${
                 vistaActual === tab.id
                   ? "bg-white dark:bg-neutral-700 text-blue-600 dark:text-blue-400 shadow-sm"
                   : "text-gray-500 dark:text-gray-400 hover:bg-gray-300 dark:hover:bg-neutral-700"
               }`}
             >
-              <tab.icon className="w-4 h-4 shrink-0" />
+              <tab.icon className="w-5 h-5 shrink-0" />
               <span className="hidden sm:inline">{tab.label}</span>
             </button>
           ))}
@@ -376,38 +449,38 @@ export default function Celula({
                 <div
                   className={`flex items-center gap-2 w-full md:w-auto ${ocultarBuscador ? "ml-auto" : ""}`}
                 >
-                  <div className="flex bg-gray-100 dark:bg-neutral-800 p-1 rounded-lg border dark:border-neutral-700 shrink-0">
+                  <div className="flex bg-gray-100 dark:bg-neutral-800 p-1 md:p-1.5 rounded-lg border dark:border-neutral-700 shrink-0">
                     <button
                       type="button"
                       onClick={() => setFormatoVista("tarjetas")}
                       title="Ver tarjetas"
-                      className={`flex items-center gap-1.5 px-3 py-2 rounded-md text-[10px] font-bold uppercase transition-colors ${
+                      className={`flex items-center gap-2 px-3 md:px-4 py-2.5 md:py-3 rounded-md text-sm md:text-base font-bold uppercase transition-colors ${
                         formatoVista === "tarjetas"
                           ? "bg-white dark:bg-neutral-700 text-blue-600 dark:text-blue-400 shadow-sm"
                           : "text-gray-500 dark:text-gray-400"
                       }`}
                     >
-                      <LayoutGrid className="w-4 h-4" />
+                      <LayoutGrid className="w-5 h-5" />
                       <span className="hidden sm:inline">Tarjetas</span>
                     </button>
                     <button
                       type="button"
                       onClick={() => setFormatoVista("tabla")}
                       title="Ver tabla"
-                      className={`flex items-center gap-1.5 px-3 py-2 rounded-md text-[10px] font-bold uppercase transition-colors ${
+                      className={`flex items-center gap-2 px-3 md:px-4 py-2.5 md:py-3 rounded-md text-sm md:text-base font-bold uppercase transition-colors ${
                         formatoVista === "tabla"
                           ? "bg-white dark:bg-neutral-700 text-blue-600 dark:text-blue-400 shadow-sm"
                           : "text-gray-500 dark:text-gray-400"
                       }`}
                     >
-                      <Table2 className="w-4 h-4" />
+                      <Table2 className="w-5 h-5" />
                       <span className="hidden sm:inline">Lista</span>
                     </button>
                   </div>
                   {puedeGestionarIntegrantes && (
                     <Button
                       variant="outline"
-                      className={`font-bold h-[42px] px-4 uppercase text-xs bg-transparent border-blue-600 text-blue-600 hover:bg-blue-50 dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-950/40 flex-1 md:flex-none ${
+                      className={`font-bold h-11 md:h-12 px-4 md:px-5 uppercase text-sm md:text-base bg-transparent border-blue-600 text-blue-600 hover:bg-blue-50 dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-950/40 flex-1 md:flex-none ${
                         !esSede && totalEnGrupo === 0
                           ? "border-green-600 text-green-600 hover:bg-green-50 dark:border-green-400 dark:text-green-400 dark:hover:bg-green-950/40 animate-pulse"
                           : ""
@@ -418,12 +491,12 @@ export default function Celula({
                     >
                       {!esSede && totalEnGrupo === 0 ? (
                         <>
-                          <UserPlus className="w-4 h-4 mr-2" /> Registrarme como
+                          <UserPlus className="w-5 h-5 mr-2" /> Registrarme como
                           Líder
                         </>
                       ) : (
                         <>
-                          <UserPlus className="w-4 h-4 mr-2" /> Añadir Integrante
+                          <UserPlus className="w-5 h-5 mr-2" /> Añadir Integrante
                         </>
                       )}
                     </Button>
@@ -433,12 +506,63 @@ export default function Celula({
 
               <Tabla
                 lider={lider}
-                afiliados={afiliadosFiltrados}
+                afiliados={afiliadosPaginados}
                 onEditar={onEditar}
                 onDataChange={onDataChange}
                 rolUsuarioSesion={rolUsuarioSesion}
                 formato={formatoVista}
               />
+
+              {afiliadosOrdenados.length > 0 && (
+                <div className="flex flex-wrap items-center justify-center gap-4 mt-6 mb-8">
+                  <div className="flex items-center gap-2 text-sm md:text-base">
+                    <button
+                      type="button"
+                      aria-label="Página anterior"
+                      className="p-1 rounded text-blue-600 dark:text-blue-400 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-blue-50 dark:hover:bg-blue-950/40 transition-colors"
+                      onClick={() =>
+                        setCurrentPage((p) => Math.max(1, p - 1))
+                      }
+                      disabled={currentPage === 1 || itemsPerPage === "all"}
+                    >
+                      <ChevronLeft className="h-4 w-4 md:h-5 md:w-5" />
+                    </button>
+                    <span className="font-semibold text-gray-800 dark:text-gray-200 tabular-nums min-w-[3rem] text-center">
+                      {currentPage}/{totalPages}
+                    </span>
+                    <button
+                      type="button"
+                      aria-label="Página siguiente"
+                      className="p-1 rounded text-blue-600 dark:text-blue-400 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-blue-50 dark:hover:bg-blue-950/40 transition-colors"
+                      onClick={() =>
+                        setCurrentPage((p) => Math.min(totalPages, p + 1))
+                      }
+                      disabled={
+                        currentPage === totalPages || itemsPerPage === "all"
+                      }
+                    >
+                      <ChevronRight className="h-4 w-4 md:h-5 md:w-5" />
+                    </button>
+                  </div>
+
+                  <select
+                    value={itemsPerPage}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setItemsPerPage(
+                        val === "all" ? "all" : parseInt(val, 10),
+                      );
+                    }}
+                    className="text-sm md:text-base border border-gray-200 dark:border-neutral-700 rounded-md px-2 py-1.5 bg-white dark:bg-neutral-900 text-gray-700 dark:text-gray-300 outline-none cursor-pointer"
+                    aria-label="Cantidad por página"
+                  >
+                    <option value={15}>15</option>
+                    <option value={30}>30</option>
+                    <option value={45}>45</option>
+                    <option value="all">Todos</option>
+                  </select>
+                </div>
+              )}
             </>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 w-full pt-4">

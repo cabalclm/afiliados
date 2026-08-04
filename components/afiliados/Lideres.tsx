@@ -76,7 +76,7 @@ export default function Lideres({
   isLoading = false,
 }: Props) {
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState<number | "all">(10);
+  const [itemsPerPage, setItemsPerPage] = useState<number | "all">(15);
 
   const rolUpper = (rolUsuarioSesion || "").toUpperCase();
   const isLider = rolUpper === "LIDER";
@@ -378,13 +378,14 @@ export default function Lideres({
           value={itemsPerPage}
           onChange={(e) => {
             const val = e.target.value;
-            setItemsPerPage(val === "all" ? "all" : parseInt(val));
+            setItemsPerPage(val === "all" ? "all" : parseInt(val, 10));
           }}
           className="text-sm border border-gray-200 dark:border-neutral-700 rounded-md px-2 py-1 bg-white dark:bg-neutral-900 text-gray-700 dark:text-gray-300 outline-none cursor-pointer"
           aria-label="Cantidad por página"
         >
-          <option value={10}>10</option>
-          <option value={50}>50</option>
+          <option value={15}>15</option>
+          <option value={30}>30</option>
+          <option value={45}>45</option>
           <option value="all">Todos</option>
         </select>
       </div>

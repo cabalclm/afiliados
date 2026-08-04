@@ -163,3 +163,46 @@
     margin-bottom: 0.5rem !important;
   }
 }
+
+.swal-logout-popup {
+  border-radius: 1rem !important;
+}
+
+.swal-logout-actions {
+  display: flex !important;
+  justify-content: center !important;
+  gap: 0.75rem !important;
+  width: 100% !important;
+  margin-top: 1.25rem !important;
+}
+
+.swal-logout-confirm,
+.swal-logout-cancel {
+  border-radius: 9999px !important;
+  padding: 0.5rem 1.75rem !important;
+  font-size: 0.875rem !important;
+  font-weight: 600 !important;
+  min-width: 6rem !important;
+  margin: 0 !important;
+  box-shadow: none !important;
+}
+
+.swal-logout-confirm {
+  background: #ffffff !important;
+  color: #1f2937 !important;
+  border: 1px solid #d1d5db !important;
+}
+
+.swal-logout-confirm:hover {
+  background: #f9fafb !important;
+}
+
+.swal-logout-cancel {
+  background: #06c !important;
+  color: #ffffff !important;
+  border: none !important;
+}
+
+.swal-logout-cancel:hover {
+  background: #005bb5 !important;
+}

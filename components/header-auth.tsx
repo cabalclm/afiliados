@@ -4,6 +4,7 @@ import { signOutAction } from "@/app/actions/usuarios";
 import Link from "next/link";
 import { Button } from "./ui/button";
 import useUserData from "@/hooks/sesion/useUserData";
+import Swal from "@/lib/swal";
 import { RefreshCw } from "lucide-react";
 import { useState } from "react";
 import ConfiguracionModal from "./ConfiguracionModal";
@@ -13,12 +14,36 @@ import { AnimatedThemeToggler } from "@/components/ui/animated-theme-toggler";
 export default function AuthButton() {
   const { email, nombres, apellidos, rol, cargando } = useUserData();
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isSigningOut, setIsSigningOut] = useState(false);
 
   const handleRefresh = () => {
     setIsRefreshing(true);
     setTimeout(() => {
       window.location.reload();
     }, 500);
+  };
+
+  const handleSignOut = async () => {
+    const result = await Swal.fire({
+      title: "¿Cerrar sesión?",
+      text: "¿Estás seguro de que deseas cerrar sesión?",
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonText: "OK",
+      cancelButtonText: "Cancelar",
+      buttonsStyling: false,
+      customClass: {
+        popup: "swal-logout-popup",
+        actions: "swal-logout-actions",
+        confirmButton: "swal-logout-confirm",
+        cancelButton: "swal-logout-cancel",
+      },
+    });
+
+    if (!result.isConfirmed) return;
+
+    setIsSigningOut(true);
+    await signOutAction();
   };
 
   if (cargando) {
@@ -52,12 +77,12 @@ export default function AuthButton() {
           <Button
             type="button"
             variant="ghost"
-            className="h-10 w-10 p-0 rounded-full shrink-0 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100"
+            className="h-11 w-11 md:h-12 md:w-12 p-0 rounded-full shrink-0 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100"
             onClick={handleRefresh}
             disabled={isRefreshing}
           >
             <RefreshCw
-              className={`h-5 w-5 ${
+              className={`h-6 w-6 md:h-7 md:w-7 ${
                 isRefreshing ? "animate-spin" : "hover:rotate-180 transition-transform duration-500"
               }`}
             />
@@ -65,19 +90,19 @@ export default function AuthButton() {
           <NotificationBell />
           <AnimatedThemeToggler 
             duration={600} 
-            className="h-10 w-10 rounded-full flex items-center justify-center shrink-0 text-gray-500 hover:text-gray-900 hover:bg-gray-100/50 dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-gray-800/50 transition-colors" 
+            className="h-11 w-11 md:h-12 md:w-12 rounded-full flex items-center justify-center shrink-0 text-gray-500 hover:text-gray-900 hover:bg-gray-100/50 dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-gray-800/50 transition-colors" 
           />
         </div>
 
-        <form action={signOutAction}>
-          <Button
-            type="submit"
-            variant="ghost"
-            className="h-8 px-4 rounded-full text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/50 transition-colors text-xs md:text-sm font-semibold"
-          >
-            Cerrar Sesión
-          </Button>
-        </form>
+        <Button
+          type="button"
+          variant="ghost"
+          onClick={handleSignOut}
+          disabled={isSigningOut}
+          className="h-8 px-4 rounded-full text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/50 transition-colors text-xs md:text-sm font-semibold"
+        >
+          {isSigningOut ? "Cerrando..." : "Cerrar Sesión"}
+        </Button>
       </div>
     </div>
   ) : (
@@ -93,7 +118,7 @@ export default function AuthButton() {
         variant="hexagon" 
         duration={600} 
         fromCenter 
-        className="h-10 w-10 rounded-full flex items-center justify-center shrink-0 text-gray-500 hover:text-gray-900 hover:bg-gray-100/50 dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-gray-800/50 transition-colors"
+        className="h-11 w-11 md:h-12 md:w-12 rounded-full flex items-center justify-center shrink-0 text-gray-500 hover:text-gray-900 hover:bg-gray-100/50 dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-gray-800/50 transition-colors"
       />
     </div>
   );

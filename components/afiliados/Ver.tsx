@@ -128,30 +128,26 @@ const TAB_ORDER: Tab[] = [
 
 const tabBtnClass = (active: boolean, tab: Tab) => {
   const theme = TAB_THEMES[tab];
-  return `relative flex w-full md:w-auto md:shrink-0 flex-row items-center justify-center gap-1.5 md:gap-2 px-2 md:px-4 py-2 md:py-3 text-[10px] md:text-sm font-semibold transition-colors duration-300 ${
+  return `relative flex w-full md:w-auto md:shrink-0 flex-row items-center justify-center px-1 md:px-2 py-2.5 md:py-3 text-base md:text-lg font-semibold transition-colors duration-300 ${
     active
       ? theme.activeText
       : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
   }`;
 };
 
-const tabIconClass = (active: boolean, tab: Tab) => {
+const tabPillClass = (active: boolean, tab: Tab) => {
   const theme = TAB_THEMES[tab];
-  return `p-1 md:p-1.5 rounded-md transition-colors duration-300 shrink-0 ${
+  return `relative inline-flex w-fit max-w-full items-center justify-center gap-2 md:gap-2.5 px-3 md:px-3.5 py-2 md:py-2 rounded-lg transition-colors duration-300 ${
     active
-      ? `${theme.activeIconBg} ${theme.activeIconText}`
-      : "bg-gray-100 dark:bg-neutral-800 text-gray-400 dark:text-gray-500"
-  }`;
-};
-
-const tabBadgeClass = (active: boolean, tab: Tab) => {
-  const theme = TAB_THEMES[tab];
-  return `inline-flex items-center justify-center min-w-[1.125rem] md:min-w-[1.375rem] h-[1.125rem] md:h-[1.375rem] px-1 rounded-full text-[9px] md:text-[11px] font-bold leading-none shrink-0 ${
-    active
-      ? `${theme.activeBadgeBg} ${theme.activeBadgeText}`
+      ? `${theme.activeIconBg} ${theme.activeText}`
       : "bg-gray-100 dark:bg-neutral-800 text-gray-500 dark:text-gray-400"
   }`;
 };
+
+const tabIconClass = () => "shrink-0 flex items-center justify-center";
+
+const tabBadgeClass = () =>
+  "inline-flex items-center justify-center min-w-[1.375rem] md:min-w-[1.625rem] font-bold leading-none shrink-0";
 
 const OBJETIVO_LIDERES = 200;
 
@@ -172,9 +168,9 @@ function BtnNuevoTab({
     <button
       type="button"
       onClick={onClick}
-      className={`inline-flex h-10 items-center justify-center gap-1.5 rounded-lg border px-3 text-xs md:text-sm font-normal whitespace-nowrap transition-colors ${className}`}
+      className={`inline-flex h-11 md:h-12 items-center justify-center gap-2 rounded-lg border px-3.5 md:px-5 text-sm md:text-base font-semibold whitespace-nowrap transition-colors ${className}`}
     >
-      <span className="shrink-0 [&>svg]:w-4 [&>svg]:h-4">{icon}</span>
+      <span className="shrink-0 [&>svg]:w-5 [&>svg]:h-5 md:[&>svg]:w-5 md:[&>svg]:h-5">{icon}</span>
       {label}
     </button>
   );
@@ -296,9 +292,11 @@ export default function Ver() {
         email: session.email,
         rol: session.rol,
       }));
+  /** SEDE puede crear líderes y empleados; el resto de gestión sigue restringido. */
+  const puedeCrearLiderOEmpleado = puedeCrearLider || esSedeSesion;
   /** SUPER / ADMIN / SEDE ven pestañas; el resto solo meta + su célula. */
   const vistaConPestanas = esAdminOSuper || esSedeSesion;
-  /** SEDE solo consulta: Sede, Líderes y Trabajadores (sin editar). */
+  /** SEDE: consulta en células ajenas; crea líderes/empleados e integrantes en sede. */
   const soloLecturaSede = esSedeSesion;
   const esLider = rolUpper === "LIDER";
 
@@ -558,7 +556,7 @@ export default function Ver() {
 
     let acciones: ReactNode = null;
 
-    if (tab === "Lideres" && puedeCrearLider && !soloLecturaSede) {
+    if (tab === "Lideres" && puedeCrearLiderOEmpleado) {
       acciones = (
         <BtnNuevoTab
           label="Nuevo Líder"
@@ -569,7 +567,7 @@ export default function Ver() {
       );
     }
 
-    if (tab === "Trabajadores" && puedeCrearLider && !soloLecturaSede) {
+    if (tab === "Trabajadores" && puedeCrearLiderOEmpleado) {
       acciones = (
         <BtnNuevoTab
           label="Nuevo Empleado"
@@ -640,16 +638,20 @@ export default function Ver() {
         <ConfiguracionSistema />
 
         <div className="mb-4 space-y-3 min-w-0">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <div className="flex items-center gap-2 min-w-0">
-              <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 shrink-0">
-                <BarChart3 className="w-4 h-4" />
+          <div className="flex flex-row items-center gap-2 min-w-0 w-full md:justify-between">
+            <div
+              className={`flex items-center gap-2 min-w-0 ${
+                vistaConPestanas ? "w-1/2 md:w-auto md:flex-1" : "w-full"
+              }`}
+            >
+              <span className="flex items-center justify-center w-9 h-9 md:w-10 md:h-10 rounded-lg bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 shrink-0">
+                <BarChart3 className="w-5 h-5 md:w-5 md:h-5" />
               </span>
               <div
-                className={`min-w-0 ${puedeSimular ? "group relative" : ""}`}
+                className={`min-w-0 flex-1 ${puedeSimular ? "group relative" : ""}`}
               >
                 <h1
-                  className={`text-base md:text-xl font-black text-gray-900 dark:text-white truncate ${
+                  className={`text-lg md:text-2xl font-black text-gray-900 dark:text-white truncate ${
                     puedeSimular
                       ? "cursor-pointer underline decoration-transparent underline-offset-4 decoration-2 transition-[text-decoration-color] duration-300 group-hover:decoration-gray-900 dark:group-hover:decoration-white"
                       : ""
@@ -670,10 +672,10 @@ export default function Ver() {
               <button
                 type="button"
                 onClick={() => setIsEstadisticasOpen(true)}
-                className="inline-flex h-10 w-[9.75rem] md:w-[10.25rem] items-center justify-center gap-1.5 rounded-lg border border-blue-400 bg-blue-50 px-3 text-xs md:text-sm font-normal text-blue-600 transition-colors hover:bg-blue-100 dark:border-blue-500 dark:bg-blue-950/50 dark:text-blue-400 dark:hover:bg-blue-950/70 shrink-0 self-end sm:self-auto"
+                className="inline-flex h-11 md:h-12 w-1/2 md:w-[11.5rem] min-w-0 md:min-w-0 items-center justify-center gap-2 rounded-lg border border-blue-400 bg-blue-50 px-2 md:px-3 text-base md:text-lg font-semibold text-blue-600 transition-colors hover:bg-blue-100 dark:border-blue-500 dark:bg-blue-950/50 dark:text-blue-400 dark:hover:bg-blue-950/70 shrink-0 md:ml-auto"
               >
-                <BarChart3 className="w-4 h-4 shrink-0" />
-                Estadísticas
+                <BarChart3 className="w-5 h-5 shrink-0" />
+                <span className="truncate">Estadísticas</span>
               </button>
             )}
           </div>
@@ -705,7 +707,6 @@ export default function Ver() {
               totalSede={totalAfiliadosSede}
               totalLideres={totalAfiliadosLideres}
               totalTrabajadores={totalAfiliadosTrabajadores}
-              usuariosLideres={totalLideresRegistrados}
             />
             {miPerfilGlobal ? (
               <Celula
@@ -730,7 +731,6 @@ export default function Ver() {
               totalSede={totalAfiliadosSede}
               totalLideres={totalAfiliadosLideres}
               totalTrabajadores={totalAfiliadosTrabajadores}
-              usuariosLideres={totalLideresRegistrados}
             />
             <div className="mb-6 w-full min-w-0 border-b border-gray-200 dark:border-neutral-800">
               <div
@@ -800,26 +800,26 @@ export default function Ver() {
                         whileTap={{ scale: 0.98 }}
                         transition={{ duration: 0.2 }}
                       >
-                        <span className={tabIconClass(activo, tab.id)}>
-                          <Icon className="w-3.5 h-3.5 md:w-[18px] md:h-[18px] shrink-0" />
-                        </span>
-                        <span className="truncate">{tab.label}</span>
-                        {tab.count !== null && (
-                          <span className={tabBadgeClass(activo, tab.id)}>
-                            {tab.count}
+                        <span className={tabPillClass(activo, tab.id)}>
+                          <span className={tabIconClass()}>
+                            <Icon className="w-5 h-5 md:w-6 md:h-6 shrink-0" />
                           </span>
-                        )}
-                        {activo && (
-                          <motion.span
-                            layoutId="pestana-subrayado"
-                            className={`absolute bottom-0 left-2 right-2 md:left-3 md:right-3 h-[2px] md:h-[3px] rounded-full ${theme.lineBg}`}
-                            transition={{
-                              type: "spring",
-                              stiffness: 380,
-                              damping: 32,
-                            }}
-                          />
-                        )}
+                          <span className="whitespace-nowrap">{tab.label}</span>
+                          {tab.count !== null && (
+                            <span className={tabBadgeClass()}>{tab.count}</span>
+                          )}
+                          {activo && (
+                            <motion.span
+                              layoutId="pestana-subrayado"
+                              className={`absolute -bottom-[9px] md:-bottom-[11px] left-0 right-0 h-[2px] md:h-[3px] rounded-full ${theme.lineBg}`}
+                              transition={{
+                                type: "spring",
+                                stiffness: 380,
+                                damping: 32,
+                              }}
+                            />
+                          )}
+                        </span>
                       </motion.button>
                     );
                   })}

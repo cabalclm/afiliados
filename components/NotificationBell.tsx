@@ -49,21 +49,21 @@ export default function NotificationBell() {
             : "Activar notificaciones en este dispositivo"
       }
       aria-label="Notificaciones"
-      className={`relative h-10 w-10 p-0 rounded-full shrink-0 transition-colors ${
+      className={`relative h-11 w-11 md:h-12 md:w-12 p-0 rounded-full shrink-0 transition-colors ${
         activo
           ? "text-yellow-500 hover:text-yellow-600 dark:text-yellow-400 dark:hover:text-yellow-300"
           : "text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100"
       }`}
     >
       {procesando || cargando ? (
-        <Loader2 className="h-5 w-5 animate-spin" />
+        <Loader2 className="h-6 w-6 md:h-7 md:w-7 animate-spin" />
       ) : activo ? (
         <>
-          <BellRing className="h-5 w-5" />
-          <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-yellow-500 ring-2 ring-white dark:ring-neutral-900" />
+          <BellRing className="h-6 w-6 md:h-7 md:w-7" />
+          <span className="absolute top-2.5 right-2.5 h-2.5 w-2.5 rounded-full bg-yellow-500 ring-2 ring-white dark:ring-neutral-900" />
         </>
       ) : (
-        <Bell className="h-5 w-5" />
+        <Bell className="h-6 w-6 md:h-7 md:w-7" />
       )}
     </Button>
   );
