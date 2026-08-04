@@ -24,18 +24,18 @@ export default function ConfiguracionSistema() {
 
         <div className="flex justify-center pb-5 w-full">
           <div className="flex flex-col relative group inline-flex max-w-full">
-            <h1 className="text-2xl md:text-5xl font-bold text-center leading-tight bg-gradient-to-r from-blue-800 via-blue-400 to-blue-800 dark:from-blue-400 dark:via-blue-200 dark:to-blue-400 bg-[length:200%_auto] text-transparent bg-clip-text animate-text-shine">
+            <h1 className="text-xl sm:text-2xl md:text-5xl font-bold text-center leading-tight bg-gradient-to-r from-blue-800 via-blue-400 to-blue-800 dark:from-blue-400 dark:via-blue-200 dark:to-blue-400 bg-[length:200%_auto] text-transparent bg-clip-text animate-text-shine">
               {currentConfig.nombre_candidato || "Sin nombre asignado"}
             </h1>
             
             {currentConfig.frase && (
-              <p className="mt-1 text-base md:text-lg text-blue-500 dark:text-blue-400 font-medium italic opacity-80 text-center">
+              <p className="mt-1 text-base sm:text-lg md:text-lg text-blue-500 dark:text-blue-400 font-medium italic opacity-80 text-center px-2">
                 "{currentConfig.frase}"
               </p>
             )}
 
-            <div className="flex justify-end mt-1 w-full">
-              <span className="text-sm font-bold text-blue-300 dark:text-blue-500 uppercase tracking-widest flex items-center gap-2">
+            <div className="flex justify-end mt-1 w-full px-2">
+              <span className="text-base sm:text-lg font-bold text-blue-300 dark:text-blue-500 uppercase tracking-wide flex items-center gap-2">
                 <span className="h-[1px] w-6 bg-blue-200 dark:bg-blue-600"></span>
                 {currentConfig.lugar || "Sin lugar"}
               </span>

@@ -6,7 +6,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <>
       <nav className="w-full flex h-45">
-        <div className="w-full flex  items-center justify-between pr-5  text-xs">
+        <div className="w-full flex items-center justify-between pr-3 sm:pr-5">
           <div className="flex items-center gap-3">
             <LogoLink />
           </div>

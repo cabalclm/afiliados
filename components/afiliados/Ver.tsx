@@ -3,12 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { toast } from "@/lib/toast";
 import { AnimatePresence, motion } from "framer-motion";
-import {
-  BarChart3,
-  Building2,
-  Search,
-  X,
-} from "lucide-react";
+import { BarChart3, Building2, Search, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Fragment, useRef, useState, type ReactNode } from "react";
 import {
@@ -128,7 +123,7 @@ const TAB_ORDER: Tab[] = [
 
 const tabBtnClass = (active: boolean, tab: Tab) => {
   const theme = TAB_THEMES[tab];
-  return `relative flex w-full md:w-auto md:shrink-0 flex-row items-center justify-center px-1 md:px-2 py-2.5 md:py-3 text-base md:text-lg font-semibold transition-colors duration-300 ${
+  return `relative flex w-full md:w-auto md:shrink-0 flex-row items-center justify-center px-1.5 sm:px-2 py-3 md:py-3 text-base md:text-lg font-semibold transition-colors duration-300 ${
     active
       ? theme.activeText
       : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
@@ -137,7 +132,7 @@ const tabBtnClass = (active: boolean, tab: Tab) => {
 
 const tabPillClass = (active: boolean, tab: Tab) => {
   const theme = TAB_THEMES[tab];
-  return `relative inline-flex w-fit max-w-full items-center justify-center gap-2 md:gap-2.5 px-3 md:px-3.5 py-2 md:py-2 rounded-lg transition-colors duration-300 ${
+  return `relative inline-flex w-full max-w-full items-center justify-center gap-1.5 sm:gap-2 md:gap-2.5 px-2 sm:px-3 md:px-3.5 py-2.5 md:py-2 rounded-lg transition-colors duration-300 ${
     active
       ? `${theme.activeIconBg} ${theme.activeText}`
       : "bg-gray-100 dark:bg-neutral-800 text-gray-500 dark:text-gray-400"
@@ -168,9 +163,11 @@ function BtnNuevoTab({
     <button
       type="button"
       onClick={onClick}
-      className={`inline-flex h-11 md:h-12 items-center justify-center gap-2 rounded-lg border px-3.5 md:px-5 text-sm md:text-base font-semibold whitespace-nowrap transition-colors ${className}`}
+      className={`inline-flex h-11 md:h-12 items-center justify-center gap-2 rounded-lg border px-3.5 md:px-5 text-base md:text-lg font-semibold whitespace-nowrap transition-colors ${className}`}
     >
-      <span className="shrink-0 [&>svg]:w-5 [&>svg]:h-5 md:[&>svg]:w-5 md:[&>svg]:h-5">{icon}</span>
+      <span className="shrink-0 [&>svg]:w-5 [&>svg]:h-5 md:[&>svg]:w-5 md:[&>svg]:h-5">
+        {icon}
+      </span>
       {label}
     </button>
   );
@@ -196,7 +193,7 @@ function BarraPestana({
           placeholder={placeholder}
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className="pl-9 pr-4 py-2 h-10 border border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 rounded-lg w-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="pl-9 pr-4 py-2 h-11 border border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 rounded-lg w-full text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
       </div>
       {acciones ? (
@@ -233,9 +230,9 @@ export default function Ver() {
   >(null);
 
   const [isFirstMemberAddition, setIsFirstMemberAddition] = useState(false);
-  const [busquedaPorTab, setBusquedaPorTab] = useState<Partial<Record<Tab, string>>>(
-    {},
-  );
+  const [busquedaPorTab, setBusquedaPorTab] = useState<
+    Partial<Record<Tab, string>>
+  >({});
   const [liderSimulado, setLiderSimulado] = useState<Lider | null>(null);
 
   const busquedaTab = (tab: Tab) => busquedaPorTab[tab] ?? "";
@@ -365,9 +362,8 @@ export default function Ver() {
   );
   const totalAfiliadosLideres =
     afiliados.length > 0
-      ? afiliados.filter(
-          (a) => a.lider_id && idsUsuariosLider.has(a.lider_id),
-        ).length
+      ? afiliados.filter((a) => a.lider_id && idsUsuariosLider.has(a.lider_id))
+          .length
       : allUsers
           .filter((u) => idsUsuariosLider.has(u.id))
           .reduce((acc, u) => acc + (u.conteoAfiliados || 0), 0);
@@ -484,11 +480,7 @@ export default function Ver() {
     liderId: string,
     isFirstMember = false,
   ) => {
-    if (
-      esSedeSesion &&
-      sedeUsuario?.id &&
-      liderId !== sedeUsuario.id
-    ) {
+    if (esSedeSesion && sedeUsuario?.id && liderId !== sedeUsuario.id) {
       return;
     }
     setAfiliadoParaEditar(null);
@@ -638,20 +630,13 @@ export default function Ver() {
         <ConfiguracionSistema />
 
         <div className="mb-4 space-y-3 min-w-0">
-          <div className="flex flex-row items-center gap-2 min-w-0 w-full md:justify-between">
-            <div
-              className={`flex items-center gap-2 min-w-0 ${
-                vistaConPestanas ? "w-1/2 md:w-auto md:flex-1" : "w-full"
-              }`}
-            >
-              <span className="flex items-center justify-center w-9 h-9 md:w-10 md:h-10 rounded-lg bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 shrink-0">
-                <BarChart3 className="w-5 h-5 md:w-5 md:h-5" />
-              </span>
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 min-w-0 w-full md:justify-between">
+            <div className="flex items-center gap-2 min-w-0 w-full sm:flex-1">
               <div
                 className={`min-w-0 flex-1 ${puedeSimular ? "group relative" : ""}`}
               >
                 <h1
-                  className={`text-lg md:text-2xl font-black text-gray-900 dark:text-white truncate ${
+                  className={`text-xl sm:text-2xl md:text-2xl font-black text-gray-900 dark:text-white ${
                     puedeSimular
                       ? "cursor-pointer underline decoration-transparent underline-offset-4 decoration-2 transition-[text-decoration-color] duration-300 group-hover:decoration-gray-900 dark:group-hover:decoration-white"
                       : ""
@@ -672,7 +657,7 @@ export default function Ver() {
               <button
                 type="button"
                 onClick={() => setIsEstadisticasOpen(true)}
-                className="inline-flex h-11 md:h-12 w-1/2 md:w-[11.5rem] min-w-0 md:min-w-0 items-center justify-center gap-2 rounded-lg border border-blue-400 bg-blue-50 px-2 md:px-3 text-base md:text-lg font-semibold text-blue-600 transition-colors hover:bg-blue-100 dark:border-blue-500 dark:bg-blue-950/50 dark:text-blue-400 dark:hover:bg-blue-950/70 shrink-0 md:ml-auto"
+                className="inline-flex h-11 md:h-12 w-full sm:w-auto sm:min-w-[11.5rem] items-center justify-center gap-2 rounded-lg border border-blue-400 bg-blue-50 px-3 md:px-3 text-base md:text-lg font-semibold text-blue-600 transition-colors hover:bg-blue-100 dark:border-blue-500 dark:bg-blue-950/50 dark:text-blue-400 dark:hover:bg-blue-950/70 shrink-0 md:ml-auto"
               >
                 <BarChart3 className="w-5 h-5 shrink-0" />
                 <span className="truncate">Estadísticas</span>
@@ -681,7 +666,7 @@ export default function Ver() {
           </div>
 
           {vistaConPestanas && (
-            <p className="text-center text-xs md:text-sm font-bold uppercase tracking-wide text-blue-600 dark:text-blue-400">
+            <p className="text-center text-sm sm:text-base font-bold uppercase tracking-wide text-blue-600 dark:text-blue-400 px-1 leading-snug">
               Se requieren {lideresFaltantes.toLocaleString()} líderes/empleados
               para la meta
             </p>
@@ -734,11 +719,7 @@ export default function Ver() {
             />
             <div className="mb-6 w-full min-w-0 border-b border-gray-200 dark:border-neutral-800">
               <div
-                className={`w-full min-w-0 gap-0 ${
-                  esAdminOSuper
-                    ? "grid grid-cols-3 md:flex md:flex-nowrap md:overflow-x-auto"
-                    : "grid grid-cols-2 md:flex md:flex-nowrap md:overflow-x-auto"
-                }`}
+                className={`w-full min-w-0 gap-1 sm:gap-0 grid grid-cols-2 md:flex md:flex-nowrap md:overflow-x-auto`}
               >
                 {(
                   [
@@ -804,7 +785,9 @@ export default function Ver() {
                           <span className={tabIconClass()}>
                             <Icon className="w-5 h-5 md:w-6 md:h-6 shrink-0" />
                           </span>
-                          <span className="whitespace-nowrap">{tab.label}</span>
+                          <span className="whitespace-normal sm:whitespace-nowrap text-center leading-tight">
+                            {tab.label}
+                          </span>
                           {tab.count !== null && (
                             <span className={tabBadgeClass()}>{tab.count}</span>
                           )}
@@ -884,20 +867,20 @@ export default function Ver() {
                       <>
                         {renderBarraPestana("Sede")}
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl border border-dashed border-blue-400/70 dark:border-blue-700 bg-blue-50/80 dark:bg-blue-950/20 px-4 py-6">
-                        <div className="flex items-start gap-3 min-w-0">
-                          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400 shrink-0">
-                            <Building2 className="h-5 w-5" />
+                          <div className="flex items-start gap-3 min-w-0">
+                            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400 shrink-0">
+                              <Building2 className="h-5 w-5" />
+                            </div>
+                            <div className="min-w-0">
+                              <p className="text-sm font-black text-blue-900 dark:text-blue-200">
+                                Aún no existe el usuario Sede
+                              </p>
+                              <p className="text-xs text-blue-800/80 dark:text-blue-300/80 mt-0.5">
+                                Créalo para afiliar desde sede y diferenciarlo
+                                del avance de los líderes.
+                              </p>
+                            </div>
                           </div>
-                          <div className="min-w-0">
-                            <p className="text-sm font-black text-blue-900 dark:text-blue-200">
-                              Aún no existe el usuario Sede
-                            </p>
-                            <p className="text-xs text-blue-800/80 dark:text-blue-300/80 mt-0.5">
-                              Créalo para afiliar desde sede y diferenciarlo del
-                              avance de los líderes.
-                            </p>
-                          </div>
-                        </div>
                         </div>
                       </>
                     ))}

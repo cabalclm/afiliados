@@ -64,7 +64,7 @@ export default function AuthButton() {
   return email ? (
     <div className="flex flex-col items-end gap-1 ">
       <div className="flex flex-col items-end text-right leading-tight">
-        <span className="text-xs md:text-xl font-bold">
+        <span className="text-sm sm:text-base md:text-xl font-bold leading-snug">
           {nombres} {apellidos}
         </span>
       </div>
@@ -99,7 +99,7 @@ export default function AuthButton() {
           variant="ghost"
           onClick={handleSignOut}
           disabled={isSigningOut}
-          className="h-8 px-4 rounded-full text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/50 transition-colors text-xs md:text-sm font-semibold"
+          className="h-9 sm:h-10 px-4 rounded-full text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/50 transition-colors text-sm md:text-base font-semibold"
         >
           {isSigningOut ? "Cerrando..." : "Cerrar Sesión"}
         </Button>
