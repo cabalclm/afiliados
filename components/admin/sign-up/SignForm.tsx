@@ -285,6 +285,7 @@ export function SignupForm({
   }, [modoSimulacion]);
 
   const esSuperSesion = rolUsuarioSesion?.toUpperCase() === "SUPER";
+  const esSedeSesion = rolUsuarioSesion?.toUpperCase() === "SEDE";
   const editandoSede =
     isEdit &&
     (esUsuarioSede(initialData || {}) ||
@@ -293,6 +294,13 @@ export function SignupForm({
   const rolesParaSelector = rolesDisponibles.filter((r) => {
     const nombre = normalizarRolNombre(r.nombre);
     if (!esSuperSesion && nombre === "SUPER") return false;
+    if (esSedeSesion) {
+      return (
+        nombre === "LIDER" ||
+        nombre === "EMPLEADO" ||
+        nombre === "TRABAJADOR"
+      );
+    }
     if (modoCrearSede || editandoSede) return nombre === "SEDE" || r.id === 5;
     if (!isEdit && rolPredefinido) {
       return coincideRolPredefinido(r.nombre, rolPredefinido);
@@ -301,7 +309,9 @@ export function SignupForm({
   });
 
   const rolBloqueado =
-    editandoSede || (!isEdit && (modoCrearSede || !!rolPredefinido));
+    editandoSede ||
+    (esSedeSesion && isEdit) ||
+    (!isEdit && (modoCrearSede || !!rolPredefinido));
   const rolSeleccionado = rolesDisponibles.find(
     (r) => r.id.toString() === rol_id,
   );

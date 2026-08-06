@@ -14,7 +14,6 @@ import {
 } from "lucide-react";
 import { eliminar } from "./acciones";
 import type { Afiliado, Lider } from "./esquemas";
-import { esUsuarioSede } from "./esquemas";
 import CarnetAfiliacion from "./CarnetAfiliacion";
 import {
   DropdownMenu,
@@ -32,6 +31,8 @@ import {
 } from "./contacto";
 import { calcularEdadLabel } from "@/utils/formatoFechaGT";
 
+import type { TemaLista } from "./temaPestana";
+
 export type FormatoVista = "tarjetas" | "tabla";
 
 interface Props {
@@ -41,33 +42,47 @@ interface Props {
   onDataChange: () => void;
   rolUsuarioSesion: string;
   formato?: FormatoVista;
+  tema?: TemaLista;
+  embebido?: boolean;
 }
 
-function puedeEliminarAfiliado(rol: string, esCelulaSede: boolean) {
+function puedeEliminarAfiliado(rol: string) {
   const r = (rol || "").toUpperCase();
-  if (r === "ADMINISTRADOR" || r === "ADMIN" || r === "SUPER") return true;
-  return r === "SEDE" && esCelulaSede;
+  if (r === "SEDE") return false;
+  return r === "ADMINISTRADOR" || r === "ADMIN" || r === "SUPER";
 }
 
 function TelefonoFooter({
   telefono,
   onCarnet,
+  tema,
 }: {
   telefono: string;
   onCarnet: () => void;
+  tema?: TemaLista;
 }) {
+  const barClass =
+    tema?.telefonoBar ??
+    "bg-gradient-to-b from-sky-50 to-blue-50 text-blue-800 dark:from-blue-950/40 dark:to-sky-950/30 dark:text-blue-200";
+  const llamarClass =
+    "inline-flex shrink-0 items-center justify-center gap-1.5 whitespace-nowrap border-l border-blue-100 bg-blue-50 px-4 py-2 text-[11px] font-bold uppercase text-blue-700 transition hover:bg-blue-100 dark:border-blue-900/50 dark:bg-blue-900/30 dark:text-blue-300 dark:hover:bg-blue-900/50 min-w-[5.25rem]";
+
   return (
-    <div className="flex items-stretch border-t border-blue-100 dark:border-blue-900/50">
+    <div
+      className={`flex items-stretch border-t ${tema ? "border-gray-200 dark:border-neutral-700" : "border-blue-100 dark:border-blue-900/50"}`}
+    >
       {telefono ? (
         <>
-          <div className="flex min-w-0 flex-1 items-center justify-center bg-gradient-to-b from-sky-50 to-blue-50 px-2 py-2 text-sm font-semibold text-blue-800 dark:from-blue-950/40 dark:to-sky-950/30 dark:text-blue-200 md:justify-start md:px-3">
+          <div
+            className={`flex min-w-0 flex-1 items-center justify-center px-2 py-2 text-sm font-semibold md:justify-start md:px-3 ${barClass}`}
+          >
             <span className="truncate font-mono tracking-wide">
               {formatearTelefono(telefono)}
             </span>
           </div>
           <a
             href={linkLlamada(telefono)}
-            className="inline-flex items-center justify-center gap-1.5 border-l border-blue-100 bg-blue-50 px-3 text-[11px] font-bold uppercase text-blue-700 transition hover:bg-blue-100 dark:border-blue-900/50 dark:bg-blue-900/30 dark:text-blue-300 dark:hover:bg-blue-900/50"
+            className={llamarClass}
             title="Llamar"
           >
             <Phone className="h-3.5 w-3.5" />
@@ -109,14 +124,18 @@ export default function Tabla({
   onDataChange,
   rolUsuarioSesion,
   formato = "tarjetas",
+  tema,
+  embebido = false,
 }: Props) {
   const [afiliadoCarnet, setAfiliadoCarnet] = useState<Afiliado | null>(null);
   const rolUpper = (rolUsuarioSesion || "").toUpperCase();
   const esSedeSesion = rolUpper === "SEDE";
-  const esCelulaSede = esUsuarioSede(lider);
-  const puedeGestionarSede = esSedeSesion && esCelulaSede;
-  const puedeEliminar = puedeEliminarAfiliado(rolUsuarioSesion, esCelulaSede);
-  const puedeEditar = !esSedeSesion || puedeGestionarSede;
+  const esAdmin =
+    rolUpper === "ADMINISTRADOR" ||
+    rolUpper === "ADMIN" ||
+    rolUpper === "SUPER";
+  const puedeEliminar = puedeEliminarAfiliado(rolUsuarioSesion);
+  const puedeEditar = esAdmin || esSedeSesion || !esSedeSesion;
 
   if (afiliados.length === 0) {
     return (
@@ -154,32 +173,44 @@ export default function Tabla({
   });
 
   const MenuAcciones = ({ afiliado }: { afiliado: Afiliado }) => {
-    if (!puedeEditar && !puedeEliminar) return null;
-
     return (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <button
             type="button"
-            className="inline-flex h-8 w-8 items-center justify-center rounded-md text-gray-500 hover:bg-gray-100 dark:hover:bg-neutral-800"
+            className={`inline-flex h-8 w-8 items-center justify-center rounded-md transition-colors ${
+              tema
+                ? tema.btnText
+                : "text-gray-500 dark:text-gray-400"
+            }`}
             aria-label="Acciones"
           >
             <MoreVertical className="h-4 w-4" />
           </button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-40">
+        <DropdownMenuContent align="end" className="w-44">
+          <DropdownMenuItem
+            className="cursor-pointer gap-2"
+            onClick={() => setAfiliadoCarnet(afiliado)}
+          >
+            <IdCard className="h-4 w-4" />
+            Descargar carnet
+          </DropdownMenuItem>
           {puedeEditar && (
-            <DropdownMenuItem
-              className="cursor-pointer gap-2"
-              onClick={() => onEditar(afiliado)}
-            >
-              <Pencil className="h-4 w-4" />
-              Editar
-            </DropdownMenuItem>
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                className="cursor-pointer gap-2"
+                onClick={() => onEditar(afiliado)}
+              >
+                <Pencil className="h-4 w-4" />
+                Editar
+              </DropdownMenuItem>
+            </>
           )}
           {puedeEliminar && (
             <>
-              {puedeEditar && <DropdownMenuSeparator />}
+              <DropdownMenuSeparator />
               <DropdownMenuItem
                 className="cursor-pointer gap-2 text-red-600 focus:text-red-600"
                 onClick={() => eliminar(afiliado, onDataChange)}
@@ -194,66 +225,85 @@ export default function Tabla({
     );
   };
 
+  const theadClass = tema
+    ? `${tema.theadBg} ${tema.theadText}`
+    : "bg-gray-100 dark:bg-neutral-800 text-gray-600 dark:text-gray-300";
+
   if (formato === "tabla") {
     return (
       <>
-        <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-neutral-700">
+        <div className={embebido ? "overflow-x-auto" : "overflow-x-auto rounded-lg border border-gray-200 dark:border-neutral-700"}>
           <table className="min-w-full bg-white dark:bg-neutral-900 text-xs">
-            <thead className="bg-gray-100 dark:bg-neutral-800">
+            <thead
+              className={`${theadClass}${embebido ? " border-b border-black/5 dark:border-white/10" : ""}`}
+            >
               <tr>
-                <th className="px-3 py-2 text-left font-bold text-gray-600 dark:text-gray-300 uppercase">
+                <th className={`px-3 py-2.5 text-left font-bold uppercase ${tema ? tema.theadText : ""}`}>
                   No.
                 </th>
-                <th className="px-3 py-2 text-left font-bold text-gray-600 dark:text-gray-300 uppercase">
+                <th className={`px-3 py-2.5 text-left font-bold uppercase ${tema ? tema.theadText : ""}`}>
                   Nombre
                 </th>
-                <th className="px-3 py-2 text-left font-bold text-gray-600 dark:text-gray-300 uppercase">
+                <th className={`px-3 py-2.5 text-left font-bold uppercase ${tema ? tema.theadText : ""}`}>
                   DPI
                 </th>
-                <th className="px-3 py-2 text-left font-bold text-gray-600 dark:text-gray-300 uppercase">
+                <th className={`px-3 py-2.5 text-left font-bold uppercase ${tema ? tema.theadText : ""}`}>
                   Teléfono
                 </th>
-                <th className="px-3 py-2 text-left font-bold text-gray-600 dark:text-gray-300 uppercase">
+                <th className={`px-3 py-2.5 text-left font-bold uppercase ${tema ? tema.theadText : ""}`}>
                   Edad
                 </th>
-                <th className="px-3 py-2 text-left font-bold text-gray-600 dark:text-gray-300 uppercase">
+                <th className={`px-3 py-2.5 text-left font-bold uppercase ${tema ? tema.theadText : ""}`}>
                   Sexo
                 </th>
-                <th className="px-3 py-2 text-left font-bold text-gray-600 dark:text-gray-300 uppercase">
+                <th className={`px-3 py-2.5 text-left font-bold uppercase ${tema ? tema.theadText : ""}`}>
                   Ubicación
                 </th>
-                <th className="px-3 py-2 text-left font-bold text-gray-600 dark:text-gray-300 uppercase">
+                <th className={`px-3 py-2.5 text-left font-bold uppercase ${tema ? tema.theadText : ""}`}>
                   Padrón
                 </th>
-                {(puedeEditar || puedeEliminar) && (
-                  <th className="px-3 py-2 text-right font-bold text-gray-600 dark:text-gray-300 uppercase">
-                    Acciones
-                  </th>
-                )}
+                <th className={`px-3 py-2.5 text-right font-bold uppercase ${tema ? tema.theadText : ""}`}>
+                  Acciones
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200 dark:divide-neutral-700">
               {afiliadosOrdenados.map((afiliado, index) => (
                 <tr
                   key={afiliado.id}
-                  className={`hover:bg-gray-50 dark:hover:bg-neutral-800/50 ${
-                    esAfiliadoLider(afiliado)
-                      ? "bg-blue-50/70 dark:bg-blue-950/30"
-                      : ""
+                  className={`${
+                    tema
+                      ? tema.filaHover
+                      : "hover:bg-gray-50 dark:hover:bg-neutral-800/50"
+                  } ${
+                    esAfiliadoLider(afiliado) && tema
+                      ? tema.theadBg
+                      : esAfiliadoLider(afiliado)
+                        ? "bg-sky-100 dark:bg-sky-950/40"
+                        : ""
                   }`}
                 >
-                  <td className="px-3 py-2 whitespace-nowrap text-gray-500 dark:text-gray-400">
+                  <td className="px-3 py-2 whitespace-nowrap font-bold text-gray-500 dark:text-gray-400">
                     {index + 1}
                   </td>
-                  <td className="px-3 py-2 whitespace-nowrap font-bold text-gray-900 dark:text-gray-100 uppercase">
+                  <td
+                    className={`px-3 py-2 whitespace-nowrap font-bold uppercase ${
+                      esAfiliadoLider(afiliado) && tema
+                        ? tema.theadText
+                        : "text-gray-900 dark:text-gray-100"
+                    }`}
+                  >
                     {esAfiliadoLider(afiliado) ? "Líder: " : ""}
                     {afiliado.nombres} {afiliado.apellidos}
                   </td>
-                  <td className="px-3 py-2 whitespace-nowrap font-mono">
+                  <td className="px-3 py-2 whitespace-nowrap font-bold font-mono">
                     {afiliado.dpi ? formatearDpi(afiliado.dpi) : "—"}
                   </td>
                   <td className="px-3 py-2 whitespace-nowrap">
-                    <TelefonoInline telefono={afiliado.telefono || ""} />
+                    <TelefonoInline
+                      telefono={afiliado.telefono || ""}
+                      pillClassName={tema?.telefonoPill}
+                    />
                   </td>
                   <td className="px-3 py-2 whitespace-nowrap font-bold">
                     {calcularEdadLabel(afiliado.nacimiento)}
@@ -261,12 +311,12 @@ export default function Tabla({
                   <td className="px-3 py-2 whitespace-nowrap font-bold">
                     {afiliado.sexo || "—"}
                   </td>
-                  <td className="px-3 py-2 whitespace-nowrap">
+                  <td className="px-3 py-2 whitespace-nowrap font-bold">
                     {afiliado.lugar_nombre || "—"}
                   </td>
                   <td className="px-3 py-2 whitespace-nowrap">
                     {afiliado.empadronado ? (
-                      <span className="font-mono font-bold text-green-700 dark:text-green-400">
+                      <span className="font-mono font-bold text-gray-900 dark:text-gray-100">
                         {afiliado.no_padron || "—"}
                       </span>
                     ) : (
@@ -275,11 +325,9 @@ export default function Tabla({
                       </span>
                     )}
                   </td>
-                  {(puedeEditar || puedeEliminar) && (
-                    <td className="px-3 py-2 whitespace-nowrap text-right">
-                      <MenuAcciones afiliado={afiliado} />
-                    </td>
-                  )}
+                  <td className="px-3 py-2 whitespace-nowrap text-right">
+                    <MenuAcciones afiliado={afiliado} />
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -304,25 +352,20 @@ export default function Tabla({
           return (
             <article
               key={afiliado.id}
-              className={`flex flex-col overflow-hidden rounded-lg border bg-white dark:bg-neutral-900 shadow-sm ${
-                esLider
-                  ? "border-blue-200 dark:border-blue-800"
-                  : "border-gray-200 dark:border-neutral-700"
+              className={`flex flex-col overflow-hidden rounded-lg border bg-white shadow-sm dark:bg-neutral-900 ${
+                tema?.cardBorder ??
+                "border-sky-200 dark:border-sky-800/60"
               }`}
             >
               <div
                 className={`flex items-center gap-2 px-3 py-3 ${
-                  esLider
-                    ? "bg-blue-100 dark:bg-blue-900/40"
-                    : "bg-sky-50 dark:bg-sky-950/30"
+                  tema?.theadBg ?? "bg-sky-50 dark:bg-sky-950/30"
                 }`}
               >
                 <div className="min-w-0 flex-1">
                   <h3
                     className={`truncate text-xs font-bold uppercase leading-snug ${
-                      esLider
-                        ? "text-blue-900 dark:text-blue-100"
-                        : "text-slate-800 dark:text-sky-100"
+                      tema?.theadText ?? "text-slate-800 dark:text-sky-100"
                     }`}
                   >
                     {index + 1}. {esLider ? "Líder: " : ""}
@@ -349,7 +392,11 @@ export default function Tabla({
                   <DropdownMenuTrigger asChild>
                     <button
                       type="button"
-                      className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-slate-600 hover:bg-white/70 dark:text-sky-200 dark:hover:bg-white/10"
+                      className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md transition-colors ${
+                        tema
+                          ? tema.btnText
+                          : "text-slate-600 dark:text-sky-200"
+                      }`}
                       aria-label="Acciones"
                     >
                       <MoreVertical className="h-4 w-4" />
@@ -400,7 +447,7 @@ export default function Tabla({
                       <span className="font-bold text-gray-500 dark:text-gray-400">
                         Padrón:
                       </span>{" "}
-                      <span className="font-mono font-medium">
+                      <span className="font-mono font-bold text-gray-900 dark:text-gray-100">
                         {afiliado.no_padron || "—"}
                       </span>
                     </span>
@@ -424,6 +471,7 @@ export default function Tabla({
                 <TelefonoFooter
                   telefono={telefono}
                   onCarnet={() => setAfiliadoCarnet(afiliado)}
+                  tema={tema}
                 />
               </footer>
             </article>

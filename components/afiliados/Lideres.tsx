@@ -9,6 +9,7 @@ import {
   Trash2,
   Building2,
   MoreVertical,
+  ChevronsRight,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
@@ -22,6 +23,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import type { TemaLista } from "./temaPestana";
+import { TEMA_LIDERES, temaDesdeLider } from "./temaPestana";
 
 export interface Lider {
   id: string;
@@ -43,6 +46,7 @@ interface Props {
   searchTerm: string;
   idUsuarioSesion: string;
   isLoading?: boolean;
+  tema?: TemaLista;
 }
 
 function LideresSkeleton({ esAdminOSuper }: { esAdminOSuper: boolean }) {
@@ -74,6 +78,7 @@ export default function Lideres({
   searchTerm,
   idUsuarioSesion,
   isLoading = false,
+  tema = TEMA_LIDERES,
 }: Props) {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState<number | "all">(15);
@@ -84,8 +89,9 @@ export default function Lideres({
     rolUpper === "ADMINISTRADOR" ||
     rolUpper === "ADMIN" ||
     rolUpper === "SUPER";
+  const esSedeSesion = rolUpper === "SEDE";
   const puedeGestionarUsuarios =
-    esAdminOSuper || rolUpper === "DOCUMENTADOR";
+    esAdminOSuper || rolUpper === "DOCUMENTADOR" || esSedeSesion;
 
   const { data: config } = useQuery({
     queryKey: ["config_sistema"],
@@ -151,17 +157,17 @@ export default function Lideres({
 
   const getRowClass = (lider: Lider) => {
     if (esUsuarioSede(lider)) {
-      return "bg-blue-50 dark:bg-blue-950/40 border-blue-300 dark:border-blue-800 ring-1 ring-blue-200 dark:ring-blue-700/60";
+      return "bg-blue-50 dark:bg-blue-950/40 border-t border-b border-blue-200 dark:border-blue-800";
     }
     if (lider.id === idUsuarioSesion) {
-      return "bg-blue-50 dark:bg-blue-900/30 border-blue-200 dark:border-blue-800 ring-1 ring-blue-300 dark:ring-blue-700 shadow-blue-50 dark:shadow-none";
+      return "bg-blue-50 dark:bg-blue-900/30 border-t border-b border-blue-200 dark:border-blue-800";
     }
-    return "bg-white dark:bg-neutral-900 border-gray-200 dark:border-neutral-800 hover:border-blue-400 hover:shadow-lg dark:hover:shadow-none";
+    return "bg-white dark:bg-neutral-900 border-t border-b border-gray-200 dark:border-neutral-800 group-hover:bg-gray-50/80 dark:group-hover:bg-neutral-800/40";
   };
 
   return (
     <>
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-4 pt-1">
         <AnimatePresence initial={false}>
         {lideresPaginados.map((lider, index) => {
           const esSede = esUsuarioSede(lider);
@@ -191,6 +197,9 @@ export default function Lideres({
             textoColor = "text-red-600 dark:text-red-400";
           }
 
+          const puedeEntrar = !(isLider && lider.id !== idUsuarioSesion);
+          const temaFila = temaDesdeLider(lider, esSede);
+
           return (
             <motion.div
               key={lider.id}
@@ -207,15 +216,9 @@ export default function Lideres({
                   : undefined
               }
               transition={{ duration: 0.45, ease: [0.25, 0.46, 0.45, 0.94] }}
-              className={`flex flex-col border rounded-xl overflow-hidden shadow-sm ${getRowClass(lider)}`}
+              className={`group flex flex-col rounded-xl overflow-hidden border-l-4 border-r-4 border-l-gray-200 border-r-gray-200 dark:border-l-neutral-700 dark:border-r-neutral-700 transition-all duration-300 ease-in-out ${temaFila.hoverBordeLateral} ${getRowClass(lider)}`}
             >
-              <div
-                className={`p-4 pb-2 flex flex-col gap-3 ${isLider && lider.id !== idUsuarioSesion ? "" : "cursor-pointer"}`}
-                onClick={() => {
-                  if (isLider && lider.id !== idUsuarioSesion) return;
-                  onVerCelula(lider);
-                }}
-              >
+              <div className="p-4 pb-2 flex flex-col gap-3">
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-center gap-3 min-w-0 flex-1">
                     <div
@@ -277,7 +280,7 @@ export default function Lideres({
                           <DropdownMenuTrigger asChild>
                             <button
                               type="button"
-                              className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 dark:hover:bg-neutral-800"
+                              className={`inline-flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 transition-all duration-300 ease-in-out ${temaFila.hoverMenu}`}
                               aria-label="Acciones"
                             >
                               <MoreVertical className="h-4 w-4" />
@@ -331,16 +334,28 @@ export default function Lideres({
                   />
                 </div>
 
-                {!esSede && (
-                  <div className="flex justify-end">
-                    <span className="text-sm md:text-base tracking-wide text-right text-gray-500 dark:text-gray-400 font-bold normal-case">
+                <div className="flex items-end justify-between gap-3">
+                  {!esSede ? (
+                    <span className="text-sm md:text-base tracking-wide text-left text-gray-500 dark:text-gray-400 font-bold normal-case">
                       Nivel de compromiso:{" "}
                       <span className={`font-black ${textoColor}`}>
                         {nivelCompromiso}
                       </span>
                     </span>
-                  </div>
-                )}
+                  ) : (
+                    <span />
+                  )}
+                  {puedeEntrar && (
+                    <button
+                      type="button"
+                      onClick={() => onVerCelula(lider)}
+                      className={`inline-flex h-9 items-center justify-center gap-1 rounded-lg border border-gray-200 bg-gray-100 px-3 text-xs font-bold uppercase whitespace-nowrap shrink-0 ml-auto text-gray-500 transition-all duration-300 ease-in-out dark:border-neutral-700 dark:bg-neutral-800 dark:text-gray-400 ${temaFila.hoverEntrar}`}
+                    >
+                      Entrar
+                      <ChevronsRight className="h-4 w-4 shrink-0" />
+                    </button>
+                  )}
+                </div>
               </div>
             </motion.div>
           );

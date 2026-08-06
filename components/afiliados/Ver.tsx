@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { toast } from "@/lib/toast";
 import { AnimatePresence, motion } from "framer-motion";
-import { BarChart3, Building2, Search, X } from "lucide-react";
+import { BarChart3, Building2, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Fragment, useRef, useState, type ReactNode } from "react";
 import {
@@ -34,6 +34,15 @@ import ModalBienvenida from "./ModalBienvenida";
 import type { Afiliado, Lider } from "./esquemas";
 import { esUsuarioSede } from "./esquemas";
 import Form from "./forms/afiliados/Afiliados";
+import PanelListaPestana from "./PanelListaPestana";
+import {
+  TEMA_ADMIN,
+  TEMA_EMPLEADOS,
+  TEMA_LIDERES,
+  TEMA_MIEMBROS,
+  TEMA_MENSAJES,
+  TEMA_SEDE,
+} from "./temaPestana";
 
 import { obtenerAfiliadosAction } from "./actions/afiliados";
 import { AFILIADOS_SIMULADOS, LIDER_SIMULADO } from "./datosSimulados";
@@ -173,38 +182,6 @@ function BtnNuevoTab({
   );
 }
 
-function BarraPestana({
-  placeholder,
-  value,
-  onChange,
-  acciones,
-}: {
-  placeholder: string;
-  value: string;
-  onChange: (value: string) => void;
-  acciones?: ReactNode;
-}) {
-  return (
-    <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-4">
-      <div className="relative flex-1 min-w-0">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
-        <input
-          type="text"
-          placeholder={placeholder}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          className="pl-9 pr-4 py-2 h-11 border border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 rounded-lg w-full text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
-      </div>
-      {acciones ? (
-        <div className="flex flex-wrap items-center gap-2 shrink-0">
-          {acciones}
-        </div>
-      ) : null}
-    </div>
-  );
-}
-
 export default function Ver() {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -293,7 +270,7 @@ export default function Ver() {
   const puedeCrearLiderOEmpleado = puedeCrearLider || esSedeSesion;
   /** SUPER / ADMIN / SEDE ven pestañas; el resto solo meta + su célula. */
   const vistaConPestanas = esAdminOSuper || esSedeSesion;
-  /** SEDE: consulta en células ajenas; crea líderes/empleados e integrantes en sede. */
+  /** SEDE: sin Administrativos ni Mensajes; puede crear líderes/empleados. */
   const soloLecturaSede = esSedeSesion;
   const esLider = rolUpper === "LIDER";
 
@@ -480,9 +457,6 @@ export default function Ver() {
     liderId: string,
     isFirstMember = false,
   ) => {
-    if (esSedeSesion && sedeUsuario?.id && liderId !== sedeUsuario.id) {
-      return;
-    }
     setAfiliadoParaEditar(null);
     setLiderParaNuevoAfiliado(liderId);
     setIsFirstMemberAddition(isFirstMember);
@@ -490,13 +464,6 @@ export default function Ver() {
   };
 
   const handleOpenEditModal = (afiliado: Afiliado) => {
-    if (
-      esSedeSesion &&
-      sedeUsuario?.id &&
-      afiliado.lider_id !== sedeUsuario.id
-    ) {
-      return;
-    }
     setAfiliadoParaEditar(afiliado);
     setLiderParaNuevoAfiliado(null);
     setIsFirstMemberAddition(false);
@@ -536,20 +503,37 @@ export default function Ver() {
     OBJETIVO_LIDERES - totalLideresRegistrados,
   );
 
-  const renderBarraPestana = (tab: Tab) => {
-    const placeholders: Record<Tab, string> = {
-      Sede: "Buscar por nombre o DPI...",
-      Lideres: "Buscar por nombre",
-      Trabajadores: "Buscar por nombre",
-      Afiliados: "Buscar por nombre o DPI",
-      Administrativos: "Buscar por nombre",
-      Mensajes: "Buscar por nombre",
-    };
+  const placeholdersTab: Record<Tab, string> = {
+    Sede: "Buscar por nombre o DPI...",
+    Lideres: "Buscar por nombre",
+    Trabajadores: "Buscar por nombre",
+    Afiliados: "Buscar por nombre o DPI",
+    Administrativos: "Buscar por nombre",
+    Mensajes: "Buscar por nombre",
+  };
 
-    let acciones: ReactNode = null;
+  const getTemaTab = (tab: Tab) => {
+    switch (tab) {
+      case "Sede":
+        return TEMA_SEDE;
+      case "Lideres":
+        return TEMA_LIDERES;
+      case "Trabajadores":
+        return TEMA_EMPLEADOS;
+      case "Afiliados":
+        return TEMA_MIEMBROS;
+      case "Administrativos":
+        return TEMA_ADMIN;
+      case "Mensajes":
+        return TEMA_MENSAJES;
+      default:
+        return TEMA_LIDERES;
+    }
+  };
 
+  const getAccionesTab = (tab: Tab): ReactNode => {
     if (tab === "Lideres" && puedeCrearLiderOEmpleado) {
-      acciones = (
+      return (
         <BtnNuevoTab
           label="Nuevo Líder"
           icon={<PiMedalDuotone />}
@@ -560,7 +544,7 @@ export default function Ver() {
     }
 
     if (tab === "Trabajadores" && puedeCrearLiderOEmpleado) {
-      acciones = (
+      return (
         <BtnNuevoTab
           label="Nuevo Empleado"
           icon={<PiBriefcaseDuotone />}
@@ -571,7 +555,7 @@ export default function Ver() {
     }
 
     if (tab === "Administrativos" && esAdminOSuper) {
-      acciones = (
+      return (
         <>
           <BtnNuevoTab
             label="Nuevo Admin"
@@ -597,7 +581,7 @@ export default function Ver() {
       !sedeUsuario &&
       activeTab === "Sede"
     ) {
-      acciones = (
+      return (
         <BtnNuevoTab
           label="Crear Sede"
           icon={<Building2 />}
@@ -607,15 +591,20 @@ export default function Ver() {
       );
     }
 
-    return (
-      <BarraPestana
-        placeholder={placeholders[tab]}
-        value={busquedaTab(tab)}
-        onChange={(v) => setBusquedaTab(tab, v)}
-        acciones={acciones}
-      />
-    );
+    return null;
   };
+
+  const renderPanelTab = (tab: Tab, children: ReactNode) => (
+    <PanelListaPestana
+      tema={getTemaTab(tab)}
+      placeholder={placeholdersTab[tab]}
+      value={busquedaTab(tab)}
+      onChange={(v) => setBusquedaTab(tab, v)}
+      acciones={getAccionesTab(tab)}
+    >
+      {children}
+    </PanelListaPestana>
+  );
 
   return (
     <>
@@ -830,7 +819,6 @@ export default function Ver() {
                     onDataChange={fetchData}
                     rolUsuarioSesion={esSedeSesion ? "SEDE" : rol}
                     afiliadosSimulados={AFILIADOS_SIMULADOS}
-                    ocultarBuscador
                   />
                 </motion.div>
               ) : (
@@ -844,28 +832,22 @@ export default function Ver() {
                 >
                   {activeTab === "Sede" &&
                     (sedeUsuario ? (
-                      <>
-                        {renderBarraPestana("Sede")}
-                        <Celula
-                          embedded
-                          isOpen
-                          onClose={() => {}}
-                          lider={sedeUsuario}
-                          onEditar={handleOpenEditModal}
-                          onEditarUsuario={
-                            esAdminOSuper ? handleOpenEditLiderModal : undefined
-                          }
-                          onAnadirAfiliado={handleOpenAnadirAfiliadoModal}
-                          onDataChange={fetchData}
-                          rolUsuarioSesion={esSedeSesion ? "SEDE" : rol}
-                          busqueda={busquedaTab("Sede")}
-                          onBusquedaChange={(v) => setBusquedaTab("Sede", v)}
-                          ocultarBuscador
-                        />
-                      </>
+                      <Celula
+                        embedded
+                        isOpen
+                        onClose={() => {}}
+                        lider={sedeUsuario}
+                        onEditar={handleOpenEditModal}
+                        onEditarUsuario={
+                          esAdminOSuper ? handleOpenEditLiderModal : undefined
+                        }
+                        onAnadirAfiliado={handleOpenAnadirAfiliadoModal}
+                        onDataChange={fetchData}
+                        rolUsuarioSesion={esSedeSesion ? "SEDE" : rol}
+                      />
                     ) : (
-                      <>
-                        {renderBarraPestana("Sede")}
+                      renderPanelTab(
+                        "Sede",
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl border border-dashed border-blue-400/70 dark:border-blue-700 bg-blue-50/80 dark:bg-blue-950/20 px-4 py-6">
                           <div className="flex items-start gap-3 min-w-0">
                             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400 shrink-0">
@@ -881,13 +863,13 @@ export default function Ver() {
                               </p>
                             </div>
                           </div>
-                        </div>
-                      </>
+                        </div>,
+                      )
                     ))}
 
-                  {activeTab === "Lideres" && (
-                    <>
-                      {renderBarraPestana("Lideres")}
+                  {activeTab === "Lideres" &&
+                    renderPanelTab(
+                      "Lideres",
                       <Lideres
                         lideres={lideresVisibles}
                         onVerCelula={handleOpenCelula}
@@ -897,12 +879,12 @@ export default function Ver() {
                         searchTerm={busquedaTab("Lideres")}
                         idUsuarioSesion={userId}
                         isLoading={cargandoLideres}
-                      />
-                    </>
-                  )}
-                  {activeTab === "Afiliados" && (
-                    <>
-                      {renderBarraPestana("Afiliados")}
+                        tema={getTemaTab("Lideres")}
+                      />,
+                    )}
+                  {activeTab === "Afiliados" &&
+                    renderPanelTab(
+                      "Afiliados",
                       <AfiliadosGeneral
                         afiliados={afiliados}
                         lideres={allUsers}
@@ -910,12 +892,11 @@ export default function Ver() {
                         onDataChange={fetchData}
                         searchTerm={busquedaTab("Afiliados")}
                         isLoading={cargandoMiembros}
-                      />
-                    </>
-                  )}
-                  {activeTab === "Trabajadores" && (
-                    <>
-                      {renderBarraPestana("Trabajadores")}
+                      />,
+                    )}
+                  {activeTab === "Trabajadores" &&
+                    renderPanelTab(
+                      "Trabajadores",
                       <Lideres
                         lideres={trabajadores}
                         onVerCelula={handleOpenCelula}
@@ -925,12 +906,12 @@ export default function Ver() {
                         searchTerm={busquedaTab("Trabajadores")}
                         idUsuarioSesion={userId}
                         isLoading={cargandoLideres}
-                      />
-                    </>
-                  )}
-                  {activeTab === "Administrativos" && (
-                    <>
-                      {renderBarraPestana("Administrativos")}
+                        tema={getTemaTab("Trabajadores")}
+                      />,
+                    )}
+                  {activeTab === "Administrativos" &&
+                    renderPanelTab(
+                      "Administrativos",
                       <Lideres
                         lideres={administrativos}
                         onVerCelula={handleOpenCelula}
@@ -940,15 +921,12 @@ export default function Ver() {
                         searchTerm={busquedaTab("Administrativos")}
                         idUsuarioSesion={userId}
                         isLoading={cargandoLideres}
-                      />
-                    </>
-                  )}
-                  {activeTab === "Mensajes" && esAdminOSuper && (
-                    <>
-                      {renderBarraPestana("Mensajes")}
-                      <Difusion usuarios={allUsers} />
-                    </>
-                  )}
+                        tema={getTemaTab("Administrativos")}
+                      />,
+                    )}
+                  {activeTab === "Mensajes" &&
+                    esAdminOSuper &&
+                    renderPanelTab("Mensajes", <Difusion usuarios={allUsers} />)}
                 </motion.div>
               )}
             </AnimatePresence>
