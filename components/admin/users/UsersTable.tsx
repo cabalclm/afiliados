@@ -4,6 +4,11 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Usuario } from '@/components/admin/users/types';
+import {
+  columnaNoFijaCelda,
+  columnaNoFijaEncabezado,
+  FONDO_CELDA_TABLA,
+} from '@/lib/tablaSticky';
 
 type Props = {
   usuarios: Usuario[];
@@ -24,7 +29,14 @@ export default function UsersTable({ usuarios }: Props) {
         <table className="w-full border-collapse border-[2.5px] border-gray-300 dark:border-neutral-700 text-lg">
           <thead>
             <tr className="text-left text-[15px] font-semibold bg-gray-200 dark:bg-neutral-800 border-b-[2.5px] border-gray-400 dark:border-neutral-600 text-gray-900 dark:text-gray-100">
-              <th className="p-2 border-[1.5px] border-gray-300 dark:border-neutral-700 text-center">No.</th>
+              <th
+                className={columnaNoFijaEncabezado(
+                  "bg-gray-200 dark:bg-neutral-800",
+                  "p-2 border-[1.5px] border-gray-300 dark:border-neutral-700 text-center",
+                )}
+              >
+                No.
+              </th>
               <th className="p-2 border-[1.5px] border-gray-300 dark:border-neutral-700">Usuario</th>
               <th className="p-2 border-[1.5px] border-gray-300 dark:border-neutral-700">Nombres</th>
               <th className="p-2 border-[1.5px] border-gray-300 dark:border-neutral-700">Apellidos</th>
@@ -43,9 +55,14 @@ export default function UsersTable({ usuarios }: Props) {
               usuariosPaginados.map((usuario, index) => (
                 <tr
                   key={usuario.id}
-                  className="hover:bg-gray-50 dark:hover:bg-neutral-800/50 border-[1.5px] border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-gray-100"
+                  className="group hover:bg-gray-50 dark:hover:bg-neutral-800/50 border-[1.5px] border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-gray-100"
                 >
-                  <td className="p-2 border-[1.5px] border-gray-300 dark:border-neutral-700 text-center">
+                  <td
+                    className={columnaNoFijaCelda(
+                      FONDO_CELDA_TABLA,
+                      "p-2 border-[1.5px] border-gray-300 dark:border-neutral-700 text-center",
+                    )}
+                  >
                     {inicio + index + 1}
                   </td>
                   <td className="p-2 border-[1.5px] border-gray-300 dark:border-neutral-700">{usuario.email}</td>

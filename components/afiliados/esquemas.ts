@@ -10,6 +10,24 @@ export interface Lider {
   simulado?: boolean;
 }
 
+/** Normaliza rol para comparar sin tildes ni mayúsculas inconsistentes. */
+export function normalizarRol(rol: string | null | undefined) {
+  return (rol || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim()
+    .toUpperCase();
+}
+
+export function esRolLider(rol: string | null | undefined) {
+  return normalizarRol(rol) === "LIDER";
+}
+
+export function esRolEmpleado(rol: string | null | undefined) {
+  const r = normalizarRol(rol);
+  return r === "EMPLEADO" || r === "TRABAJADOR";
+}
+
 /** Detecta el usuario especial "Sede" (rol SEDE, o nombre/usuario legado). */
 export function esUsuarioSede(lider: {
   nombres?: string | null;

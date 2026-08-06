@@ -67,8 +67,7 @@ export default function MetaGeneral({
           className="bg-violet-500 h-full shrink-0"
         />
       </div>
-      <div className="flex flex-wrap items-center justify-between gap-3 mt-2.5">
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+      <div className="mt-2.5 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 md:justify-start">
           <span
             className={`flex items-center gap-1.5 ${texto} uppercase text-blue-700 dark:text-blue-400`}
           >
@@ -87,12 +86,6 @@ export default function MetaGeneral({
             <PiBriefcaseDuotone className="size-5 shrink-0" />
             Empleados: {totalTrabajadores.toLocaleString()}
           </span>
-        </div>
-        <span
-          className={`flex items-center gap-1.5 ${texto} text-gray-900 dark:text-gray-100 normal-case`}
-        >
-          Total: {total.toLocaleString()}
-        </span>
       </div>
     </div>
   );

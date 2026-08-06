@@ -3,13 +3,12 @@
 import { Button } from "@/components/ui/button";
 import { toast } from "@/lib/toast";
 import { AnimatePresence, motion } from "framer-motion";
-import { BarChart3, Building2, X } from "lucide-react";
+import { BarChart3, Building2, Mail, X } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { Fragment, useRef, useState, type ReactNode } from "react";
+import { Fragment, useMemo, useRef, useState, type ReactNode } from "react";
 import {
   PiBriefcaseDuotone,
   PiBuildingsDuotone,
-  PiChatCircleDotsDuotone,
   PiCodeDuotone,
   PiMedalDuotone,
   PiShieldCheckDuotone,
@@ -18,7 +17,6 @@ import {
 
 import ConfiguracionSistema from "../dashboard/ConfiguracionSistema";
 import EstadisticasEdades from "./estadisticas/Edades";
-import EstadisticasEmpadronados from "./estadisticas/Empadronados";
 import EstadisticasLugares from "./estadisticas/Lugares";
 import EstadisticasPoliticas from "./estadisticas/Politicas";
 import EstadisticasReligiones from "./estadisticas/Religion";
@@ -32,7 +30,7 @@ import Lideres from "./Lideres";
 import MetaGeneral from "./MetaGeneral";
 import ModalBienvenida from "./ModalBienvenida";
 import type { Afiliado, Lider } from "./esquemas";
-import { esUsuarioSede } from "./esquemas";
+import { esRolEmpleado, esRolLider, esUsuarioSede } from "./esquemas";
 import Form from "./forms/afiliados/Afiliados";
 import PanelListaPestana from "./PanelListaPestana";
 import {
@@ -270,6 +268,11 @@ export default function Ver() {
   const puedeCrearLiderOEmpleado = puedeCrearLider || esSedeSesion;
   /** SUPER / ADMIN / SEDE ven pestañas; el resto solo meta + su célula. */
   const vistaConPestanas = esAdminOSuper || esSedeSesion;
+  /** Aviso de líderes faltantes para la meta: solo admin, super y sede. */
+  const puedeVerAvisoMetaEquipo =
+    (esAdminOSuper || esSedeSesion) &&
+    !esRolLider(rol) &&
+    !esRolEmpleado(rol);
   /** SEDE: sin Administrativos ni Mensajes; puede crear líderes/empleados. */
   const soloLecturaSede = esSedeSesion;
   const esLider = rolUpper === "LIDER";
@@ -282,20 +285,14 @@ export default function Ver() {
   const { data: afiliados = [], isLoading: isLoadingAfiliados } = useQuery({
     queryKey: ["afiliados-gl"],
     queryFn: () => obtenerAfiliadosAction(),
-    enabled:
-      isEstadisticasOpen ||
-      (vistaConPestanas &&
-        (activeTab === "Afiliados" ||
-          activeTab === "Sede" ||
-          !!liderParaCelula)) ||
-      !vistaConPestanas,
+    enabled: isEstadisticasOpen || vistaConPestanas || !vistaConPestanas,
   });
 
   // Derivar líderes, admins, lugares de la respuesta unificada
   const allUsers = (dashboardData?.usuarios || []) as Lider[];
   const allLideres = allUsers.filter(
     (u) =>
-      (u.rol || "").toUpperCase() === "LIDER" ||
+      esRolLider(u.rol) ||
       (u.rol || "").toUpperCase() === "SEDE" ||
       esUsuarioSede(u),
   );
@@ -320,30 +317,70 @@ export default function Ver() {
   const administrativos = allUsers.filter((u) =>
     rolesAdminVisibles.includes((u.rol || "").toUpperCase()),
   );
-  const trabajadores = allUsers.filter((u) => {
-    const r = (u.rol || "").toUpperCase();
-    return r === "EMPLEADO" || r === "TRABAJADOR";
-  });
-  const totalAfiliadosTrabajadores = trabajadores.reduce(
-    (acc, u) => acc + (u.conteoAfiliados || 0),
-    0,
-  );
+  const trabajadores = allUsers.filter((u) => esRolEmpleado(u.rol));
   const sedeUsuario =
     allUsers.find((u) => esUsuarioSede(u)) ||
     (esSedeSesion && miPerfilGlobal ? miPerfilGlobal : null);
-  const totalAfiliadosSede = sedeUsuario?.conteoAfiliados || 0;
-  const idsUsuariosLider = new Set(
-    allUsers
-      .filter((u) => (u.rol || "").toUpperCase() === "LIDER")
-      .map((u) => u.id),
-  );
-  const totalAfiliadosLideres =
-    afiliados.length > 0
-      ? afiliados.filter((a) => a.lider_id && idsUsuariosLider.has(a.lider_id))
-          .length
-      : allUsers
-          .filter((u) => idsUsuariosLider.has(u.id))
-          .reduce((acc, u) => acc + (u.conteoAfiliados || 0), 0);
+
+  const totalesMeta = useMemo(() => {
+    const idsEmpleado = new Set(
+      allUsers.filter((u) => esRolEmpleado(u.rol)).map((u) => u.id),
+    );
+    const idsLider = new Set(
+      allUsers.filter((u) => esRolLider(u.rol)).map((u) => u.id),
+    );
+    const sedeId = sedeUsuario?.id;
+    const conLider = afiliados.filter((a) => a.lider_id);
+
+    if (conLider.length > 0) {
+      let sede = 0;
+      let lideres = 0;
+      let trabajadoresCount = 0;
+
+      for (const a of conLider) {
+        const lid = a.lider_id!;
+        const responsable = allUsers.find((u) => u.id === lid);
+
+        if (
+          (sedeId && lid === sedeId) ||
+          (responsable && esUsuarioSede(responsable))
+        ) {
+          sede++;
+        } else if (idsEmpleado.has(lid)) {
+          trabajadoresCount++;
+        } else {
+          lideres++;
+        }
+      }
+
+      return {
+        sede,
+        lideres,
+        trabajadores: trabajadoresCount,
+        total: sede + lideres + trabajadoresCount,
+      };
+    }
+
+    const sede = sedeUsuario?.conteoAfiliados || 0;
+    const lideres = allUsers
+      .filter((u) => idsLider.has(u.id))
+      .reduce((acc, u) => acc + (u.conteoAfiliados || 0), 0);
+    const trabajadoresCount = allUsers
+      .filter((u) => idsEmpleado.has(u.id))
+      .reduce((acc, u) => acc + (u.conteoAfiliados || 0), 0);
+
+    return {
+      sede,
+      lideres,
+      trabajadores: trabajadoresCount,
+      total: sede + lideres + trabajadoresCount,
+    };
+  }, [afiliados, allUsers, sedeUsuario]);
+
+  const totalAfiliadosSede = totalesMeta.sede;
+  const totalAfiliadosLideres = totalesMeta.lideres;
+  const totalAfiliadosTrabajadores = totalesMeta.trabajadores;
+  const totalMiembrosGeneral = totalesMeta.total;
   const lugares = (dashboardData?.lugares || []) as Lugar[];
 
   const lideres = (() => {
@@ -382,13 +419,11 @@ export default function Ver() {
     );
   };
 
-  const totalLideresRegistrados = allUsers.filter(
-    (u) => (u.rol || "").toUpperCase() === "LIDER",
+  const totalLideresRegistrados = allUsers.filter((u) =>
+    esRolLider(u.rol),
   ).length;
   const totalEmpleadosRegistrados = trabajadores.length;
   const totalAdministrativosRegistrados = administrativos.length;
-  const totalMiembrosGeneral =
-    totalAfiliadosSede + totalAfiliadosLideres + totalAfiliadosTrabajadores;
 
   const cambiarTab = (tab: Tab) => {
     if (soloLecturaSede && (tab === "Mensajes" || tab === "Administrativos")) {
@@ -654,7 +689,7 @@ export default function Ver() {
             )}
           </div>
 
-          {vistaConPestanas && (
+          {puedeVerAvisoMetaEquipo && (
             <p className="text-center text-sm sm:text-base font-bold uppercase tracking-wide text-blue-600 dark:text-blue-400 px-1 leading-snug">
               Se requieren {lideresFaltantes.toLocaleString()} líderes/empleados
               para la meta
@@ -751,7 +786,7 @@ export default function Ver() {
                       id: "Mensajes" as Tab,
                       label: "Mensajes",
                       count: null as number | null,
-                      icon: PiChatCircleDotsDuotone,
+                      icon: Mail,
                       show: esAdminOSuper,
                     },
                   ] as const
@@ -882,18 +917,19 @@ export default function Ver() {
                         tema={getTemaTab("Lideres")}
                       />,
                     )}
-                  {activeTab === "Afiliados" &&
-                    renderPanelTab(
-                      "Afiliados",
-                      <AfiliadosGeneral
-                        afiliados={afiliados}
-                        lideres={allUsers}
-                        onEditar={handleOpenEditModal}
-                        onDataChange={fetchData}
-                        searchTerm={busquedaTab("Afiliados")}
-                        isLoading={cargandoMiembros}
-                      />,
-                    )}
+                  {activeTab === "Afiliados" && (
+                    <AfiliadosGeneral
+                      afiliados={afiliados}
+                      lideres={allUsers}
+                      onEditar={handleOpenEditModal}
+                      onDataChange={fetchData}
+                      searchTerm={busquedaTab("Afiliados")}
+                      onSearchChange={(v) => setBusquedaTab("Afiliados", v)}
+                      placeholder={placeholdersTab.Afiliados}
+                      tema={getTemaTab("Afiliados")}
+                      isLoading={cargandoMiembros}
+                    />
+                  )}
                   {activeTab === "Trabajadores" &&
                     renderPanelTab(
                       "Trabajadores",
@@ -964,24 +1000,22 @@ export default function Ver() {
               </div>
               <div className="flex-1 overflow-y-auto bg-gray-50/30 dark:bg-neutral-950 py-4 md:p-8">
                 <div className="max-w-[1600px] mx-auto">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full pt-4">
-                    <div className="bg-white dark:bg-neutral-900 flex flex-col min-h-[450px] rounded-lg border dark:border-neutral-800">
-                      <EstadisticasEdades afiliados={afiliados} />
+                  <div className="flex w-full flex-col gap-8 pt-4">
+                    <div className="grid grid-cols-1 items-stretch gap-8 md:grid-cols-2 xl:grid-cols-3">
+                      <div className="flex h-full flex-col justify-start rounded-lg border bg-white dark:border-neutral-800 dark:bg-neutral-900">
+                        <EstadisticasEdades afiliados={afiliados} />
+                      </div>
+
+                      <div className="flex h-full flex-col justify-start rounded-lg border bg-white dark:border-neutral-800 dark:bg-neutral-900">
+                        <EstadisticasReligiones afiliados={afiliados} />
+                      </div>
+
+                      <div className="flex h-full flex-col justify-start rounded-lg border bg-white dark:border-neutral-800 dark:bg-neutral-900">
+                        <EstadisticasPoliticas afiliados={afiliados} />
+                      </div>
                     </div>
 
-                    <div className="bg-white dark:bg-neutral-900 flex flex-col min-h-[450px] rounded-lg border dark:border-neutral-800">
-                      <EstadisticasEmpadronados afiliados={afiliados} />
-                    </div>
-
-                    <div className="bg-white dark:bg-neutral-900 flex flex-col min-h-[450px] rounded-lg border dark:border-neutral-800">
-                      <EstadisticasReligiones afiliados={afiliados} />
-                    </div>
-
-                    <div className="bg-white dark:bg-neutral-900 flex flex-col min-h-[450px] rounded-lg border dark:border-neutral-800">
-                      <EstadisticasPoliticas afiliados={afiliados} />
-                    </div>
-
-                    <div className="bg-white dark:bg-neutral-900 flex flex-col min-h-[450px] md:col-span-2 rounded-lg border dark:border-neutral-800">
+                    <div className="flex w-full flex-col justify-start rounded-lg border bg-white dark:border-neutral-800 dark:bg-neutral-900">
                       <EstadisticasLugares afiliados={afiliados} />
                     </div>
                   </div>

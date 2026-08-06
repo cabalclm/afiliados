@@ -29,6 +29,12 @@ import {
   linkWhatsapp,
   TelefonoInline,
 } from "./contacto";
+import {
+  columnaNoFijaCelda,
+  columnaNoFijaEncabezado,
+  FONDO_CELDA_TABLA,
+  FONDO_ENCABEZADO_TABLA,
+} from "@/lib/tablaSticky";
 import { calcularEdadLabel } from "@/utils/formatoFechaGT";
 
 import type { TemaLista } from "./temaPestana";
@@ -65,7 +71,7 @@ function TelefonoFooter({
     tema?.telefonoBar ??
     "bg-gradient-to-b from-sky-50 to-blue-50 text-blue-800 dark:from-blue-950/40 dark:to-sky-950/30 dark:text-blue-200";
   const llamarClass =
-    "inline-flex shrink-0 items-center justify-center gap-1.5 whitespace-nowrap border-l border-blue-100 bg-blue-50 px-4 py-2 text-[11px] font-bold uppercase text-blue-700 transition hover:bg-blue-100 dark:border-blue-900/50 dark:bg-blue-900/30 dark:text-blue-300 dark:hover:bg-blue-900/50 min-w-[5.25rem]";
+    "inline-flex shrink-0 items-center justify-center gap-1 whitespace-nowrap border-l border-blue-100 bg-blue-50 px-2 py-1.5 text-[9px] font-bold uppercase text-blue-700 transition hover:bg-blue-100 dark:border-blue-900/50 dark:bg-blue-900/30 dark:text-blue-300 dark:hover:bg-blue-900/50 min-w-[3.75rem] md:gap-1.5 md:px-4 md:py-2 md:text-[11px] md:min-w-[5.25rem]";
 
   return (
     <div
@@ -74,7 +80,7 @@ function TelefonoFooter({
       {telefono ? (
         <>
           <div
-            className={`flex min-w-0 flex-1 items-center justify-center px-2 py-2 text-sm font-semibold md:justify-start md:px-3 ${barClass}`}
+            className={`flex min-w-0 flex-1 items-center justify-center px-1.5 py-1.5 text-[10px] font-semibold md:justify-start md:px-3 md:py-2 md:text-sm ${barClass}`}
           >
             <span className="truncate font-mono tracking-wide">
               {formatearTelefono(telefono)}
@@ -85,32 +91,32 @@ function TelefonoFooter({
             className={llamarClass}
             title="Llamar"
           >
-            <Phone className="h-3.5 w-3.5" />
+            <Phone className="h-3 w-3 md:h-3.5 md:w-3.5" />
             Llamar
           </a>
           <a
             href={linkWhatsapp(telefono)}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center justify-center gap-1.5 border-l border-green-200 bg-green-50 px-3 text-[11px] font-bold uppercase text-green-700 transition hover:bg-green-100 dark:border-green-800/50 dark:bg-green-900/30 dark:text-green-400 dark:hover:bg-green-900/50"
+            className="inline-flex items-center justify-center gap-1 border-l border-green-200 bg-green-50 px-2 py-1.5 text-[9px] font-bold uppercase text-green-700 transition hover:bg-green-100 dark:border-green-800/50 dark:bg-green-900/30 dark:text-green-400 dark:hover:bg-green-900/50 md:gap-1.5 md:px-3 md:text-[11px]"
             title="WhatsApp"
           >
-            <MessageCircle className="h-3.5 w-3.5" />
+            <MessageCircle className="h-3 w-3 md:h-3.5 md:w-3.5" />
             WhatsApp
           </a>
         </>
       ) : (
-        <div className="flex min-w-0 flex-1 items-center px-3 py-2 text-[11px] text-gray-400 dark:text-gray-500">
+        <div className="flex min-w-0 flex-1 items-center px-2 py-1.5 text-[9px] text-gray-400 dark:text-gray-500 md:px-3 md:py-2 md:text-[11px]">
           Sin teléfono
         </div>
       )}
       <button
         type="button"
         onClick={onCarnet}
-        className="inline-flex items-center justify-center gap-1.5 border-l border-indigo-200 bg-indigo-50 px-3 text-[11px] font-bold uppercase text-indigo-700 transition hover:bg-indigo-100 dark:border-indigo-800/50 dark:bg-indigo-900/30 dark:text-indigo-300 dark:hover:bg-indigo-900/50"
+        className="inline-flex items-center justify-center gap-1 border-l border-indigo-200 bg-indigo-50 px-2 py-1.5 text-[9px] font-bold uppercase text-indigo-700 transition hover:bg-indigo-100 dark:border-indigo-800/50 dark:bg-indigo-900/30 dark:text-indigo-300 dark:hover:bg-indigo-900/50 md:gap-1.5 md:px-3 md:text-[11px]"
         title="Carnet"
       >
-        <IdCard className="h-3.5 w-3.5" />
+        <IdCard className="h-3 w-3 md:h-3.5 md:w-3.5" />
         Carnet
       </button>
     </div>
@@ -238,7 +244,12 @@ export default function Tabla({
               className={`${theadClass}${embebido ? " border-b border-black/5 dark:border-white/10" : ""}`}
             >
               <tr>
-                <th className={`px-3 py-2.5 text-left font-bold uppercase ${tema ? tema.theadText : ""}`}>
+                <th
+                  className={columnaNoFijaEncabezado(
+                    tema ? tema.theadBg : FONDO_ENCABEZADO_TABLA,
+                    `px-3 py-2.5 text-left font-bold uppercase ${tema ? tema.theadText : ""}`,
+                  )}
+                >
                   No.
                 </th>
                 <th className={`px-3 py-2.5 text-left font-bold uppercase ${tema ? tema.theadText : ""}`}>
@@ -271,7 +282,7 @@ export default function Tabla({
               {afiliadosOrdenados.map((afiliado, index) => (
                 <tr
                   key={afiliado.id}
-                  className={`${
+                  className={`group ${
                     tema
                       ? tema.filaHover
                       : "hover:bg-gray-50 dark:hover:bg-neutral-800/50"
@@ -283,16 +294,19 @@ export default function Tabla({
                         : ""
                   }`}
                 >
-                  <td className="px-3 py-2 whitespace-nowrap font-bold text-gray-500 dark:text-gray-400">
+                  <td
+                    className={columnaNoFijaCelda(
+                      esAfiliadoLider(afiliado) && tema
+                        ? tema.theadBg
+                        : esAfiliadoLider(afiliado)
+                          ? "bg-sky-100 dark:bg-sky-950/40"
+                          : FONDO_CELDA_TABLA,
+                      "px-3 py-2 whitespace-nowrap font-bold text-gray-500 dark:text-gray-400",
+                    )}
+                  >
                     {index + 1}
                   </td>
-                  <td
-                    className={`px-3 py-2 whitespace-nowrap font-bold uppercase ${
-                      esAfiliadoLider(afiliado) && tema
-                        ? tema.theadText
-                        : "text-gray-900 dark:text-gray-100"
-                    }`}
-                  >
+                  <td className="px-3 py-2 whitespace-nowrap font-bold uppercase text-gray-900 dark:text-gray-100">
                     {esAfiliadoLider(afiliado) ? "Líder: " : ""}
                     {afiliado.nombres} {afiliado.apellidos}
                   </td>
@@ -365,7 +379,9 @@ export default function Tabla({
                 <div className="min-w-0 flex-1">
                   <h3
                     className={`truncate text-xs font-bold uppercase leading-snug ${
-                      tema?.theadText ?? "text-slate-800 dark:text-sky-100"
+                      esLider
+                        ? "text-gray-900 dark:text-gray-100"
+                        : tema?.theadText ?? "text-slate-800 dark:text-sky-100"
                     }`}
                   >
                     {index + 1}. {esLider ? "Líder: " : ""}

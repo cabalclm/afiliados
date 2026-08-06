@@ -12,10 +12,16 @@ import {
 import { AnimatePresence, motion } from "framer-motion";
 import * as XLSX from "xlsx";
 import type { Afiliado, Lider } from "./esquemas";
-import { esUsuarioSede } from "./esquemas";
+import { esRolEmpleado, esRolLider, esUsuarioSede } from "./esquemas";
 import { formatearDpi, TelefonoInline } from "./contacto";
-import { Button } from "@/components/ui/button";
 import { calcularEdadLabel } from "@/utils/formatoFechaGT";
+import { TEMA_MIEMBROS, type TemaLista } from "./temaPestana";
+import PanelListaPestana from "./PanelListaPestana";
+import {
+  columnaNoFijaCelda,
+  columnaNoFijaEncabezado,
+  FONDO_CELDA_TABLA,
+} from "@/lib/tablaSticky";
 
 interface Props {
   afiliados: Afiliado[];
@@ -23,6 +29,9 @@ interface Props {
   onEditar: (afiliado: Afiliado) => void;
   onDataChange: () => void;
   searchTerm: string;
+  onSearchChange: (value: string) => void;
+  placeholder?: string;
+  tema?: TemaLista;
   isLoading?: boolean;
 }
 
@@ -47,8 +56,9 @@ const CATEGORIAS: Array<{
     titulo: "Todos",
     icon: Users,
     active:
-      "bg-sky-600 text-white border-sky-600 shadow-md shadow-sky-200/50 dark:shadow-none",
-    idle: "bg-white dark:bg-neutral-900 text-sky-700 dark:text-sky-400 border-sky-200 dark:border-sky-800 hover:bg-sky-50 dark:hover:bg-sky-950/40",
+      "bg-sky-100 text-sky-600 dark:bg-sky-950/60 dark:text-sky-400",
+    idle:
+      "bg-gray-100 text-gray-500 hover:text-gray-700 dark:bg-neutral-800 dark:text-gray-400 dark:hover:text-gray-300",
     rowActive: "bg-sky-50 dark:bg-sky-950/40",
   },
   {
@@ -56,8 +66,9 @@ const CATEGORIAS: Array<{
     titulo: "Sede",
     icon: Building2,
     active:
-      "bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-200/50 dark:shadow-none",
-    idle: "bg-white dark:bg-neutral-900 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-800 hover:bg-blue-50 dark:hover:bg-blue-950/40",
+      "bg-blue-100 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400",
+    idle:
+      "bg-gray-100 text-gray-500 hover:text-gray-700 dark:bg-neutral-800 dark:text-gray-400 dark:hover:text-gray-300",
     rowActive: "bg-blue-50 dark:bg-blue-950/40",
   },
   {
@@ -65,8 +76,9 @@ const CATEGORIAS: Array<{
     titulo: "Líderes",
     icon: Medal,
     active:
-      "bg-orange-500 text-white border-orange-500 shadow-md shadow-orange-200/50 dark:shadow-none",
-    idle: "bg-white dark:bg-neutral-900 text-orange-700 dark:text-orange-400 border-orange-200 dark:border-orange-800 hover:bg-orange-50 dark:hover:bg-orange-950/40",
+      "bg-orange-100 text-orange-600 dark:bg-orange-950/60 dark:text-orange-400",
+    idle:
+      "bg-gray-100 text-gray-500 hover:text-gray-700 dark:bg-neutral-800 dark:text-gray-400 dark:hover:text-gray-300",
     rowActive: "bg-orange-50 dark:bg-orange-950/30",
   },
   {
@@ -74,21 +86,30 @@ const CATEGORIAS: Array<{
     titulo: "Empleado",
     icon: Briefcase,
     active:
-      "bg-violet-600 text-white border-violet-600 shadow-md shadow-violet-200/50 dark:shadow-none",
-    idle: "bg-white dark:bg-neutral-900 text-violet-700 dark:text-violet-400 border-violet-200 dark:border-violet-800 hover:bg-violet-50 dark:hover:bg-violet-950/40",
+      "bg-violet-100 text-violet-600 dark:bg-violet-950/60 dark:text-violet-400",
+    idle:
+      "bg-gray-100 text-gray-500 hover:text-gray-700 dark:bg-neutral-800 dark:text-gray-400 dark:hover:text-gray-300",
     rowActive: "bg-violet-50 dark:bg-violet-950/30",
   },
 ];
 
-function esRolEmpleado(rol: string | null | undefined) {
-  const r = (rol || "").toUpperCase();
-  return r === "EMPLEADO" || r === "TRABAJADOR";
-}
-
-function tipoDeLider(lider: Lider): Exclude<GrupoTipo, "todos"> {
+function tipoDeLider(lider: Lider): Exclude<GrupoTipo, "todos"> | null {
   if (esUsuarioSede(lider)) return "sede";
   if (esRolEmpleado(lider.rol)) return "trabajador";
-  return "lider";
+  if (esRolLider(lider.rol)) return "lider";
+  return null;
+}
+
+function liderDesdeAfiliado(liderId: string, lista: Afiliado[]): Lider {
+  const nombre = (lista[0]?.lider_nombre || "Líder").trim();
+  const partes = nombre.split(/\s+/);
+  return {
+    id: liderId,
+    email: "",
+    nombres: partes[0] || "Líder",
+    apellidos: partes.slice(1).join(" ") || "",
+    rol: "LIDER",
+  };
 }
 
 function etiquetaGrupo(tipo: Exclude<GrupoTipo, "todos">) {
@@ -148,6 +169,9 @@ export default function AfiliadosGeneral({
   afiliados,
   lideres,
   searchTerm,
+  onSearchChange,
+  placeholder = "Buscar por nombre o DPI...",
+  tema = TEMA_MIEMBROS,
   isLoading = false,
 }: Props) {
   const [categoria, setCategoria] = useState<GrupoTipo>("todos");
@@ -174,34 +198,28 @@ export default function AfiliadosGeneral({
     });
 
     const result: GrupoAfiliados[] = [];
+    const liderMap = new Map(lideres.map((l) => [l.id, l]));
+    const idsIncluidos = new Set<string>();
 
     lideres.forEach((lider) => {
       const tipo = tipoDeLider(lider);
-      const rol = (lider.rol || "").toUpperCase();
+      if (!tipo) return;
+      result.push({
+        lider,
+        afiliados: grouped.get(lider.id) || [],
+        tipo,
+      });
+      idsIncluidos.add(lider.id);
+    });
 
-      if (tipo === "sede") {
-        result.push({
-          lider,
-          afiliados: grouped.get(lider.id) || [],
-          tipo: "sede",
-        });
-        return;
-      }
-      if (esRolEmpleado(rol)) {
-        result.push({
-          lider,
-          afiliados: grouped.get(lider.id) || [],
-          tipo: "trabajador",
-        });
-        return;
-      }
-      if (rol === "LIDER") {
-        result.push({
-          lider,
-          afiliados: grouped.get(lider.id) || [],
-          tipo: "lider",
-        });
-      }
+    grouped.forEach((lista, liderId) => {
+      if (idsIncluidos.has(liderId)) return;
+      const lider =
+        liderMap.get(liderId) ?? liderDesdeAfiliado(liderId, lista);
+      const tipo = tipoDeLider(lider) ?? "lider";
+      if (tipo !== "lider") return;
+      result.push({ lider, afiliados: lista, tipo });
+      idsIncluidos.add(liderId);
     });
 
     return result.sort((a, b) =>
@@ -318,6 +336,46 @@ export default function AfiliadosGeneral({
     XLSX.writeFile(wb, `miembros_${fecha}.xlsx`);
   };
 
+  const theadClass = `${tema.theadBg} ${tema.theadText} border-b border-black/5 dark:border-white/10`;
+
+  const toolbarAcciones = (
+    <div className="flex w-full items-center gap-2">
+      <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
+        {CATEGORIAS.map((cat) => {
+          const Icon = cat.icon;
+          const activo = categoria === cat.tipo;
+          const total = conteosCategoria[cat.tipo];
+          return (
+            <button
+              key={cat.tipo}
+              type="button"
+              onClick={() => {
+                setCategoria(cat.tipo);
+                setLiderSeleccionadoId(null);
+              }}
+              className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-2 text-xs font-semibold transition-colors duration-300 sm:gap-2 sm:px-3 sm:text-sm ${
+                activo ? cat.active : cat.idle
+              }`}
+            >
+              <Icon className="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" />
+              <span>{cat.titulo}</span>
+              <span className="font-bold">{total}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      <button
+        type="button"
+        onClick={descargarExcel}
+        className="ml-auto inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-green-600 bg-green-100 px-2.5 py-2 text-xs font-semibold text-green-800 transition-colors hover:bg-green-200 dark:border-green-500 dark:bg-green-950/50 dark:text-green-300 dark:hover:bg-green-950/70 sm:gap-2 sm:px-3 sm:text-sm [&_svg]:text-green-700 dark:[&_svg]:text-green-400"
+      >
+        <Download className="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" />
+        Excel
+      </button>
+    </div>
+  );
+
   if (isLoading) return <AfiliadosSkeleton />;
 
   if (grupos.every((g) => g.afiliados.length === 0) && afiliados.length === 0) {
@@ -329,52 +387,14 @@ export default function AfiliadosGeneral({
   }
 
   return (
-    <div className="space-y-5">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div className="flex flex-wrap gap-2">
-          {CATEGORIAS.map((cat) => {
-            const Icon = cat.icon;
-            const activo = categoria === cat.tipo;
-            const total = conteosCategoria[cat.tipo];
-            return (
-              <button
-                key={cat.tipo}
-                type="button"
-                onClick={() => {
-                  setCategoria(cat.tipo);
-                  setLiderSeleccionadoId(null);
-                }}
-                className={`inline-flex items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-bold transition-all ${
-                  activo ? cat.active : cat.idle
-                }`}
-              >
-                <Icon className="h-4 w-4 shrink-0" />
-                <span>{cat.titulo}</span>
-                <span
-                  className={`text-[11px] font-black px-2 py-0.5 rounded-md ${
-                    activo
-                      ? "bg-white/20 text-white"
-                      : "bg-gray-100 dark:bg-neutral-800 text-gray-600 dark:text-gray-300"
-                  }`}
-                >
-                  {total}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-
-        <Button
-          type="button"
-          variant="outline"
-          onClick={descargarExcel}
-          className="gap-2 font-bold border-emerald-300 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-700 dark:text-emerald-400 dark:hover:bg-emerald-950/40"
-        >
-          <Download className="h-4 w-4" />
-          Descargar Excel
-        </Button>
-      </div>
-
+    <PanelListaPestana
+      tema={tema}
+      placeholder={placeholder}
+      value={searchTerm}
+      onChange={onSearchChange}
+      acciones={toolbarAcciones}
+      contenidoSinPadding
+    >
       <AnimatePresence mode="wait" initial={false}>
         {categoria === "todos" ? (
           <motion.div
@@ -383,38 +403,43 @@ export default function AfiliadosGeneral({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -12 }}
             transition={{ duration: 0.28, ease: [0.25, 0.46, 0.45, 0.94] }}
-            className="overflow-x-auto rounded-xl border border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 shadow-sm"
+            className="overflow-x-auto"
           >
             {miembrosTodos.length === 0 ? (
               <div className="px-4 py-10 text-center text-sm text-gray-500 dark:text-gray-400">
                 No hay miembros{searchTerm ? " para esta búsqueda" : ""}.
               </div>
             ) : (
-              <table className="min-w-full text-xs">
-                <thead className="bg-sky-50 dark:bg-sky-950/40">
+              <table className="min-w-full bg-white text-xs dark:bg-neutral-900">
+                <thead className={theadClass}>
                   <tr>
-                    <th className="px-4 py-2 text-left font-bold text-gray-600 dark:text-gray-300 uppercase">
+                    <th
+                      className={columnaNoFijaEncabezado(
+                        tema.theadBg,
+                        "px-4 py-2.5 text-left font-bold uppercase",
+                      )}
+                    >
                       No.
                     </th>
-                    <th className="px-4 py-2 text-left font-bold text-gray-600 dark:text-gray-300 uppercase">
+                    <th className="px-4 py-2.5 text-left font-bold uppercase">
                       Nombre
                     </th>
-                    <th className="px-4 py-2 text-left font-bold text-gray-600 dark:text-gray-300 uppercase">
+                    <th className="px-4 py-2.5 text-left font-bold uppercase">
                       DPI
                     </th>
-                    <th className="px-4 py-2 text-left font-bold text-gray-600 dark:text-gray-300 uppercase">
+                    <th className="px-4 py-2.5 text-left font-bold uppercase">
                       Teléfono
                     </th>
-                    <th className="px-4 py-2 text-left font-bold text-gray-600 dark:text-gray-300 uppercase">
+                    <th className="px-4 py-2.5 text-left font-bold uppercase">
                       Edad
                     </th>
-                    <th className="px-4 py-2 text-left font-bold text-gray-600 dark:text-gray-300 uppercase">
+                    <th className="px-4 py-2.5 text-left font-bold uppercase">
                       Ubicación
                     </th>
-                    <th className="px-4 py-2 text-left font-bold text-gray-600 dark:text-gray-300 uppercase">
+                    <th className="px-4 py-2.5 text-left font-bold uppercase">
                       Líder
                     </th>
-                    <th className="px-4 py-2 text-left font-bold text-gray-600 dark:text-gray-300 uppercase">
+                    <th className="px-4 py-2.5 text-left font-bold uppercase">
                       Grupo
                     </th>
                   </tr>
@@ -423,9 +448,14 @@ export default function AfiliadosGeneral({
                   {miembrosTodos.map((row, index) => (
                     <tr
                       key={row.afiliado.id}
-                      className="hover:bg-gray-50 dark:hover:bg-neutral-800/50 uppercase"
+                      className="group hover:bg-gray-50 dark:hover:bg-neutral-800/50 uppercase"
                     >
-                      <td className="px-4 py-2 whitespace-nowrap text-gray-500 dark:text-gray-400">
+                      <td
+                        className={columnaNoFijaCelda(
+                          FONDO_CELDA_TABLA,
+                          "px-4 py-2 whitespace-nowrap text-gray-500 dark:text-gray-400",
+                        )}
+                      >
                         {index + 1}
                       </td>
                       <td className="px-4 py-2 whitespace-nowrap font-bold text-gray-900 dark:text-gray-100">
@@ -478,18 +508,23 @@ export default function AfiliadosGeneral({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -12 }}
             transition={{ duration: 0.28, ease: [0.25, 0.46, 0.45, 0.94] }}
-            className="overflow-x-auto rounded-xl border border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 shadow-sm"
+            className="overflow-x-auto"
           >
-            <table className="min-w-full text-sm">
-              <thead className="bg-gray-100 dark:bg-neutral-800">
+            <table className="min-w-full bg-white text-sm dark:bg-neutral-900">
+              <thead className={theadClass}>
                 <tr>
-                  <th className="px-4 py-3 text-left font-bold text-gray-600 dark:text-gray-300 uppercase text-xs">
+                  <th
+                    className={columnaNoFijaEncabezado(
+                      tema.theadBg,
+                      "px-4 py-2.5 text-left text-xs font-bold uppercase",
+                    )}
+                  >
                     No.
                   </th>
-                  <th className="px-4 py-3 text-left font-bold text-gray-600 dark:text-gray-300 uppercase text-xs">
+                  <th className="px-4 py-2.5 text-left text-xs font-bold uppercase">
                     Nombre
                   </th>
-                  <th className="px-4 py-3 text-right font-bold text-gray-600 dark:text-gray-300 uppercase text-xs">
+                  <th className="px-4 py-2.5 text-right text-xs font-bold uppercase">
                     Miembros
                   </th>
                 </tr>
@@ -499,9 +534,14 @@ export default function AfiliadosGeneral({
                   <tr
                     key={lider.id}
                     onClick={() => setLiderSeleccionadoId(lider.id)}
-                    className="cursor-pointer hover:bg-gray-50 dark:hover:bg-neutral-800/60 transition-colors"
+                    className="group cursor-pointer hover:bg-gray-50 dark:hover:bg-neutral-800/60 transition-colors"
                   >
-                    <td className="px-4 py-3 whitespace-nowrap text-gray-500 dark:text-gray-400">
+                    <td
+                      className={columnaNoFijaCelda(
+                        FONDO_CELDA_TABLA,
+                        "px-4 py-3 whitespace-nowrap text-gray-500 dark:text-gray-400",
+                      )}
+                    >
                       {index + 1}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap font-bold text-gray-900 dark:text-gray-100 uppercase">
@@ -522,20 +562,22 @@ export default function AfiliadosGeneral({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -12, scale: 0.99 }}
             transition={{ duration: 0.32, ease: [0.25, 0.46, 0.45, 0.94] }}
-            className="space-y-3"
+            className="space-y-0"
           >
-            <button
-              type="button"
-              onClick={() => setLiderSeleccionadoId(null)}
-              className="inline-flex items-center gap-2 text-sm font-bold text-blue-700 dark:text-blue-400 hover:underline"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Volver a {categoriaCfg.titulo}
-            </button>
+            <div className="px-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setLiderSeleccionadoId(null)}
+                className="inline-flex items-center gap-2 text-sm font-bold text-blue-700 hover:underline dark:text-blue-400"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Volver a {categoriaCfg.titulo}
+              </button>
+            </div>
 
-            <div className="overflow-x-auto rounded-xl border border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 shadow-sm">
+            <div className="overflow-x-auto">
               <div
-                className={`flex items-center justify-between gap-3 px-4 py-3 border-b dark:border-neutral-800 ${categoriaCfg.rowActive}`}
+                className={`flex items-center justify-between gap-3 border-b px-4 py-3 dark:border-neutral-800 ${categoriaCfg.rowActive}`}
               >
                 <div className="min-w-0">
                   <p className="text-[10px] font-black uppercase tracking-wide text-gray-500 dark:text-gray-400">
@@ -557,25 +599,30 @@ export default function AfiliadosGeneral({
                   {searchTerm ? " que coincidan con la búsqueda" : ""}.
                 </div>
               ) : (
-                <table className="min-w-full text-xs">
-                  <thead className="bg-gray-100 dark:bg-neutral-800">
+                <table className="min-w-full bg-white text-xs dark:bg-neutral-900">
+                  <thead className={theadClass}>
                     <tr>
-                      <th className="px-4 py-2 text-left font-bold text-gray-600 dark:text-gray-300 uppercase">
+                      <th
+                        className={columnaNoFijaEncabezado(
+                          tema.theadBg,
+                          "px-4 py-2.5 text-left font-bold uppercase",
+                        )}
+                      >
                         No.
                       </th>
-                      <th className="px-4 py-2 text-left font-bold text-gray-600 dark:text-gray-300 uppercase">
+                      <th className="px-4 py-2.5 text-left font-bold uppercase">
                         Nombre
                       </th>
-                      <th className="px-4 py-2 text-left font-bold text-gray-600 dark:text-gray-300 uppercase">
+                      <th className="px-4 py-2.5 text-left font-bold uppercase">
                         DPI
                       </th>
-                      <th className="px-4 py-2 text-left font-bold text-gray-600 dark:text-gray-300 uppercase">
+                      <th className="px-4 py-2.5 text-left font-bold uppercase">
                         Teléfono
                       </th>
-                      <th className="px-4 py-2 text-left font-bold text-gray-600 dark:text-gray-300 uppercase">
+                      <th className="px-4 py-2.5 text-left font-bold uppercase">
                         Edad
                       </th>
-                      <th className="px-4 py-2 text-left font-bold text-gray-600 dark:text-gray-300 uppercase">
+                      <th className="px-4 py-2.5 text-left font-bold uppercase">
                         Ubicación
                       </th>
                     </tr>
@@ -598,9 +645,14 @@ export default function AfiliadosGeneral({
                             delay: Math.min(index * 0.02, 0.24),
                             ease: [0.25, 0.46, 0.45, 0.94],
                           }}
-                          className="hover:bg-gray-50 dark:hover:bg-neutral-800/50 uppercase"
+                          className="group hover:bg-gray-50 dark:hover:bg-neutral-800/50 uppercase"
                         >
-                          <td className="px-4 py-2 whitespace-nowrap text-gray-500 dark:text-gray-400">
+                          <td
+                            className={columnaNoFijaCelda(
+                              FONDO_CELDA_TABLA,
+                              "px-4 py-2 whitespace-nowrap text-gray-500 dark:text-gray-400",
+                            )}
+                          >
                             {index + 1}
                           </td>
                           <td className="px-4 py-2 whitespace-nowrap font-bold text-gray-900 dark:text-gray-100">
@@ -629,6 +681,6 @@ export default function AfiliadosGeneral({
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
+    </PanelListaPestana>
   );
 }

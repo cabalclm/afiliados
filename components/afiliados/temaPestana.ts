@@ -28,7 +28,7 @@ export const TEMA_SEDE: TemaLista = {
     "border-blue-400 bg-blue-50 text-blue-600 hover:bg-blue-100 dark:border-blue-500 dark:bg-blue-950/50 dark:text-blue-400 dark:hover:bg-blue-950/70",
   btnText: "text-blue-600 dark:text-blue-400",
   btnHover: "hover:bg-blue-50 dark:hover:bg-blue-950/40",
-  activeToggle: "bg-white dark:bg-neutral-700 text-blue-600 dark:text-blue-400 shadow-sm",
+  activeToggle: "bg-blue-100 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400 shadow-sm",
   pagination: "text-blue-600 dark:text-blue-400",
   hoverEntrar:
     "group-hover:border-blue-500 group-hover:bg-blue-50 group-hover:text-blue-600 dark:group-hover:border-blue-400 dark:group-hover:bg-blue-950/50 dark:group-hover:text-blue-400",
@@ -52,7 +52,7 @@ export const TEMA_LIDERES: TemaLista = {
     "border-orange-400 bg-orange-50 text-orange-600 hover:bg-orange-100 dark:border-orange-500 dark:bg-orange-950/50 dark:text-orange-400 dark:hover:bg-orange-950/70",
   btnText: "text-orange-600 dark:text-orange-400",
   btnHover: "hover:bg-orange-50 dark:hover:bg-orange-950/40",
-  activeToggle: "bg-white dark:bg-neutral-700 text-orange-600 dark:text-orange-400 shadow-sm",
+  activeToggle: "bg-orange-100 text-orange-600 dark:bg-orange-950/60 dark:text-orange-400 shadow-sm",
   pagination: "text-orange-600 dark:text-orange-400",
   hoverEntrar:
     "group-hover:border-orange-500 group-hover:bg-orange-50 group-hover:text-orange-600 dark:group-hover:border-orange-400 dark:group-hover:bg-orange-950/50 dark:group-hover:text-orange-400",
@@ -76,7 +76,7 @@ export const TEMA_EMPLEADOS: TemaLista = {
     "border-violet-500 bg-violet-50 text-violet-600 hover:bg-violet-100 dark:border-violet-500 dark:bg-violet-950/50 dark:text-violet-400 dark:hover:bg-violet-950/70",
   btnText: "text-violet-600 dark:text-violet-400",
   btnHover: "hover:bg-violet-50 dark:hover:bg-violet-950/40",
-  activeToggle: "bg-white dark:bg-neutral-700 text-violet-600 dark:text-violet-400 shadow-sm",
+  activeToggle: "bg-violet-100 text-violet-600 dark:bg-violet-950/60 dark:text-violet-400 shadow-sm",
   pagination: "text-violet-600 dark:text-violet-400",
   hoverEntrar:
     "group-hover:border-violet-500 group-hover:bg-violet-50 group-hover:text-violet-600 dark:group-hover:border-violet-400 dark:group-hover:bg-violet-950/50 dark:group-hover:text-violet-400",
@@ -100,7 +100,7 @@ export const TEMA_MIEMBROS: TemaLista = {
     "border-sky-500 bg-sky-50 text-sky-600 hover:bg-sky-100 dark:border-sky-500 dark:bg-sky-950/50 dark:text-sky-400 dark:hover:bg-sky-950/70",
   btnText: "text-sky-600 dark:text-sky-400",
   btnHover: "hover:bg-sky-50 dark:hover:bg-sky-950/40",
-  activeToggle: "bg-white dark:bg-neutral-700 text-sky-600 dark:text-sky-400 shadow-sm",
+  activeToggle: "bg-sky-100 text-sky-600 dark:bg-sky-950/60 dark:text-sky-400 shadow-sm",
   pagination: "text-sky-600 dark:text-sky-400",
   hoverEntrar:
     "group-hover:border-sky-500 group-hover:bg-sky-50 group-hover:text-sky-600 dark:group-hover:border-sky-400 dark:group-hover:bg-sky-950/50 dark:group-hover:text-sky-400",
@@ -124,7 +124,7 @@ export const TEMA_ADMIN: TemaLista = {
     "border-indigo-400 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 dark:border-indigo-500 dark:bg-indigo-950/50 dark:text-indigo-400 dark:hover:bg-indigo-950/70",
   btnText: "text-indigo-600 dark:text-indigo-400",
   btnHover: "hover:bg-indigo-50 dark:hover:bg-indigo-950/40",
-  activeToggle: "bg-white dark:bg-neutral-700 text-indigo-600 dark:text-indigo-400 shadow-sm",
+  activeToggle: "bg-indigo-100 text-indigo-600 dark:bg-indigo-950/60 dark:text-indigo-400 shadow-sm",
   pagination: "text-indigo-600 dark:text-indigo-400",
   hoverEntrar:
     "group-hover:border-indigo-500 group-hover:bg-indigo-50 group-hover:text-indigo-600 dark:group-hover:border-indigo-400 dark:group-hover:bg-indigo-950/50 dark:group-hover:text-indigo-400",
@@ -148,7 +148,7 @@ export const TEMA_MENSAJES: TemaLista = {
     "border-green-500 bg-green-50 text-green-600 hover:bg-green-100 dark:border-green-500 dark:bg-green-950/50 dark:text-green-400 dark:hover:bg-green-950/70",
   btnText: "text-green-600 dark:text-green-400",
   btnHover: "hover:bg-green-50 dark:hover:bg-green-950/40",
-  activeToggle: "bg-white dark:bg-neutral-700 text-green-600 dark:text-green-400 shadow-sm",
+  activeToggle: "bg-green-100 text-green-600 dark:bg-green-950/60 dark:text-green-400 shadow-sm",
   pagination: "text-green-600 dark:text-green-400",
   hoverEntrar:
     "group-hover:border-green-500 group-hover:bg-green-50 group-hover:text-green-600 dark:group-hover:border-green-400 dark:group-hover:bg-green-950/50 dark:group-hover:text-green-400",

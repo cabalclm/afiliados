@@ -12,6 +12,7 @@ import {
   ChevronRight,
   LayoutGrid,
   Loader2,
+  Mail,
   Pencil,
   Search,
   Table2,
@@ -25,13 +26,13 @@ import { Fragment, useEffect, useMemo, useState } from "react";
 import type { Afiliado, Lider } from "./esquemas";
 import { esUsuarioSede } from "./esquemas";
 import EstadisticasEdades from "./estadisticas/Edades";
-import EstadisticasEmpadronados from "./estadisticas/Empadronados";
 import EstadisticasLugares from "./estadisticas/Lugares";
 import EstadisticasPoliticas from "./estadisticas/Politicas";
 import EstadisticasReligiones from "./estadisticas/Religion";
 import type { FormatoVista } from "./Tabla";
 import Tabla from "./Tabla";
 import { temaDesdeLider } from "./temaPestana";
+import MensajesUsuario from "./MensajesUsuario";
 
 const GIFS_DISPONIBLES = [
   "/gif/afiliados/gif0.gif",
@@ -109,7 +110,7 @@ interface Props {
   ocultarBuscador?: boolean;
 }
 
-type Vista = "miembros" | "estadisticas";
+type Vista = "miembros" | "estadisticas" | "mensajes";
 
 const vistaEase = [0.25, 0.46, 0.45, 0.94] as const;
 
@@ -272,78 +273,135 @@ export default function Celula({
   }
 
   const TABS = [
-    { id: "miembros", label: "Miembros", icon: Users },
-    { id: "estadisticas", label: "Estadísticas Generales", icon: BarChart3 },
+    { id: "miembros" as const, label: "Afiliados", icon: Users },
+    { id: "estadisticas" as const, label: "Estadísticas", icon: BarChart3 },
+    { id: "mensajes" as const, label: "Mensajes", icon: Mail },
   ];
+
+  const switchTrackClass =
+    "flex min-w-0 gap-1 rounded-lg bg-gray-200/70 p-1 dark:bg-neutral-700/60";
+  const switchActivoClass = `${tema.activeToggle} shadow-sm`;
+  const switchInactivoClass =
+    "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300";
 
   const panelContent = (
     <>
-      <div className="flex items-center gap-2 px-2 py-3 border-b dark:border-neutral-800 shrink-0 bg-white dark:bg-neutral-950 sticky top-0 z-20">
-        {embedded && onBack && (
-          <Button
-            type="button"
-            onClick={onBack}
-            variant="ghost"
-            size="sm"
-            className="shrink-0 h-9 gap-1.5 font-bold uppercase text-[10px] text-gray-600 dark:text-gray-300"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Atrás
-          </Button>
-        )}
-
-        <div className="flex items-center gap-2 min-w-0 flex-1">
-          <h3 className="text-sm md:text-xl font-bold uppercase truncate dark:text-white">
-            {lider.nombres} {lider.apellidos}
-          </h3>
-          {esSede && esAdminOSuper && onEditarUsuario && (
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => onEditarUsuario(lider)}
-              className="shrink-0 h-10 md:h-11 gap-2 font-bold uppercase text-xs md:text-sm border-blue-400 bg-blue-50 text-blue-600 hover:bg-blue-100 dark:border-blue-500 dark:bg-blue-950/50 dark:text-blue-400 dark:hover:bg-blue-950/70"
+      <div className="sticky top-0 z-20 shrink-0 border-b border-gray-200 bg-white px-2 pt-1 pb-2 md:py-3 dark:border-neutral-800 dark:bg-neutral-950">
+        <div className="flex flex-col gap-1.5 md:flex-row md:items-center md:gap-3">
+          <div className="relative flex w-full items-center justify-center md:hidden">
+            <h3
+              className={`max-w-[88%] truncate text-center text-lg font-bold uppercase ${tema.btnText}`}
             >
-              <Pencil className="h-4 w-4 md:h-5 md:w-5" />
-              <span className="hidden sm:inline">Editar Sede</span>
-            </Button>
-          )}
-          {isLoading && (
-            <Loader2 className="w-4 h-4 animate-spin text-blue-600 shrink-0" />
-          )}
-        </div>
+              {lider.nombres} {lider.apellidos}
+            </h3>
+            {isLoading && (
+              <Loader2 className="absolute right-0 h-4 w-4 shrink-0 animate-spin text-blue-600" />
+            )}
+          </div>
 
-        <div className="flex bg-gray-200 dark:bg-neutral-800 p-1 md:p-1.5 rounded-lg gap-1 shrink-0">
-          {TABS.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setVistaActual(tab.id as Vista)}
-              className={`flex items-center justify-center gap-2 px-3 md:px-4 py-2 md:py-2.5 rounded-md text-sm md:text-base font-bold transition-all whitespace-nowrap ${
-                vistaActual === tab.id
-                  ? "bg-white dark:bg-neutral-700 text-blue-600 dark:text-blue-400 shadow-sm"
-                  : "text-gray-500 dark:text-gray-400 hover:bg-gray-300 dark:hover:bg-neutral-700"
-              }`}
+          <div className="hidden min-w-0 items-center gap-2 md:flex md:flex-1">
+            {embedded && onBack && (
+              <Button
+                type="button"
+                onClick={onBack}
+                variant="ghost"
+                size="sm"
+                className="inline-flex h-9 shrink-0 gap-1.5 font-bold uppercase text-[10px] text-gray-600 dark:text-gray-300"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Atrás
+              </Button>
+            )}
+
+            <h3
+              className={`min-w-0 flex-1 truncate text-2xl font-bold uppercase ${tema.btnText}`}
             >
-              <tab.icon className="w-5 h-5 shrink-0" />
-              <span className="hidden sm:inline">{tab.label}</span>
-            </button>
-          ))}
-        </div>
+              {lider.nombres} {lider.apellidos}
+            </h3>
 
-        {!embedded && (
-          <Button
-            onClick={onClose}
-            variant="ghost"
-            size="icon"
-            className="rounded-full shrink-0 h-10 w-10 hover:bg-gray-100 dark:hover:bg-neutral-800"
-          >
-            <X className="w-6 h-6 text-gray-700 dark:text-gray-300" />
-          </Button>
-        )}
+            {esSede && esAdminOSuper && onEditarUsuario && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => onEditarUsuario(lider)}
+                className="h-11 shrink-0 gap-2 border-blue-400 bg-blue-50 font-bold uppercase text-sm text-blue-600 hover:bg-blue-100 dark:border-blue-500 dark:bg-blue-950/50 dark:text-blue-400 dark:hover:bg-blue-950/70"
+              >
+                <Pencil className="h-5 w-5" />
+                <span className="hidden sm:inline">Editar Sede</span>
+              </Button>
+            )}
+
+            {isLoading && (
+              <Loader2 className="h-4 w-4 shrink-0 animate-spin text-blue-600" />
+            )}
+
+            {!embedded && (
+              <Button
+                onClick={onClose}
+                variant="ghost"
+                size="icon"
+                className="inline-flex h-10 w-10 shrink-0 rounded-full hover:bg-gray-100 dark:hover:bg-neutral-800"
+              >
+                <X className="h-6 w-6 text-gray-700 dark:text-gray-300" />
+              </Button>
+            )}
+          </div>
+
+          <div className="flex min-w-0 items-center gap-2">
+            {embedded && onBack && (
+              <Button
+                type="button"
+                onClick={onBack}
+                variant="ghost"
+                size="sm"
+                className="h-9 shrink-0 gap-1.5 font-bold uppercase text-[10px] text-gray-600 dark:text-gray-300 md:hidden"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Atrás
+              </Button>
+            )}
+
+            <div className={`${switchTrackClass} min-w-0 flex-1 md:flex-initial`}>
+              {TABS.map((tab) => (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => setVistaActual(tab.id)}
+                  className={`flex min-w-0 flex-1 items-center justify-center gap-1 rounded-md px-1.5 py-2 text-[10px] font-bold transition-all whitespace-nowrap sm:gap-2 sm:px-3 sm:text-xs md:flex-initial md:px-4 md:py-2.5 md:text-sm ${
+                    vistaActual === tab.id ? switchActivoClass : switchInactivoClass
+                  }`}
+                >
+                  <tab.icon className="h-4 w-4 shrink-0 md:h-5 md:w-5" />
+                  <span>{tab.label}</span>
+                </button>
+              ))}
+            </div>
+
+            {!embedded && (
+              <Button
+                onClick={onClose}
+                variant="ghost"
+                size="icon"
+                className="h-10 w-10 shrink-0 rounded-full hover:bg-gray-100 dark:hover:bg-neutral-800 md:hidden"
+              >
+                <X className="h-6 w-6 text-gray-700 dark:text-gray-300" />
+              </Button>
+            )}
+          </div>
+        </div>
       </div>
 
       <div className={`flex-1 overflow-y-auto px-2 ${embedded ? "py-2" : ""}`}>
         <div className="w-full">
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.div
+              key={isLoading ? "loading" : vistaActual}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.28, ease: vistaEase }}
+            >
           {isLoading ? (
             <div className="flex flex-col gap-4 py-4 w-full animate-pulse">
               <div className="w-full h-32 bg-gray-200 dark:bg-neutral-800 rounded-xl mb-6"></div>
@@ -363,10 +421,10 @@ export default function Celula({
           ) : vistaActual === "miembros" ? (
             <>
               {!esSede && (
-                <div className="mb-6 p-4 border dark:border-neutral-800 rounded-xl bg-white dark:bg-neutral-900 shadow-sm flex flex-col md:flex-row items-center gap-4">
+                <div className="mb-6 flex flex-col items-center gap-4 rounded-xl border bg-white p-4 shadow-sm dark:border-neutral-800 dark:bg-neutral-900 md:flex-row">
                   <div className="w-full md:flex-1">
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase">
+                    <div className="mb-2 flex items-center justify-between">
+                      <span className="text-xs font-bold uppercase text-gray-700 dark:text-gray-300">
                         Nivel de compromiso:{" "}
                         <span className={textoColor}>{nivelCompromiso}</span>
                       </span>
@@ -374,28 +432,28 @@ export default function Celula({
                         {totalEnGrupo} / {objetivo}
                       </span>
                     </div>
-                    <div className="w-full bg-gray-100 dark:bg-neutral-800 rounded-full h-4 overflow-hidden shadow-inner border dark:border-neutral-700">
+                    <div className="h-4 w-full overflow-hidden rounded-full border bg-gray-100 shadow-inner dark:border-neutral-700 dark:bg-neutral-800">
                       <div
                         className={`${colorBarra} h-full transition-all duration-1000`}
                         style={{ width: `${progreso}%` }}
-                      ></div>
+                      />
                     </div>
 
-                    <div className="hidden md:block text-center mt-2">
-                      <span className="text-xs text-gray-600 dark:text-gray-300 font-bold bg-gray-50 dark:bg-neutral-800 px-4 py-1 rounded-full border dark:border-neutral-700 inline-block">
+                    <div className="mt-2 hidden text-center md:block">
+                      <span className="inline-block rounded-full border bg-gray-50 px-4 py-1 text-xs font-bold text-gray-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-gray-300">
                         <TextoAnimado textos={[mensaje]} />
                       </span>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-3 bg-gray-50 dark:bg-neutral-800 p-2 rounded-lg border dark:border-neutral-700 w-full md:w-auto shrink-0">
-                    <div className="md:hidden flex-1">
-                      <span className="text-[10px] text-gray-700 dark:text-gray-300 font-bold leading-tight uppercase">
+                  <div className="flex w-full shrink-0 items-center gap-3 rounded-lg border bg-gray-50 p-2 dark:border-neutral-700 dark:bg-neutral-800 md:w-auto">
+                    <div className="flex-1 md:hidden">
+                      <span className="text-[10px] font-bold uppercase leading-tight text-gray-700 dark:text-gray-300">
                         <TextoAnimado textos={[mensaje]} />
                       </span>
                     </div>
 
-                    <div className="shrink-0 mx-auto md:mx-0">
+                    <div className="mx-auto shrink-0 md:mx-0">
                       <Image
                         key={gifUrl}
                         src={gifUrl}
@@ -411,7 +469,7 @@ export default function Celula({
               )}
 
               {!ocultarBuscador && (
-                <p className="text-sm font-bold text-gray-800 dark:text-gray-200 mb-2">
+                <p className="mb-2 text-sm font-bold text-gray-800 dark:text-gray-200">
                   Total:{" "}
                   <span className={`tabular-nums ${tema.btnText}`}>
                     {afiliadosOrdenados.length.toLocaleString()}
@@ -420,79 +478,70 @@ export default function Celula({
               )}
 
               <div
-                className={`overflow-hidden rounded-xl border border-gray-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-sm border-t-4 ${tema.borderTop}`}
+                className={`overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-neutral-800 dark:bg-neutral-900 border-t-4 ${tema.borderTop}`}
               >
-                <div
-                  className={`flex flex-col sm:flex-row sm:items-center gap-3 p-3 ${tema.theadBg}`}
-                >
+                <div className="flex flex-col gap-3 border-b border-gray-100 bg-white p-3 dark:border-neutral-800 dark:bg-neutral-900 sm:flex-row sm:items-center">
                   <div
-                    className={`flex w-full gap-2 order-1 sm:order-2 sm:w-auto sm:flex-shrink-0 ${ocultarBuscador ? "sm:ml-auto" : ""}`}
+                    className={`order-1 flex w-full min-w-0 gap-2 sm:order-2 sm:w-auto sm:shrink-0 ${ocultarBuscador ? "sm:ml-auto" : ""}`}
                   >
                     <div
-                      className={`flex w-1/2 sm:w-auto sm:shrink-0 sm:min-w-[15.5rem] min-w-0 h-11 items-center justify-center gap-0.5 sm:gap-1 rounded-lg border bg-white dark:bg-neutral-900 px-1 sm:px-2.5 text-xs sm:text-sm font-bold uppercase ${tema.btnOutline}`}
+                      className={`${switchTrackClass} flex h-11 w-2/3 min-w-0 items-center sm:w-auto sm:min-w-[15.5rem]`}
                     >
                       <button
                         type="button"
                         onClick={() => setFormatoVista("tabla")}
                         title="Ver lista"
-                        className={`inline-flex flex-1 sm:flex-initial items-center justify-center gap-1 sm:gap-2 min-w-0 sm:min-w-fit px-1 sm:px-2 py-1.5 rounded-md whitespace-nowrap transition-all duration-300 ease-in-out ${
+                        className={`inline-flex flex-1 items-center justify-center gap-1 rounded-md px-1.5 py-2 text-[10px] font-bold uppercase whitespace-nowrap transition-all sm:gap-2 sm:px-3 sm:text-xs ${
                           formatoVista === "tabla"
-                            ? tema.btnText
-                            : "text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                            ? switchActivoClass
+                            : switchInactivoClass
                         }`}
                       >
-                        <Table2 className="w-4 h-4 shrink-0" />
-                        <span className="truncate sm:overflow-visible sm:text-clip">
-                          Lista
-                        </span>
+                        <Table2 className="h-4 w-4 shrink-0" />
+                        <span className="shrink-0">Lista</span>
                       </button>
-                      <span className="text-gray-300 dark:text-neutral-600 shrink-0 px-0.5">
-                        |
-                      </span>
                       <button
                         type="button"
                         onClick={() => setFormatoVista("tarjetas")}
                         title="Ver tarjetas"
-                        className={`inline-flex flex-1 sm:flex-initial items-center justify-center gap-1 sm:gap-2 min-w-0 sm:min-w-fit px-1 sm:px-2 py-1.5 rounded-md whitespace-nowrap transition-all duration-300 ease-in-out ${
+                        className={`inline-flex flex-1 items-center justify-center gap-1 rounded-md px-1.5 py-2 text-[10px] font-bold uppercase whitespace-nowrap transition-all sm:gap-2 sm:px-3 sm:text-xs ${
                           formatoVista === "tarjetas"
-                            ? tema.btnText
-                            : "text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                            ? switchActivoClass
+                            : switchInactivoClass
                         }`}
                       >
-                        <LayoutGrid className="w-4 h-4 shrink-0" />
-                        <span className="truncate sm:overflow-visible sm:text-clip">
-                          Tarjetas
-                        </span>
+                        <LayoutGrid className="h-4 w-4 shrink-0" />
+                        <span className="shrink-0">Tarjetas</span>
                       </button>
                     </div>
                     {puedeGestionarIntegrantes && (
                       <button
                         type="button"
-                        className={`flex w-1/2 sm:w-auto sm:shrink-0 sm:min-w-[11rem] min-w-0 h-11 items-center justify-center gap-1.5 rounded-lg border bg-white dark:bg-neutral-900 px-2 sm:px-3.5 text-[11px] sm:text-sm font-semibold uppercase whitespace-nowrap transition-all duration-300 ease-in-out ${
+                        className={`flex h-11 w-1/3 min-w-0 items-center justify-center gap-1 rounded-lg border px-1.5 text-[10px] font-semibold uppercase whitespace-nowrap transition-all duration-300 ease-in-out sm:w-auto sm:min-w-[6.5rem] sm:px-3 sm:text-xs ${
                           !esSede && totalEnGrupo === 0
-                            ? "border-green-500 text-green-600 hover:bg-green-50 dark:border-green-500 dark:text-green-400 dark:hover:bg-green-950/50 animate-pulse"
-                            : `${tema.btnOutline} ${tema.btnHover}`
+                            ? "animate-pulse border-green-500 bg-green-50 text-green-700 hover:bg-green-100 dark:border-green-500 dark:bg-green-950/50 dark:text-green-400 dark:hover:bg-green-950/70"
+                            : `${tema.btnPrimary} ${tema.btnHover}`
                         }`}
                         onClick={() =>
                           onAnadirAfiliado(lider.id, !esSede && totalEnGrupo === 0)
                         }
                       >
-                        <UserPlus className="w-4 h-4 shrink-0" />
-                        <span className="truncate sm:overflow-visible sm:text-clip">
+                        <UserPlus className="h-4 w-4 shrink-0" />
+                        <span className="truncate">
                           {!esSede && totalEnGrupo === 0
                             ? "Registrarme"
-                            : "Añadir Integrante"}
+                            : "Añadir"}
                         </span>
                       </button>
                     )}
                   </div>
                   {!ocultarBuscador && (
-                    <div className="relative w-full order-2 sm:order-1 sm:flex-1 min-w-0">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+                    <div className="relative order-2 min-w-0 w-full sm:order-1 sm:min-w-[12rem] sm:flex-1">
+                      <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
                       <input
                         type="text"
                         placeholder="Buscar por nombre o DPI..."
-                        className={`pl-9 pr-4 py-2.5 h-11 border border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 rounded-lg w-full text-sm focus:outline-none focus:ring-2 ${tema.focusRing}`}
+                        className={`h-11 w-full rounded-lg border border-gray-200 bg-white py-2.5 pl-9 pr-4 text-sm focus:outline-none focus:ring-2 dark:border-neutral-700 dark:bg-neutral-900 ${tema.focusRing}`}
                         value={busqueda}
                         onChange={(e) => setBusqueda(e.target.value)}
                       />
@@ -527,26 +576,30 @@ export default function Celula({
                 </div>
 
                 {afiliadosOrdenados.length > 0 && (
-                  <div className="flex flex-wrap items-center justify-center gap-4 px-3 py-3 border-t border-gray-100 dark:border-neutral-800">
+                  <div className="flex flex-wrap items-center justify-center gap-4 border-t border-gray-100 px-3 py-3 dark:border-neutral-800">
                     <div className="flex items-center gap-2 text-sm">
                       <button
                         type="button"
                         aria-label="Página anterior"
-                        className={`p-1 rounded disabled:opacity-30 disabled:cursor-not-allowed ${tema.pagination} ${tema.btnHover}`}
+                        className={`rounded p-1 disabled:cursor-not-allowed disabled:opacity-30 ${tema.pagination} ${tema.btnHover}`}
                         onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                         disabled={currentPage === 1 || itemsPerPage === "all"}
                       >
                         <ChevronLeft className="h-4 w-4" />
                       </button>
-                      <span className="font-semibold text-gray-800 dark:text-gray-200 tabular-nums min-w-[3rem] text-center">
+                      <span className="min-w-[3rem] text-center font-semibold tabular-nums text-gray-800 dark:text-gray-200">
                         {currentPage}/{totalPages}
                       </span>
                       <button
                         type="button"
                         aria-label="Página siguiente"
-                        className={`p-1 rounded disabled:opacity-30 disabled:cursor-not-allowed ${tema.pagination} ${tema.btnHover}`}
-                        onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                        disabled={currentPage === totalPages || itemsPerPage === "all"}
+                        className={`rounded p-1 disabled:cursor-not-allowed disabled:opacity-30 ${tema.pagination} ${tema.btnHover}`}
+                        onClick={() =>
+                          setCurrentPage((p) => Math.min(totalPages, p + 1))
+                        }
+                        disabled={
+                          currentPage === totalPages || itemsPerPage === "all"
+                        }
                       >
                         <ChevronRight className="h-4 w-4" />
                       </button>
@@ -557,7 +610,7 @@ export default function Celula({
                         const val = e.target.value;
                         setItemsPerPage(val === "all" ? "all" : parseInt(val, 10));
                       }}
-                      className="text-sm border border-gray-200 dark:border-neutral-700 rounded-md px-2 py-1.5 bg-white dark:bg-neutral-900 text-gray-700 dark:text-gray-300 outline-none cursor-pointer"
+                      className="cursor-pointer rounded-md border border-gray-200 bg-white px-2 py-1.5 text-sm text-gray-700 outline-none dark:border-neutral-700 dark:bg-neutral-900 dark:text-gray-300"
                       aria-label="Cantidad por página"
                     >
                       <option value={15}>15</option>
@@ -569,21 +622,30 @@ export default function Celula({
                 )}
               </div>
             </>
+          ) : vistaActual === "mensajes" ? (
+            <div
+              className={`overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-neutral-800 dark:bg-neutral-900 border-t-4 ${tema.borderTop}`}
+            >
+              <MensajesUsuario
+                userId={lider.id}
+                nivelCompromiso={nivelCompromiso}
+                tema={tema}
+              />
+            </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 w-full pt-4">
-              <div className="bg-white dark:bg-neutral-900 border dark:border-neutral-800 rounded-2xl p-6 shadow-sm min-h-[400px] flex flex-col">
-                <EstadisticasEmpadronados afiliados={afiliadosDelLider} />
+            <div className="flex w-full flex-col gap-6 pt-4">
+              <div className="grid grid-cols-1 items-stretch gap-6 md:grid-cols-2 xl:grid-cols-3">
+                <div className="flex h-full flex-col justify-start rounded-2xl border bg-white shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
+                  <EstadisticasEdades afiliados={afiliadosDelLider} />
+                </div>
+                <div className="flex h-full flex-col justify-start rounded-2xl border bg-white shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
+                  <EstadisticasReligiones afiliados={afiliadosDelLider} />
+                </div>
+                <div className="flex h-full flex-col justify-start rounded-2xl border bg-white shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
+                  <EstadisticasPoliticas afiliados={afiliadosDelLider} />
+                </div>
               </div>
-              <div className="bg-white dark:bg-neutral-900 border dark:border-neutral-800 rounded-2xl p-6 shadow-sm min-h-[400px] flex flex-col">
-                <EstadisticasReligiones afiliados={afiliadosDelLider} />
-              </div>
-              <div className="bg-white dark:bg-neutral-900 border dark:border-neutral-800 rounded-2xl p-6 shadow-sm min-h-[400px] flex flex-col">
-                <EstadisticasEdades afiliados={afiliadosDelLider} />
-              </div>
-              <div className="bg-white dark:bg-neutral-900 border dark:border-neutral-800 rounded-2xl p-6 shadow-sm min-h-[400px] flex flex-col">
-                <EstadisticasPoliticas afiliados={afiliadosDelLider} />
-              </div>
-              <div className="bg-white dark:bg-neutral-900 border dark:border-neutral-800 rounded-2xl p-6 shadow-sm min-h-[400px] flex flex-col md:col-span-2">
+              <div className="flex w-full flex-col justify-start rounded-2xl border bg-white shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
                 <EstadisticasLugares afiliados={afiliadosDelLider} />
               </div>
             </div>
@@ -601,6 +663,8 @@ export default function Celula({
               </Button>
             </div>
           )}
+            </motion.div>
+          </AnimatePresence>
         </div>
       </div>
     </>

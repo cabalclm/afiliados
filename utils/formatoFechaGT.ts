@@ -118,3 +118,45 @@ export function calcularEdadLabel(
   if (edad === null) return "—";
   return `${edad} años`;
 }
+
+/** Ej.: Lun 01/06/25 | 02:35 AM (zona Guatemala). */
+export function formatearFechaHoraMensaje(
+  valor: string | null | undefined,
+): string {
+  if (!valor) return "—";
+  const d = new Date(valor);
+  if (Number.isNaN(d.getTime())) return "—";
+
+  const tz = "America/Guatemala";
+  const diaSemana = new Intl.DateTimeFormat("es-GT", {
+    timeZone: tz,
+    weekday: "short",
+  })
+    .format(d)
+    .replace(/\.$/, "");
+  const diaCap =
+    diaSemana.charAt(0).toUpperCase() + diaSemana.slice(1).toLowerCase();
+
+  const partesFecha = new Intl.DateTimeFormat("es-GT", {
+    timeZone: tz,
+    day: "2-digit",
+    month: "2-digit",
+    year: "2-digit",
+  }).formatToParts(d);
+  const dd = partesFecha.find((p) => p.type === "day")?.value ?? "00";
+  const mm = partesFecha.find((p) => p.type === "month")?.value ?? "00";
+  const yy = partesFecha.find((p) => p.type === "year")?.value ?? "00";
+
+  const partesHora = new Intl.DateTimeFormat("en-US", {
+    timeZone: tz,
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  }).formatToParts(d);
+  const hour = partesHora.find((p) => p.type === "hour")?.value ?? "00";
+  const minute = partesHora.find((p) => p.type === "minute")?.value ?? "00";
+  const meridiano =
+    partesHora.find((p) => p.type === "dayPeriod")?.value.toUpperCase() ?? "AM";
+
+  return `${diaCap} ${dd}/${mm}/${yy} | ${hour}:${minute} ${meridiano}`;
+}

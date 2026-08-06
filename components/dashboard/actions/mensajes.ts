@@ -187,7 +187,7 @@ function mensajeAplicaAlUsuario(
   );
 }
 
-async function obtenerMensajesPendientesParaUsuario(
+async function obtenerMensajesParaUsuario(
   supabase: Awaited<ReturnType<typeof createClient>>,
   userId: string,
   nivelCompromiso: string,
@@ -203,18 +203,48 @@ async function obtenerMensajesPendientesParaUsuario(
   const [{ data: lecturas }, rolUsuario] = await Promise.all([
     supabase
       .from("sis_mensajes_lecturas")
-      .select("mensaje_id")
+      .select("mensaje_id, leido_en")
       .eq("user_id", userId),
     obtenerRolUsuario(userId),
   ]);
 
-  const leidosIds = new Set((lecturas || []).map((l) => l.mensaje_id));
-
-  return mensajes.filter(
-    (m) =>
-      !leidosIds.has(m.id) &&
-      mensajeAplicaAlUsuario(m, userId, nivelCompromiso, rolUsuario),
+  const lecturasPorMensaje = new Map(
+    (lecturas || []).map((l) => [l.mensaje_id, l.leido_en]),
   );
+
+  return mensajes
+    .filter((m) =>
+      mensajeAplicaAlUsuario(m, userId, nivelCompromiso, rolUsuario),
+    )
+    .map((m) => ({
+      ...m,
+      leido: lecturasPorMensaje.has(m.id),
+      leido_en: lecturasPorMensaje.get(m.id) ?? null,
+    }));
+}
+
+async function obtenerMensajesPendientesParaUsuario(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  userId: string,
+  nivelCompromiso: string,
+) {
+  const mensajes = await obtenerMensajesParaUsuario(
+    supabase,
+    userId,
+    nivelCompromiso,
+  );
+
+  return mensajes.filter((m) => !m.leido);
+}
+
+export async function obtenerMensajesUsuarioAction(
+  userId: string,
+  nivelCompromiso: string,
+) {
+  if (!userId) return [];
+
+  const supabase = await createClient();
+  return obtenerMensajesParaUsuario(supabase, userId, nivelCompromiso);
 }
 
 export async function obtenerMensajePendienteAction(

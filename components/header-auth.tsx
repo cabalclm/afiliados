@@ -10,9 +10,13 @@ import { useState } from "react";
 import ConfiguracionModal from "./ConfiguracionModal";
 import NotificationBell from "./NotificationBell";
 import { AnimatedThemeToggler } from "@/components/ui/animated-theme-toggler";
+import { useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 
 export default function AuthButton() {
   const { email, nombres, apellidos, rol, cargando } = useUserData();
+  const queryClient = useQueryClient();
+  const router = useRouter();
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
 
@@ -43,7 +47,9 @@ export default function AuthButton() {
     if (!result.isConfirmed) return;
 
     setIsSigningOut(true);
+    queryClient.clear();
     await signOutAction();
+    router.refresh();
   };
 
   if (cargando) {

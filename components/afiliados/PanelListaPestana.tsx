@@ -13,6 +13,7 @@ type Props = {
   extra?: ReactNode;
   children: ReactNode;
   footer?: ReactNode;
+  contenidoSinPadding?: boolean;
 };
 
 export default function PanelListaPestana({
@@ -24,6 +25,7 @@ export default function PanelListaPestana({
   extra,
   children,
   footer,
+  contenidoSinPadding = false,
 }: Props) {
   return (
     <div
@@ -46,10 +48,12 @@ export default function PanelListaPestana({
           {extra}
         </div>
         {acciones ? (
-          <div className="flex flex-wrap items-center gap-2 shrink-0">{acciones}</div>
+          <div className="w-full min-w-0 shrink-0 sm:w-auto">{acciones}</div>
         ) : null}
       </div>
-      <div className="px-3 pb-3 pt-3">{children}</div>
+      <div className={contenidoSinPadding ? undefined : "px-3 pb-3 pt-3"}>
+        {children}
+      </div>
       {footer ? (
         <div className="border-t border-gray-100 dark:border-neutral-800 px-3 py-3">
           {footer}
