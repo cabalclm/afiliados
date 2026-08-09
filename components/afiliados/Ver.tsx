@@ -2,10 +2,10 @@
 
 import { Button } from "@/components/ui/button";
 import { toast } from "@/lib/toast";
-import { AnimatePresence, motion } from "framer-motion";
+import { motion } from "framer-motion";
 import { BarChart3, Building2, Mail, X } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { Fragment, useMemo, useRef, useState, type ReactNode } from "react";
+import { Fragment, useMemo, useState, type ReactNode } from "react";
 import {
   PiBriefcaseDuotone,
   PiBuildingsDuotone,
@@ -117,17 +117,6 @@ const TAB_THEMES: Record<
   },
 };
 
-const tabEase = [0.25, 0.46, 0.45, 0.94] as const;
-
-const TAB_ORDER: Tab[] = [
-  "Sede",
-  "Lideres",
-  "Trabajadores",
-  "Afiliados",
-  "Administrativos",
-  "Mensajes",
-];
-
 const tabBtnClass = (active: boolean, tab: Tab) => {
   const theme = TAB_THEMES[tab];
   return `relative flex w-full md:w-auto md:shrink-0 flex-row items-center justify-center px-1.5 sm:px-2 py-3 md:py-3 text-base md:text-lg font-semibold transition-colors duration-300 ${
@@ -185,8 +174,6 @@ export default function Ver() {
   const queryClient = useQueryClient();
 
   const [activeTab, setActiveTab] = useState<Tab>("Sede");
-  const [tabSlideDir, setTabSlideDir] = useState(1);
-  const prevTabRef = useRef<Tab>("Sede");
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isEstadisticasOpen, setIsEstadisticasOpen] = useState(false);
@@ -429,11 +416,6 @@ export default function Ver() {
     if (soloLecturaSede && (tab === "Mensajes" || tab === "Administrativos")) {
       return;
     }
-    const prev = prevTabRef.current;
-    const prevIdx = TAB_ORDER.indexOf(prev);
-    const nextIdx = TAB_ORDER.indexOf(tab);
-    setTabSlideDir(nextIdx >= prevIdx ? 1 : -1);
-    prevTabRef.current = tab;
     setActiveTab(tab);
     setLiderParaCelula(null);
   };
@@ -833,139 +815,183 @@ export default function Ver() {
               </div>
             </div>
 
-            <AnimatePresence mode="wait" initial={false} custom={tabSlideDir}>
-              {liderParaCelula && activeTab !== "Sede" ? (
-                <motion.div
-                  key={`celula-${liderParaCelula.id}`}
-                  custom={tabSlideDir}
-                  initial={{ opacity: 0, x: tabSlideDir * 36 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: tabSlideDir * -28 }}
-                  transition={{ duration: 0.45, ease: tabEase }}
-                >
+            <>
+              {liderParaCelula && activeTab !== "Sede" && (
+                <Celula
+                  embedded
+                  isOpen
+                  onClose={handleVolverDeCelula}
+                  onBack={handleVolverDeCelula}
+                  lider={liderParaCelula}
+                  onEditar={handleOpenEditModal}
+                  onAnadirAfiliado={handleOpenAnadirAfiliadoModal}
+                  onDataChange={fetchData}
+                  rolUsuarioSesion={esSedeSesion ? "SEDE" : rol}
+                  afiliadosSimulados={AFILIADOS_SIMULADOS}
+                />
+              )}
+
+              {/* Paneles siempre montados: al cambiar de pestaña no se remonta ni se vuelve a cargar. */}
+              <div
+                className={
+                  activeTab === "Sede" && !liderParaCelula
+                    ? undefined
+                    : "hidden"
+                }
+                aria-hidden={!(activeTab === "Sede" && !liderParaCelula)}
+              >
+                {sedeUsuario ? (
                   <Celula
                     embedded
                     isOpen
-                    onClose={handleVolverDeCelula}
-                    onBack={handleVolverDeCelula}
-                    lider={liderParaCelula}
+                    onClose={() => {}}
+                    lider={sedeUsuario}
                     onEditar={handleOpenEditModal}
+                    onEditarUsuario={
+                      esAdminOSuper ? handleOpenEditLiderModal : undefined
+                    }
                     onAnadirAfiliado={handleOpenAnadirAfiliadoModal}
                     onDataChange={fetchData}
                     rolUsuarioSesion={esSedeSesion ? "SEDE" : rol}
-                    afiliadosSimulados={AFILIADOS_SIMULADOS}
                   />
-                </motion.div>
-              ) : (
-                <motion.div
-                  key={activeTab}
-                  custom={tabSlideDir}
-                  initial={{ opacity: 0, x: tabSlideDir * 40 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: tabSlideDir * -32 }}
-                  transition={{ duration: 0.45, ease: tabEase }}
-                >
-                  {activeTab === "Sede" &&
-                    (sedeUsuario ? (
-                      <Celula
-                        embedded
-                        isOpen
-                        onClose={() => {}}
-                        lider={sedeUsuario}
-                        onEditar={handleOpenEditModal}
-                        onEditarUsuario={
-                          esAdminOSuper ? handleOpenEditLiderModal : undefined
-                        }
-                        onAnadirAfiliado={handleOpenAnadirAfiliadoModal}
-                        onDataChange={fetchData}
-                        rolUsuarioSesion={esSedeSesion ? "SEDE" : rol}
-                      />
-                    ) : (
-                      renderPanelTab(
-                        "Sede",
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl border border-dashed border-blue-400/70 dark:border-blue-700 bg-blue-50/80 dark:bg-blue-950/20 px-4 py-6">
-                          <div className="flex items-start gap-3 min-w-0">
-                            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400 shrink-0">
-                              <Building2 className="h-5 w-5" />
-                            </div>
-                            <div className="min-w-0">
-                              <p className="text-sm font-black text-blue-900 dark:text-blue-200">
-                                Aún no existe el usuario Sede
-                              </p>
-                              <p className="text-xs text-blue-800/80 dark:text-blue-300/80 mt-0.5">
-                                Créalo para afiliar desde sede y diferenciarlo
-                                del avance de los líderes.
-                              </p>
-                            </div>
-                          </div>
-                        </div>,
-                      )
-                    ))}
+                ) : (
+                  renderPanelTab(
+                    "Sede",
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl border border-dashed border-blue-400/70 dark:border-blue-700 bg-blue-50/80 dark:bg-blue-950/20 px-4 py-6">
+                      <div className="flex items-start gap-3 min-w-0">
+                        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400 shrink-0">
+                          <Building2 className="h-5 w-5" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-black text-blue-900 dark:text-blue-200">
+                            Aún no existe el usuario Sede
+                          </p>
+                          <p className="text-xs text-blue-800/80 dark:text-blue-300/80 mt-0.5">
+                            Créalo para afiliar desde sede y diferenciarlo del
+                            avance de los líderes.
+                          </p>
+                        </div>
+                      </div>
+                    </div>,
+                  )
+                )}
+              </div>
 
-                  {activeTab === "Lideres" &&
-                    renderPanelTab(
-                      "Lideres",
-                      <Lideres
-                        lideres={lideresVisibles}
-                        onVerCelula={handleOpenCelula}
-                        onEditar={handleOpenEditLiderModal}
-                        rolUsuarioSesion={esSedeSesion ? "SEDE" : rol}
-                        onDataChange={fetchData}
-                        searchTerm={busquedaTab("Lideres")}
-                        idUsuarioSesion={userId}
-                        isLoading={cargandoLideres}
-                        tema={getTemaTab("Lideres")}
-                      />,
-                    )}
-                  {activeTab === "Afiliados" && (
-                    <AfiliadosGeneral
-                      afiliados={afiliados}
-                      lideres={allUsers}
-                      onEditar={handleOpenEditModal}
+              <div
+                className={
+                  activeTab === "Lideres" && !liderParaCelula
+                    ? undefined
+                    : "hidden"
+                }
+                aria-hidden={!(activeTab === "Lideres" && !liderParaCelula)}
+              >
+                {renderPanelTab(
+                  "Lideres",
+                  <Lideres
+                    lideres={lideresVisibles}
+                    onVerCelula={handleOpenCelula}
+                    onEditar={handleOpenEditLiderModal}
+                    rolUsuarioSesion={esSedeSesion ? "SEDE" : rol}
+                    onDataChange={fetchData}
+                    searchTerm={busquedaTab("Lideres")}
+                    idUsuarioSesion={userId}
+                    isLoading={cargandoLideres}
+                    tema={getTemaTab("Lideres")}
+                  />,
+                )}
+              </div>
+
+              <div
+                className={
+                  activeTab === "Trabajadores" && !liderParaCelula
+                    ? undefined
+                    : "hidden"
+                }
+                aria-hidden={
+                  !(activeTab === "Trabajadores" && !liderParaCelula)
+                }
+              >
+                {renderPanelTab(
+                  "Trabajadores",
+                  <Lideres
+                    lideres={trabajadores}
+                    onVerCelula={handleOpenCelula}
+                    onEditar={handleOpenEditLiderModal}
+                    rolUsuarioSesion={esSedeSesion ? "SEDE" : rol}
+                    onDataChange={fetchData}
+                    searchTerm={busquedaTab("Trabajadores")}
+                    idUsuarioSesion={userId}
+                    isLoading={cargandoLideres}
+                    tema={getTemaTab("Trabajadores")}
+                  />,
+                )}
+              </div>
+
+              <div
+                className={
+                  activeTab === "Afiliados" && !liderParaCelula
+                    ? undefined
+                    : "hidden"
+                }
+                aria-hidden={!(activeTab === "Afiliados" && !liderParaCelula)}
+              >
+                <AfiliadosGeneral
+                  afiliados={afiliados}
+                  lideres={allUsers}
+                  onEditar={handleOpenEditModal}
+                  onDataChange={fetchData}
+                  searchTerm={busquedaTab("Afiliados")}
+                  onSearchChange={(v) => setBusquedaTab("Afiliados", v)}
+                  placeholder={placeholdersTab.Afiliados}
+                  tema={getTemaTab("Afiliados")}
+                  isLoading={cargandoMiembros}
+                />
+              </div>
+
+              {esAdminOSuper && (
+                <div
+                  className={
+                    activeTab === "Administrativos" && !liderParaCelula
+                      ? undefined
+                      : "hidden"
+                  }
+                  aria-hidden={
+                    !(activeTab === "Administrativos" && !liderParaCelula)
+                  }
+                >
+                  {renderPanelTab(
+                    "Administrativos",
+                    <Lideres
+                      lideres={administrativos}
+                      onVerCelula={handleOpenCelula}
+                      onEditar={handleOpenEditLiderModal}
+                      rolUsuarioSesion={esSedeSesion ? "SEDE" : rol}
                       onDataChange={fetchData}
-                      searchTerm={busquedaTab("Afiliados")}
-                      onSearchChange={(v) => setBusquedaTab("Afiliados", v)}
-                      placeholder={placeholdersTab.Afiliados}
-                      tema={getTemaTab("Afiliados")}
-                      isLoading={cargandoMiembros}
-                    />
+                      searchTerm={busquedaTab("Administrativos")}
+                      idUsuarioSesion={userId}
+                      isLoading={cargandoLideres}
+                      tema={getTemaTab("Administrativos")}
+                    />,
                   )}
-                  {activeTab === "Trabajadores" &&
-                    renderPanelTab(
-                      "Trabajadores",
-                      <Lideres
-                        lideres={trabajadores}
-                        onVerCelula={handleOpenCelula}
-                        onEditar={handleOpenEditLiderModal}
-                        rolUsuarioSesion={esSedeSesion ? "SEDE" : rol}
-                        onDataChange={fetchData}
-                        searchTerm={busquedaTab("Trabajadores")}
-                        idUsuarioSesion={userId}
-                        isLoading={cargandoLideres}
-                        tema={getTemaTab("Trabajadores")}
-                      />,
-                    )}
-                  {activeTab === "Administrativos" &&
-                    renderPanelTab(
-                      "Administrativos",
-                      <Lideres
-                        lideres={administrativos}
-                        onVerCelula={handleOpenCelula}
-                        onEditar={handleOpenEditLiderModal}
-                        rolUsuarioSesion={esSedeSesion ? "SEDE" : rol}
-                        onDataChange={fetchData}
-                        searchTerm={busquedaTab("Administrativos")}
-                        idUsuarioSesion={userId}
-                        isLoading={cargandoLideres}
-                        tema={getTemaTab("Administrativos")}
-                      />,
-                    )}
-                  {activeTab === "Mensajes" &&
-                    esAdminOSuper &&
-                    renderPanelTab("Mensajes", <Difusion usuarios={allUsers} />)}
-                </motion.div>
+                </div>
               )}
-            </AnimatePresence>
+
+              {esAdminOSuper && (
+                <div
+                  className={
+                    activeTab === "Mensajes" && !liderParaCelula
+                      ? undefined
+                      : "hidden"
+                  }
+                  aria-hidden={!(activeTab === "Mensajes" && !liderParaCelula)}
+                >
+                  {renderPanelTab(
+                    "Mensajes",
+                    <Difusion usuarios={allUsers} />,
+                  )}
+                </div>
+              )}
+            </>
           </>
         )}
       </div>
