@@ -50,14 +50,43 @@ export default function useUserData() {
     void obtenerUsuario();
 
     const supabase = createClient();
+    const knownUserIdRef: { current: string | null | undefined } = {
+      current: undefined,
+    };
+
+    supabase.auth.getSession().then(({ data }) => {
+      if (knownUserIdRef.current === undefined) {
+        knownUserIdRef.current = data.session?.user?.id ?? null;
+      }
+    });
+
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((event) => {
-      if (
-        event === "SIGNED_IN" ||
-        event === "SIGNED_OUT" ||
-        event === "USER_UPDATED"
-      ) {
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      const nextUserId = session?.user?.id ?? null;
+
+      if (event === "TOKEN_REFRESHED") {
+        knownUserIdRef.current = nextUserId;
+        return;
+      }
+
+      if (event === "SIGNED_IN") {
+        // Primer evento o mismo usuario al volver a la PWA: no resetear UI.
+        if (
+          knownUserIdRef.current === undefined ||
+          nextUserId === knownUserIdRef.current
+        ) {
+          knownUserIdRef.current = nextUserId;
+          return;
+        }
+        knownUserIdRef.current = nextUserId;
+        setCargando(true);
+        void obtenerUsuario();
+        return;
+      }
+
+      if (event === "SIGNED_OUT" || event === "USER_UPDATED") {
+        knownUserIdRef.current = nextUserId;
         setCargando(true);
         void obtenerUsuario();
       }

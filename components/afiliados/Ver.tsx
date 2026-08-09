@@ -206,7 +206,7 @@ export default function Ver() {
   // UN SOLO fetch que trae TODO: sesión + usuarios + lugares
   // Usa API Route (JSON puro) en vez de Server Action (RSC lento)
   // =====================================================
-  const { data: dashboardData, isLoading: isDashboardLoading } = useQuery({
+  const { data: dashboardData, isPending: isDashboardPending } = useQuery({
     queryKey: ["dashboard-data"],
     queryFn: async () => {
       console.time("⏱️ fetch /api/dashboard");
@@ -221,6 +221,8 @@ export default function Ver() {
     },
     staleTime: 5 * 60 * 1000,
   });
+  /** Solo skeleton en la primera carga; no desmontar UI si ya hay datos. */
+  const isDashboardLoading = isDashboardPending && !dashboardData;
 
   const session = dashboardData?.session;
   const rol = session?.rol || "";
