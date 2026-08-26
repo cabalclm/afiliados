@@ -1,7 +1,8 @@
 diff --git a/package.json b/package.json
+index 34ff685543b0dcb431ca15ff30813bbaacc1f27e..fbcd960d86c81d462d423595ac409cb5ddc698c2 100644
 --- a/package.json
 +++ b/package.json
-@@ -28,6 +28,16 @@
+@@ -28,6 +28,15 @@
    "module": "dist/esm/lucide.js",
    "unpkg": "dist/umd/lucide.min.js",
    "typings": "dist/lucide.d.ts",

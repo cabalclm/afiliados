@@ -4,6 +4,11 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+patchedDependencies:
+  lucide@0.468.0:
+    hash: a5c16fb4b9e3cf3a5c7245d06a2c8364489c8e51d2f6644e36b0523f0b1ba472
+    path: patches/lucide@0.468.0.patch
+
 importers:
 
   .:
@@ -85,7 +90,7 @@ importers:
         version: 2.4.1(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       lucide:
         specifier: 0.468.0
-        version: 0.468.0
+        version: 0.468.0(patch_hash=a5c16fb4b9e3cf3a5c7245d06a2c8364489c8e51d2f6644e36b0523f0b1ba472)
       lucide-react:
         specifier: ^0.468.0
         version: 0.468.0(react@19.2.3)
@@ -6859,7 +6864,7 @@ snapshots:
     dependencies:
       react: 19.2.3
 
-  lucide@0.468.0: {}
+  lucide@0.468.0(patch_hash=a5c16fb4b9e3cf3a5c7245d06a2c8364489c8e51d2f6644e36b0523f0b1ba472): {}
 
   luxon@3.7.2: {}
 
