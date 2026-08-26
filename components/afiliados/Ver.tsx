@@ -1,19 +1,34 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import HoverMorphIcon from "@/components/ui/HoverMorphIcon";
 import { toast } from "@/lib/toast";
 import { motion } from "framer-motion";
-import { BarChart3, Building2, Mail, X } from "lucide-react";
+import { Building2, X } from "lucide-react";
+import {
+  Award,
+  Briefcase,
+  BriefcaseBusiness,
+  Building,
+  Building2 as Building2Data,
+  ChartColumn,
+  ChartColumnIncreasing,
+  ClipboardList,
+  Landmark,
+  Code,
+  Download,
+  Mail,
+  MailOpen,
+  Medal,
+  Sheet,
+  Shield,
+  ShieldCheck,
+  Terminal,
+  Users,
+  UsersRound,
+} from "lucide";
 import { useRouter } from "next/navigation";
 import { Fragment, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import {
-  PiBriefcaseDuotone,
-  PiBuildingsDuotone,
-  PiCodeDuotone,
-  PiMedalDuotone,
-  PiShieldCheckDuotone,
-  PiUsersThreeDuotone,
-} from "react-icons/pi";
 
 import ConfiguracionSistema from "../dashboard/ConfiguracionSistema";
 import EstadisticasEdades from "./estadisticas/Edades";
@@ -30,7 +45,7 @@ import Lideres from "./Lideres";
 import MetaGeneral from "./MetaGeneral";
 import ModalBienvenida from "./ModalBienvenida";
 import type { Afiliado, Lider } from "./esquemas";
-import { esRolAdminOSuper, esRolEmpleado, esRolLider, esUsuarioSede } from "./esquemas";
+import { esRolAdminOSuper, esRolEmpleado, esRolLider, esRolPlanilla, esUsuarioSede } from "./esquemas";
 import Form from "./forms/afiliados/Afiliados";
 import PanelListaPestana from "./PanelListaPestana";
 import {
@@ -39,11 +54,14 @@ import {
   TEMA_LIDERES,
   TEMA_MIEMBROS,
   TEMA_MENSAJES,
+  TEMA_PLANILLA,
   TEMA_SEDE,
 } from "./temaPestana";
 
 import { obtenerAfiliadosAction } from "./actions/afiliados";
+import { obtenerConfiguracionAction } from "@/components/dashboard/actions/configuracion";
 import { AFILIADOS_SIMULADOS, LIDER_SIMULADO } from "./datosSimulados";
+import { descargarExcelEquipo } from "./excelEquipo";
 
 type Lugar = { id: number; nombre: string };
 type Tab =
@@ -51,6 +69,7 @@ type Tab =
   | "Lideres"
   | "Afiliados"
   | "Trabajadores"
+  | "Planilla"
   | "Administrativos"
   | "Mensajes";
 
@@ -99,6 +118,14 @@ const TAB_THEMES: Record<
     activeBadgeText: "text-violet-700 dark:text-violet-300",
     lineBg: "bg-violet-500 dark:bg-violet-400",
   },
+  Planilla: {
+    activeText: "text-red-600 dark:text-red-400",
+    activeIconBg: "bg-red-100 dark:bg-red-950/60",
+    activeIconText: "text-red-600 dark:text-red-400",
+    activeBadgeBg: "bg-red-100 dark:bg-red-950/60",
+    activeBadgeText: "text-red-700 dark:text-red-300",
+    lineBg: "bg-red-500 dark:bg-red-400",
+  },
   Administrativos: {
     activeText: "text-indigo-600 dark:text-indigo-400",
     activeIconBg: "bg-indigo-100 dark:bg-indigo-950/60",
@@ -142,30 +169,105 @@ const tabBadgeClass = () =>
 
 const OBJETIVO_LIDERES = 200;
 
-type RolNuevo = "LIDER" | "EMPLEADO" | "ADMINISTRADOR" | "SUPER";
+type RolNuevo = "LIDER" | "EMPLEADO" | "PLANILLA" | "ADMINISTRADOR" | "SUPER";
 
 function BtnNuevoTab({
   label,
-  icon,
+  idle,
+  hover,
   onClick,
   className,
+  disabled,
 }: {
   label: string;
-  icon: ReactNode;
+  idle: unknown;
+  hover: unknown;
   onClick: () => void;
   className: string;
+  disabled?: boolean;
 }) {
+  const [hovered, setHovered] = useState(false);
   return (
     <button
       type="button"
+      disabled={disabled}
       onClick={onClick}
-      className={`inline-flex h-11 md:h-12 items-center justify-center gap-2 rounded-lg border px-3.5 md:px-5 text-base md:text-lg font-semibold whitespace-nowrap transition-colors ${className}`}
+      className={`inline-flex h-11 md:h-12 shrink-0 items-center justify-center gap-2 rounded-lg border px-3.5 md:px-5 text-base md:text-lg font-semibold whitespace-nowrap transition-colors disabled:opacity-60 ${className}`}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
     >
-      <span className="shrink-0 [&>svg]:w-5 [&>svg]:h-5 md:[&>svg]:w-5 md:[&>svg]:h-5">
-        {icon}
-      </span>
+      <HoverMorphIcon
+        idle={idle}
+        hover={hover}
+        size={20}
+        active={hovered}
+      />
       {label}
     </button>
+  );
+}
+
+function TabMorphButton({
+  label,
+  count,
+  idle,
+  hover,
+  activo,
+  theme,
+  onClick,
+  btnClass,
+  pillClass,
+}: {
+  label: string;
+  count: number | null;
+  idle: unknown;
+  hover: unknown;
+  activo: boolean;
+  theme: { lineBg: string };
+  onClick: () => void;
+  btnClass: string;
+  pillClass: string;
+}) {
+  const [hovered, setHovered] = useState(false);
+  return (
+    <motion.button
+      type="button"
+      onClick={onClick}
+      className={btnClass}
+      whileTap={{ scale: 0.98 }}
+      transition={{ duration: 0.2 }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      <span className={pillClass}>
+        <span className={tabIconClass()}>
+          <HoverMorphIcon
+            idle={idle}
+            hover={hover}
+            size={20}
+            active={hovered || activo}
+            className="md:[&_svg]:h-6 md:[&_svg]:w-6"
+          />
+        </span>
+        <span className="whitespace-normal sm:whitespace-nowrap text-center leading-tight">
+          {label}
+        </span>
+        {count !== null && (
+          <span className={tabBadgeClass()}>{count}</span>
+        )}
+        {activo && (
+          <motion.span
+            layoutId="pestana-subrayado"
+            className={`absolute -bottom-[9px] md:-bottom-[11px] left-0 right-0 h-[2px] md:h-[3px] rounded-full ${theme.lineBg}`}
+            transition={{
+              type: "spring",
+              stiffness: 380,
+              damping: 32,
+            }}
+          />
+        )}
+      </span>
+    </motion.button>
   );
 }
 
@@ -196,6 +298,7 @@ export default function Ver() {
     Partial<Record<Tab, string>>
   >({});
   const [liderSimulado, setLiderSimulado] = useState<Lider | null>(null);
+  const [exportandoExcel, setExportandoExcel] = useState(false);
 
   const busquedaTab = (tab: Tab) => busquedaPorTab[tab] ?? "";
   const setBusquedaTab = (tab: Tab, value: string) => {
@@ -255,13 +358,17 @@ export default function Ver() {
       }));
   /** SEDE puede crear líderes y empleados; el resto de gestión sigue restringido. */
   const puedeCrearLiderOEmpleado = puedeCrearLider || esSedeSesion;
-  const esLiderOEmpleado = esRolLider(rol) || esRolEmpleado(rol);
+  const esLiderOEmpleado =
+    esRolLider(rol) || esRolEmpleado(rol) || esRolPlanilla(rol);
   /** Admin/Super/Sede: pestañas completas. Líder/empleado: solo Líderes + Empleados. */
   const vistaAdminPestanas = esAdminOSuper || esSedeSesion;
   const vistaConPestanas = vistaAdminPestanas || esLiderOEmpleado;
   /** Aviso de líderes faltantes para la meta: solo admin, super y sede. */
   const puedeVerAvisoMetaEquipo =
-    vistaAdminPestanas && !esRolLider(rol) && !esRolEmpleado(rol);
+    vistaAdminPestanas &&
+    !esRolLider(rol) &&
+    !esRolEmpleado(rol) &&
+    !esRolPlanilla(rol);
   /** SEDE: sin Administrativos ni Mensajes; puede crear líderes/empleados. */
   const soloLecturaSede = esSedeSesion;
   const esLider = rolUpper === "LIDER";
@@ -271,6 +378,9 @@ export default function Ver() {
     if (tabInicialRef.current || !rol) return;
     if (esRolEmpleado(rol)) {
       setActiveTab("Trabajadores");
+      tabInicialRef.current = true;
+    } else if (esRolPlanilla(rol)) {
+      setActiveTab("Planilla");
       tabInicialRef.current = true;
     } else if (esRolLider(rol)) {
       setActiveTab("Lideres");
@@ -321,6 +431,7 @@ export default function Ver() {
     rolesAdminVisibles.includes((u.rol || "").toUpperCase()),
   );
   const trabajadores = allUsers.filter((u) => esRolEmpleado(u.rol));
+  const planilla = allUsers.filter((u) => esRolPlanilla(u.rol));
   const sedeUsuario =
     allUsers.find((u) => esUsuarioSede(u)) ||
     (esSedeSesion && miPerfilGlobal ? miPerfilGlobal : null);
@@ -328,13 +439,20 @@ export default function Ver() {
   const totalesMeta = useMemo(() => {
     // Preferir meta del API: cuenta TODAS las filas de `afiliados` (paginado).
     const meta = dashboardData?.meta as
-      | { total: number; sede: number; lideres: number; trabajadores: number }
+      | {
+          total: number;
+          sede: number;
+          lideres: number;
+          trabajadores: number;
+          planilla?: number;
+        }
       | undefined;
     if (meta && typeof meta.total === "number") {
       return {
         sede: meta.sede || 0,
         lideres: meta.lideres || 0,
         trabajadores: meta.trabajadores || 0,
+        planilla: meta.planilla || 0,
         total: meta.total,
       };
     }
@@ -347,11 +465,15 @@ export default function Ver() {
         )
         .map((u) => u.id),
     );
+    const idsPlanilla = new Set(
+      allUsers.filter((u) => esRolPlanilla(u.rol)).map((u) => u.id),
+    );
     const sedeId = sedeUsuario?.id;
 
     let sede = 0;
     let lideres = 0;
     let trabajadoresCount = 0;
+    let planillaCount = 0;
 
     for (const u of allUsers) {
       const n = u.conteoAfiliados || 0;
@@ -361,6 +483,8 @@ export default function Ver() {
         sede += n;
       } else if (idsEmpleado.has(u.id)) {
         trabajadoresCount += n;
+      } else if (idsPlanilla.has(u.id)) {
+        planillaCount += n;
       } else {
         lideres += n;
       }
@@ -370,13 +494,15 @@ export default function Ver() {
       sede,
       lideres,
       trabajadores: trabajadoresCount,
-      total: sede + lideres + trabajadoresCount,
+      planilla: planillaCount,
+      total: sede + lideres + trabajadoresCount + planillaCount,
     };
   }, [dashboardData?.meta, allUsers, sedeUsuario]);
 
   const totalAfiliadosSede = totalesMeta.sede;
   const totalAfiliadosLideres = totalesMeta.lideres;
   const totalAfiliadosTrabajadores = totalesMeta.trabajadores;
+  const totalAfiliadosPlanilla = totalesMeta.planilla;
   const totalMiembrosGeneral = totalesMeta.total;
   const lugares = (dashboardData?.lugares || []) as Lugar[];
 
@@ -417,6 +543,17 @@ export default function Ver() {
     return trabajadores;
   }, [rol, miPerfilGlobal, trabajadores]);
 
+  const planillaParaLista = useMemo(() => {
+    if (
+      esRolPlanilla(rol) &&
+      miPerfilGlobal &&
+      !planilla.some((u) => u.id === miPerfilGlobal.id)
+    ) {
+      return [miPerfilGlobal, ...planilla];
+    }
+    return planilla;
+  }, [rol, miPerfilGlobal, planilla]);
+
   /** Líderes y empleados pueden tener célula (afiliados bajo su user_id). */
   const usuariosConCelula = allUsers.filter((u) => {
     const r = (u.rol || "").toUpperCase();
@@ -424,6 +561,7 @@ export default function Ver() {
       r === "LIDER" ||
       r === "EMPLEADO" ||
       r === "TRABAJADOR" ||
+      r === "PLANILLA" ||
       r === "SEDE" ||
       esUsuarioSede(u)
     );
@@ -443,6 +581,7 @@ export default function Ver() {
     esRolLider(u.rol),
   ).length;
   const totalEmpleadosRegistrados = trabajadores.length;
+  const totalPlanillaRegistrados = planilla.length;
   const totalAdministrativosRegistrados = administrativos.length;
 
   const cambiarTab = (tab: Tab) => {
@@ -452,7 +591,8 @@ export default function Ver() {
     if (
       esLiderOEmpleado &&
       tab !== "Lideres" &&
-      tab !== "Trabajadores"
+      tab !== "Trabajadores" &&
+      tab !== "Planilla"
     ) {
       return;
     }
@@ -464,10 +604,13 @@ export default function Ver() {
   const tabActiva: Tab =
     esLiderOEmpleado &&
     activeTab !== "Lideres" &&
-    activeTab !== "Trabajadores"
+    activeTab !== "Trabajadores" &&
+    activeTab !== "Planilla"
       ? esRolEmpleado(rol)
         ? "Trabajadores"
-        : "Lideres"
+        : esRolPlanilla(rol)
+          ? "Planilla"
+          : "Lideres"
       : activeTab;
 
   const cargandoLideres = isDashboardLoading;
@@ -576,6 +719,7 @@ export default function Ver() {
     Sede: "Buscar por nombre o DPI...",
     Lideres: "Buscar por nombre",
     Trabajadores: "Buscar por nombre",
+    Planilla: "Buscar por nombre",
     Afiliados: "Buscar por nombre o DPI",
     Administrativos: "Buscar por nombre",
     Mensajes: "Buscar por nombre",
@@ -589,6 +733,8 @@ export default function Ver() {
         return TEMA_LIDERES;
       case "Trabajadores":
         return TEMA_EMPLEADOS;
+      case "Planilla":
+        return TEMA_PLANILLA;
       case "Afiliados":
         return TEMA_MIEMBROS;
       case "Administrativos":
@@ -600,47 +746,107 @@ export default function Ver() {
     }
   };
 
+  const handleExcelEquipo = async () => {
+    if (exportandoExcel) return;
+    setExportandoExcel(true);
+    try {
+      const config = await obtenerConfiguracionAction();
+      await descargarExcelEquipo(
+        allUsers,
+        afiliados,
+        config?.meta_celula ?? 15,
+        config?.meta_celula_minima ?? 10,
+      );
+      toast.success("Excel del equipo descargado");
+    } catch (err) {
+      console.error(err);
+      toast.error("No se pudo generar el Excel");
+    } finally {
+      setExportandoExcel(false);
+    }
+  };
+
+  const btnExcelEquipo = (
+    <BtnNuevoTab
+      label={exportandoExcel ? "Generando…" : "Excel"}
+      idle={Download}
+      hover={Sheet}
+      disabled={exportandoExcel || cargandoMiembros}
+      onClick={handleExcelEquipo}
+      className="border-emerald-600 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 dark:border-emerald-500 dark:bg-emerald-950/50 dark:text-emerald-300 dark:hover:bg-emerald-950/70"
+    />
+  );
+
+  const conExcel = (extra: ReactNode = null) => (
+    <div className="flex w-full min-w-0 flex-wrap items-center gap-2 sm:justify-end">
+      {btnExcelEquipo}
+      {extra}
+    </div>
+  );
+
   const getAccionesTab = (tab: Tab): ReactNode => {
-    if (tab === "Lideres" && puedeCrearLiderOEmpleado) {
-      return (
-        <BtnNuevoTab
-          label="Nuevo Líder"
-          icon={<PiMedalDuotone />}
-          onClick={() => abrirNuevoUsuario("LIDER")}
-          className="border-orange-400 bg-orange-50 text-orange-600 hover:bg-orange-100 dark:border-orange-500 dark:bg-orange-950/50 dark:text-orange-400 dark:hover:bg-orange-950/70"
-        />
+    if (tab === "Lideres") {
+      return conExcel(
+        puedeCrearLiderOEmpleado ? (
+          <BtnNuevoTab
+            label="Nuevo"
+            idle={Medal}
+            hover={Award}
+            onClick={() => abrirNuevoUsuario("LIDER")}
+            className="border-orange-400 bg-orange-50 text-orange-600 hover:bg-orange-100 dark:border-orange-500 dark:bg-orange-950/50 dark:text-orange-400 dark:hover:bg-orange-950/70"
+          />
+        ) : null,
       );
     }
 
-    if (tab === "Trabajadores" && puedeCrearLiderOEmpleado) {
-      return (
-        <BtnNuevoTab
-          label="Nuevo Empleado"
-          icon={<PiBriefcaseDuotone />}
-          onClick={() => abrirNuevoUsuario("EMPLEADO")}
-          className="border-violet-500 bg-violet-50 text-violet-600 hover:bg-violet-100 dark:border-violet-500 dark:bg-violet-950/50 dark:text-violet-400 dark:hover:bg-violet-950/70"
-        />
+    if (tab === "Trabajadores") {
+      return conExcel(
+        puedeCrearLiderOEmpleado ? (
+          <BtnNuevoTab
+            label="Nuevo"
+            idle={Briefcase}
+            hover={BriefcaseBusiness}
+            onClick={() => abrirNuevoUsuario("EMPLEADO")}
+            className="border-violet-500 bg-violet-50 text-violet-600 hover:bg-violet-100 dark:border-violet-500 dark:bg-violet-950/50 dark:text-violet-400 dark:hover:bg-violet-950/70"
+          />
+        ) : null,
+      );
+    }
+
+    if (tab === "Planilla") {
+      return conExcel(
+        esAdminOSuper ? (
+          <BtnNuevoTab
+            label="Nuevo"
+            idle={Landmark}
+            hover={ClipboardList}
+            onClick={() => abrirNuevoUsuario("PLANILLA")}
+            className="border-red-400 bg-red-50 text-red-600 hover:bg-red-100 dark:border-red-500 dark:bg-red-950/50 dark:text-red-400 dark:hover:bg-red-950/70"
+          />
+        ) : null,
       );
     }
 
     if (tab === "Administrativos" && esAdminOSuper) {
-      return (
+      return conExcel(
         <>
           <BtnNuevoTab
             label="Nuevo Admin"
-            icon={<PiShieldCheckDuotone />}
+            idle={Shield}
+            hover={ShieldCheck}
             onClick={() => abrirNuevoUsuario("ADMINISTRADOR")}
             className="border-blue-400 bg-blue-50 text-blue-600 hover:bg-blue-100 dark:border-blue-500 dark:bg-blue-950/50 dark:text-blue-400 dark:hover:bg-blue-950/70"
           />
           {rolUpper === "SUPER" && (
             <BtnNuevoTab
               label="Nuevo Super"
-              icon={<PiCodeDuotone />}
+              idle={Code}
+              hover={Terminal}
               onClick={() => abrirNuevoUsuario("SUPER")}
               className="border-green-500 bg-green-50 text-green-600 hover:bg-green-100 dark:border-green-500 dark:bg-green-950/50 dark:text-green-400 dark:hover:bg-green-950/70"
             />
           )}
-        </>
+        </>,
       );
     }
 
@@ -652,8 +858,9 @@ export default function Ver() {
     ) {
       return (
         <BtnNuevoTab
-          label="Crear Sede"
-          icon={<Building2 />}
+          label="Nuevo"
+          idle={Building2Data}
+          hover={Building}
           onClick={handleOpenCrearSedeModal}
           className="border-blue-400 bg-blue-50 text-blue-600 hover:bg-blue-100 dark:border-blue-500 dark:bg-blue-950/50 dark:text-blue-400 dark:hover:bg-blue-950/70"
         />
@@ -712,14 +919,13 @@ export default function Ver() {
             </div>
 
             {vistaAdminPestanas && (
-              <button
-                type="button"
+              <BtnNuevoTab
+                label="Estadísticas"
+                idle={ChartColumn}
+                hover={ChartColumnIncreasing}
                 onClick={() => setIsEstadisticasOpen(true)}
-                className="inline-flex h-11 md:h-12 w-full sm:w-auto sm:min-w-[11.5rem] items-center justify-center gap-2 rounded-lg border border-blue-400 bg-blue-50 px-3 md:px-3 text-base md:text-lg font-semibold text-blue-600 transition-colors hover:bg-blue-100 dark:border-blue-500 dark:bg-blue-950/50 dark:text-blue-400 dark:hover:bg-blue-950/70 shrink-0 md:ml-auto"
-              >
-                <BarChart3 className="w-5 h-5 shrink-0" />
-                <span className="truncate">Estadísticas</span>
-              </button>
+                className="w-full sm:w-auto sm:min-w-[11.5rem] border-blue-400 bg-blue-50 text-blue-600 hover:bg-blue-100 dark:border-blue-500 dark:bg-blue-950/50 dark:text-blue-400 dark:hover:bg-blue-950/70 md:ml-auto"
+              />
             )}
           </div>
 
@@ -750,6 +956,7 @@ export default function Ver() {
               totalSede={totalAfiliadosSede}
               totalLideres={totalAfiliadosLideres}
               totalTrabajadores={totalAfiliadosTrabajadores}
+              totalPlanilla={totalAfiliadosPlanilla}
               totalGeneral={totalMiembrosGeneral}
             />
             {miPerfilGlobal ? (
@@ -775,6 +982,7 @@ export default function Ver() {
               totalSede={totalAfiliadosSede}
               totalLideres={totalAfiliadosLideres}
               totalTrabajadores={totalAfiliadosTrabajadores}
+              totalPlanilla={totalAfiliadosPlanilla}
               totalGeneral={totalMiembrosGeneral}
             />
             <div className="mb-6 w-full min-w-0 border-b border-gray-200 dark:border-neutral-800">
@@ -788,42 +996,56 @@ export default function Ver() {
                         id: "Sede" as Tab,
                         label: "Sede",
                         count: totalAfiliadosSede,
-                        icon: PiBuildingsDuotone,
+                        idle: Building2Data,
+                        hover: Building,
                         show: vistaAdminPestanas,
+                      },
+                      {
+                        id: "Planilla" as Tab,
+                        label: "Planilla",
+                        count: totalPlanillaRegistrados,
+                        idle: Landmark,
+                        hover: ClipboardList,
+                        show: true,
                       },
                       {
                         id: "Lideres" as Tab,
                         label: "Líderes",
                         count: totalLideresRegistrados,
-                        icon: PiMedalDuotone,
+                        idle: Medal,
+                        hover: Award,
                         show: true,
                       },
                       {
                         id: "Trabajadores" as Tab,
                         label: "Empleados",
                         count: totalEmpleadosRegistrados,
-                        icon: PiBriefcaseDuotone,
+                        idle: Briefcase,
+                        hover: BriefcaseBusiness,
                         show: true,
                       },
                       {
                         id: "Afiliados" as Tab,
                         label: "Miembros",
                         count: totalMiembrosGeneral,
-                        icon: PiUsersThreeDuotone,
+                        idle: Users,
+                        hover: UsersRound,
                         show: vistaAdminPestanas,
                       },
                       {
                         id: "Administrativos" as Tab,
                         label: "Administrativos",
                         count: totalAdministrativosRegistrados,
-                        icon: PiShieldCheckDuotone,
+                        idle: ShieldCheck,
+                        hover: Shield,
                         show: esAdminOSuper,
                       },
                       {
                         id: "Mensajes" as Tab,
                         label: "Mensajes",
                         count: null as number | null,
-                        icon: Mail,
+                        idle: Mail,
+                        hover: MailOpen,
                         show: esAdminOSuper,
                       },
                     ] as const
@@ -834,49 +1056,27 @@ export default function Ver() {
                       if (!esLiderOEmpleado) return 0;
                       const propia = esRolEmpleado(rol)
                         ? "Trabajadores"
-                        : "Lideres";
+                        : esRolPlanilla(rol)
+                          ? "Planilla"
+                          : "Lideres";
                       if (a.id === propia) return -1;
                       if (b.id === propia) return 1;
                       return 0;
                     })
-                ).map((tab) => {
-                    const Icon = tab.icon;
-                    const activo = tabActiva === tab.id;
-                    const theme = TAB_THEMES[tab.id];
-                    return (
-                      <motion.button
-                        key={tab.id}
-                        type="button"
-                        onClick={() => cambiarTab(tab.id)}
-                        className={tabBtnClass(activo, tab.id)}
-                        whileTap={{ scale: 0.98 }}
-                        transition={{ duration: 0.2 }}
-                      >
-                        <span className={tabPillClass(activo, tab.id)}>
-                          <span className={tabIconClass()}>
-                            <Icon className="w-5 h-5 md:w-6 md:h-6 shrink-0" />
-                          </span>
-                          <span className="whitespace-normal sm:whitespace-nowrap text-center leading-tight">
-                            {tab.label}
-                          </span>
-                          {tab.count !== null && (
-                            <span className={tabBadgeClass()}>{tab.count}</span>
-                          )}
-                          {activo && (
-                            <motion.span
-                              layoutId="pestana-subrayado"
-                              className={`absolute -bottom-[9px] md:-bottom-[11px] left-0 right-0 h-[2px] md:h-[3px] rounded-full ${theme.lineBg}`}
-                              transition={{
-                                type: "spring",
-                                stiffness: 380,
-                                damping: 32,
-                              }}
-                            />
-                          )}
-                        </span>
-                      </motion.button>
-                    );
-                  })}
+                ).map((tab) => (
+                  <TabMorphButton
+                    key={tab.id}
+                    label={tab.label}
+                    count={tab.count}
+                    idle={tab.idle}
+                    hover={tab.hover}
+                    activo={tabActiva === tab.id}
+                    theme={TAB_THEMES[tab.id]}
+                    onClick={() => cambiarTab(tab.id)}
+                    btnClass={tabBtnClass(tabActiva === tab.id, tab.id)}
+                    pillClass={tabPillClass(tabActiva === tab.id, tab.id)}
+                  />
+                ))}
               </div>
             </div>
 
@@ -990,6 +1190,30 @@ export default function Ver() {
                     idUsuarioSesion={userId}
                     isLoading={cargandoLideres}
                     tema={getTemaTab("Trabajadores")}
+                  />,
+                )}
+              </div>
+
+              <div
+                className={
+                  tabActiva === "Planilla" && !liderParaCelula
+                    ? undefined
+                    : "hidden"
+                }
+                aria-hidden={!(tabActiva === "Planilla" && !liderParaCelula)}
+              >
+                {renderPanelTab(
+                  "Planilla",
+                  <Lideres
+                    lideres={planillaParaLista}
+                    onVerCelula={handleOpenCelula}
+                    onEditar={handleOpenEditLiderModal}
+                    rolUsuarioSesion={esSedeSesion ? "SEDE" : rol}
+                    onDataChange={fetchData}
+                    searchTerm={busquedaTab("Planilla")}
+                    idUsuarioSesion={userId}
+                    isLoading={cargandoLideres}
+                    tema={getTemaTab("Planilla")}
                   />,
                 )}
               </div>

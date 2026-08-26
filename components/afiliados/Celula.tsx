@@ -6,23 +6,34 @@ import TextoAnimado from "@/components/ui/Typeanimation";
 import { Dialog, DialogPanel, TransitionChild } from "@headlessui/react";
 import { useQuery } from "@tanstack/react-query";
 import {
-  ArrowLeft,
-  BarChart3,
   ChevronLeft,
   ChevronRight,
-  LayoutGrid,
   Loader2,
-  Mail,
-  Pencil,
   Search,
-  Table2,
-  UserPlus,
-  Users,
   X,
 } from "lucide-react";
+import {
+  ArrowLeft,
+  ChartColumn,
+  ChartColumnIncreasing,
+  ChevronsLeft,
+  LayoutDashboard,
+  LayoutGrid,
+  List,
+  Mail,
+  MailOpen,
+  Pencil,
+  SquarePen,
+  Table2,
+  UserPlus,
+  UserRoundPlus,
+  Users,
+  UsersRound,
+} from "lucide";
 import Image from "next/image";
 import { AnimatePresence, motion } from "framer-motion";
 import { Fragment, useEffect, useMemo, useState } from "react";
+import HoverMorphIcon from "@/components/ui/HoverMorphIcon";
 import type { Afiliado, Lider } from "./esquemas";
 import { esUsuarioSede } from "./esquemas";
 import EstadisticasEdades from "./estadisticas/Edades";
@@ -31,8 +42,114 @@ import EstadisticasPoliticas from "./estadisticas/Politicas";
 import EstadisticasReligiones from "./estadisticas/Religion";
 import type { FormatoVista } from "./Tabla";
 import Tabla from "./Tabla";
-import { temaDesdeLider } from "./temaPestana";
+import {
+  clasesBotonEntrar,
+  temaDesdeLider,
+  textoHoverDeTema,
+} from "./temaPestana";
 import MensajesUsuario from "./MensajesUsuario";
+
+function BtnAtrasMorph({
+  onClick,
+  className,
+}: {
+  onClick: () => void;
+  className?: string;
+}) {
+  const [hovered, setHovered] = useState(false);
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={className}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      <HoverMorphIcon
+        idle={ChevronsLeft}
+        hover={ArrowLeft}
+        size={16}
+        active={hovered}
+      />
+      Atrás
+    </button>
+  );
+}
+
+function BtnAccionMorph({
+  label,
+  idle,
+  hover,
+  onClick,
+  className,
+  size = 16,
+}: {
+  label: string;
+  idle: unknown;
+  hover: unknown;
+  onClick: () => void;
+  className?: string;
+  size?: number;
+}) {
+  const [hovered, setHovered] = useState(false);
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={className}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      <HoverMorphIcon
+        idle={idle}
+        hover={hover}
+        size={size}
+        active={hovered}
+      />
+      <span className="truncate">{label}</span>
+    </button>
+  );
+}
+
+function SwitchTabMorph({
+  label,
+  idle,
+  hover,
+  activo,
+  activoClass,
+  inactivoClass,
+  onClick,
+}: {
+  label: string;
+  idle: unknown;
+  hover: unknown;
+  activo: boolean;
+  activoClass: string;
+  inactivoClass: string;
+  onClick: () => void;
+}) {
+  const [hovered, setHovered] = useState(false);
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      className={`flex min-w-0 flex-1 items-center justify-center gap-1 rounded-md px-1.5 py-2 text-[10px] font-bold transition-colors whitespace-nowrap sm:gap-2 sm:px-3 sm:text-xs md:flex-initial md:px-4 md:py-2.5 md:text-sm ${
+        activo ? activoClass : inactivoClass
+      }`}
+    >
+      <HoverMorphIcon
+        idle={idle}
+        hover={hover}
+        size={18}
+        active={hovered || activo}
+        className="md:[&_svg]:h-5 md:[&_svg]:w-5"
+      />
+      <span>{label}</span>
+    </button>
+  );
+}
 
 const GIFS_DISPONIBLES = [
   "/gif/afiliados/gif0.gif",
@@ -224,6 +341,8 @@ export default function Celula({
   if (!lider) return null;
 
   const tema = temaDesdeLider(lider, esSede);
+  /** Mismo estilo que el botón Entrar de la lista, con color del rol. */
+  const btnAtrasClass = clasesBotonEntrar(tema);
   const totalEnGrupo = afiliadosDelLider.length;
   const objetivo = META_CELULA;
   const progreso = Math.min((totalEnGrupo / objetivo) * 100, 100);
@@ -273,16 +392,30 @@ export default function Celula({
   }
 
   const TABS = [
-    { id: "miembros" as const, label: "Afiliados", icon: Users },
-    { id: "estadisticas" as const, label: "Estadísticas", icon: BarChart3 },
-    { id: "mensajes" as const, label: "Mensajes", icon: Mail },
+    {
+      id: "miembros" as const,
+      label: "Afiliados",
+      idle: Users,
+      hover: UsersRound,
+    },
+    {
+      id: "estadisticas" as const,
+      label: "Estadísticas",
+      idle: ChartColumn,
+      hover: ChartColumnIncreasing,
+    },
+    {
+      id: "mensajes" as const,
+      label: "Mensajes",
+      idle: Mail,
+      hover: MailOpen,
+    },
   ];
 
   const switchTrackClass =
     "flex min-w-0 gap-1 rounded-lg bg-gray-200/70 p-1 dark:bg-neutral-700/60";
   const switchActivoClass = `${tema.activeToggle} shadow-sm`;
-  const switchInactivoClass =
-    "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300";
+  const switchInactivoClass = `text-gray-500 dark:text-gray-400 ${textoHoverDeTema(tema)}`;
 
   const panelContent = (
     <>
@@ -301,16 +434,10 @@ export default function Celula({
 
           <div className="hidden min-w-0 items-center gap-2 md:flex md:flex-1">
             {embedded && onBack && (
-              <Button
-                type="button"
+              <BtnAtrasMorph
                 onClick={onBack}
-                variant="ghost"
-                size="sm"
-                className="inline-flex h-9 shrink-0 gap-1.5 font-bold uppercase text-[10px] text-gray-600 dark:text-gray-300"
-              >
-                <ArrowLeft className="h-4 w-4" />
-                Atrás
-              </Button>
+                className={btnAtrasClass}
+              />
             )}
 
             <h3
@@ -320,16 +447,14 @@ export default function Celula({
             </h3>
 
             {esSede && esAdminOSuper && onEditarUsuario && (
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
+              <BtnAccionMorph
+                label="Editar Sede"
+                idle={Pencil}
+                hover={SquarePen}
+                size={20}
                 onClick={() => onEditarUsuario(lider)}
-                className="h-11 shrink-0 gap-2 border-blue-400 bg-blue-50 font-bold uppercase text-sm text-blue-600 hover:bg-blue-100 dark:border-blue-500 dark:bg-blue-950/50 dark:text-blue-400 dark:hover:bg-blue-950/70"
-              >
-                <Pencil className="h-5 w-5" />
-                <span className="hidden sm:inline">Editar Sede</span>
-              </Button>
+                className="inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-md border border-blue-400 bg-blue-50 px-3 font-bold uppercase text-sm text-blue-600 hover:bg-blue-100 dark:border-blue-500 dark:bg-blue-950/50 dark:text-blue-400 dark:hover:bg-blue-950/70"
+              />
             )}
 
             {isLoading && (
@@ -350,31 +475,24 @@ export default function Celula({
 
           <div className="flex min-w-0 items-center gap-2">
             {embedded && onBack && (
-              <Button
-                type="button"
+              <BtnAtrasMorph
                 onClick={onBack}
-                variant="ghost"
-                size="sm"
-                className="h-9 shrink-0 gap-1.5 font-bold uppercase text-[10px] text-gray-600 dark:text-gray-300 md:hidden"
-              >
-                <ArrowLeft className="h-4 w-4" />
-                Atrás
-              </Button>
+                className={`${btnAtrasClass} md:hidden`}
+              />
             )}
 
             <div className={`${switchTrackClass} min-w-0 flex-1 md:flex-initial`}>
               {TABS.map((tab) => (
-                <button
+                <SwitchTabMorph
                   key={tab.id}
-                  type="button"
+                  label={tab.label}
+                  idle={tab.idle}
+                  hover={tab.hover}
+                  activo={vistaActual === tab.id}
+                  activoClass={switchActivoClass}
+                  inactivoClass={switchInactivoClass}
                   onClick={() => setVistaActual(tab.id)}
-                  className={`flex min-w-0 flex-1 items-center justify-center gap-1 rounded-md px-1.5 py-2 text-[10px] font-bold transition-all whitespace-nowrap sm:gap-2 sm:px-3 sm:text-xs md:flex-initial md:px-4 md:py-2.5 md:text-sm ${
-                    vistaActual === tab.id ? switchActivoClass : switchInactivoClass
-                  }`}
-                >
-                  <tab.icon className="h-4 w-4 shrink-0 md:h-5 md:w-5" />
-                  <span>{tab.label}</span>
-                </button>
+                />
               ))}
             </div>
 
@@ -485,54 +603,48 @@ export default function Celula({
                     className={`order-1 flex w-full min-w-0 gap-2 sm:order-2 sm:w-auto sm:shrink-0 ${ocultarBuscador ? "sm:ml-auto" : ""}`}
                   >
                     <div
-                      className={`${switchTrackClass} flex h-11 w-2/3 min-w-0 items-center sm:w-auto sm:min-w-[15.5rem]`}
+                      className={`${switchTrackClass} flex h-11 w-2/3 min-w-0 shrink-0 items-center sm:w-auto [&_button]:sm:flex-initial`}
                     >
-                      <button
-                        type="button"
+                      <SwitchTabMorph
+                        label="Lista"
+                        idle={Table2}
+                        hover={List}
+                        activo={formatoVista === "tabla"}
+                        activoClass={switchActivoClass}
+                        inactivoClass={switchInactivoClass}
                         onClick={() => setFormatoVista("tabla")}
-                        title="Ver lista"
-                        className={`inline-flex flex-1 items-center justify-center gap-1 rounded-md px-1.5 py-2 text-[10px] font-bold uppercase whitespace-nowrap transition-all sm:gap-2 sm:px-3 sm:text-xs ${
-                          formatoVista === "tabla"
-                            ? switchActivoClass
-                            : switchInactivoClass
-                        }`}
-                      >
-                        <Table2 className="h-4 w-4 shrink-0" />
-                        <span className="shrink-0">Lista</span>
-                      </button>
-                      <button
-                        type="button"
+                      />
+                      <SwitchTabMorph
+                        label="Tarjetas"
+                        idle={LayoutGrid}
+                        hover={LayoutDashboard}
+                        activo={formatoVista === "tarjetas"}
+                        activoClass={switchActivoClass}
+                        inactivoClass={switchInactivoClass}
                         onClick={() => setFormatoVista("tarjetas")}
-                        title="Ver tarjetas"
-                        className={`inline-flex flex-1 items-center justify-center gap-1 rounded-md px-1.5 py-2 text-[10px] font-bold uppercase whitespace-nowrap transition-all sm:gap-2 sm:px-3 sm:text-xs ${
-                          formatoVista === "tarjetas"
-                            ? switchActivoClass
-                            : switchInactivoClass
-                        }`}
-                      >
-                        <LayoutGrid className="h-4 w-4 shrink-0" />
-                        <span className="shrink-0">Tarjetas</span>
-                      </button>
+                      />
                     </div>
                     {puedeGestionarIntegrantes && (
-                      <button
-                        type="button"
+                      <BtnAccionMorph
+                        label={
+                          !esSede && totalEnGrupo === 0
+                            ? "Registrarme"
+                            : "Añadir"
+                        }
+                        idle={UserPlus}
+                        hover={UserRoundPlus}
+                        onClick={() =>
+                          onAnadirAfiliado(
+                            lider.id,
+                            !esSede && totalEnGrupo === 0,
+                          )
+                        }
                         className={`flex h-11 w-1/3 min-w-0 items-center justify-center gap-1 rounded-lg border px-1.5 text-[10px] font-semibold uppercase whitespace-nowrap transition-all duration-300 ease-in-out sm:w-auto sm:min-w-[6.5rem] sm:px-3 sm:text-xs ${
                           !esSede && totalEnGrupo === 0
                             ? "animate-pulse border-green-500 bg-green-50 text-green-700 hover:bg-green-100 dark:border-green-500 dark:bg-green-950/50 dark:text-green-400 dark:hover:bg-green-950/70"
                             : `${tema.btnPrimary} ${tema.btnHover}`
                         }`}
-                        onClick={() =>
-                          onAnadirAfiliado(lider.id, !esSede && totalEnGrupo === 0)
-                        }
-                      >
-                        <UserPlus className="h-4 w-4 shrink-0" />
-                        <span className="truncate">
-                          {!esSede && totalEnGrupo === 0
-                            ? "Registrarme"
-                            : "Añadir"}
-                        </span>
-                      </button>
+                      />
                     )}
                   </div>
                   {!ocultarBuscador && (

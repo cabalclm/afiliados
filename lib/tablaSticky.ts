@@ -10,6 +10,6 @@ export function columnaNoFijaCelda(fondo: string, extra = "") {
 }
 
 export const FONDO_CELDA_TABLA =
-  "bg-white dark:bg-neutral-900 group-hover:bg-gray-50 dark:group-hover:bg-neutral-800/50";
+  "bg-white dark:bg-neutral-900 group-hover:bg-gray-50 dark:group-hover:bg-neutral-800";
 
 export const FONDO_ENCABEZADO_TABLA = "bg-gray-100 dark:bg-neutral-800";

@@ -6,7 +6,7 @@ import { signUpAction, updateUsuarioAction } from "@/app/actions/usuarios";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Building2, Check, ChevronDown, ChevronUp } from "lucide-react";
+import { Building2, Check, ChevronDown, ChevronUp, ClipboardList } from "lucide-react";
 import Swal from "@/lib/swal";
 import PasswordSection from "@/components/admin/sign-up/PasswordSection";
 import useUserData from "@/hooks/sesion/useUserData";
@@ -29,6 +29,7 @@ type RolPredefinido =
   | "LIDER"
   | "EMPLEADO"
   | "TRABAJADOR"
+  | "PLANILLA"
   | "ADMINISTRADOR"
   | "SUPER";
 
@@ -57,6 +58,7 @@ function etiquetaRol(nombre: string) {
   if (n === "ADMIN" || n === "ADMINISTRADOR") return "Admin";
   if (n === "EMPLEADO" || n === "TRABAJADOR") return "Empleado";
   if (n === "LIDER") return "Líder";
+  if (n === "PLANILLA") return "Planilla";
   if (n === "SUPER") return "Super";
   if (n === "SEDE") return "Sede";
   return nombre;
@@ -72,6 +74,16 @@ function estiloRol(nombre: string) {
       bg: "bg-orange-50 dark:bg-orange-950/40",
       iconWrap:
         "bg-orange-100 text-orange-600 dark:bg-orange-950/60 dark:text-orange-400",
+    };
+  }
+  if (n === "PLANILLA") {
+    return {
+      icon: <ClipboardList className="w-4 h-4" />,
+      text: "text-red-600 dark:text-red-400",
+      border: "border-red-400 dark:border-red-500",
+      bg: "bg-red-50 dark:bg-red-950/40",
+      iconWrap:
+        "bg-red-100 text-red-600 dark:bg-red-950/60 dark:text-red-400",
     };
   }
   if (n === "EMPLEADO" || n === "TRABAJADOR") {
@@ -240,23 +252,34 @@ export function SignupForm({
     const fetchDatos = async () => {
       const supabase = createClient();
       const { data: r } = await supabase.from("roles").select("id, nombre");
-      if (r) {
-        setRolesDisponibles(r);
+      let roles = r || [];
+      if (
+        !roles.some((role) => normalizarRolNombre(role.nombre) === "PLANILLA")
+      ) {
+        const { data: creado } = await supabase
+          .from("roles")
+          .insert({ nombre: "PLANILLA" })
+          .select("id, nombre")
+          .single();
+        if (creado) roles = [...roles, creado];
+      }
+      if (roles.length > 0) {
+        setRolesDisponibles(roles);
         if (!initialData?.rol_id) {
           if (modoCrearSede) {
-            const rolSede = r.find(
+            const rolSede = roles.find(
               (role) =>
                 role.id === 5 ||
                 role.nombre.toUpperCase() === "SEDE",
             );
             if (rolSede) setRolId(rolSede.id.toString());
           } else if (rolPredefinido) {
-            const rolMatch = r.find((role) =>
+            const rolMatch = roles.find((role) =>
               coincideRolPredefinido(role.nombre, rolPredefinido),
             );
             if (rolMatch) setRolId(rolMatch.id.toString());
           } else {
-            const rolLider = r.find(
+            const rolLider = roles.find(
               (role) =>
                 role.nombre.toUpperCase() === "LIDER" ||
                 role.nombre.toUpperCase() === "LÍDER",
@@ -330,7 +353,9 @@ export function SignupForm({
             ? "Nuevo Usuario Admin"
             : rolPredefinido === "SUPER"
               ? "Nuevo Usuario Super"
-              : "Nuevo Usuario Líder";
+              : rolPredefinido === "PLANILLA"
+                ? "Nuevo Usuario Planilla"
+                : "Nuevo Usuario Líder";
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();

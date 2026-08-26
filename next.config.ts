@@ -14,7 +14,8 @@ const withPWA = withPWAInit({
 const nextConfig: NextConfig = {
   // AGREGAMOS ESTA LÍNEA (como te sugirió la terminal)
   // @ts-ignore - El tipo NextConfig a veces no reconoce 'turbopack' directamente aún
-  turbopack: {}, 
+  turbopack: {},
+  transpilePackages: ["morphicons", "lucide", "exceljs"],
 
   images: {
     remotePatterns: [

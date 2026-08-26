@@ -2,7 +2,7 @@
 
 import { createClient } from "@/utils/supabase/server";
 import { fetchAllRows } from "@/lib/supabaseFetchAll";
-import { esRolAdminOSuper, esRolEmpleado, esUsuarioSede } from "../esquemas";
+import { esRolAdminOSuper, esRolEmpleado, esRolPlanilla, esUsuarioSede } from "../esquemas";
 import { getCachedAuthUsers } from "./cache";
 
 /**
@@ -32,7 +32,7 @@ export async function cargarDashboardAction() {
       session: null,
       usuarios: [],
       lugares: [],
-      meta: { total: 0, sede: 0, lideres: 0, trabajadores: 0 },
+      meta: { total: 0, sede: 0, lideres: 0, trabajadores: 0, planilla: 0 },
     };
   }
 
@@ -104,6 +104,7 @@ export async function cargarDashboardAction() {
   let sede = 0;
   let lideres = 0;
   let trabajadores = 0;
+  let planilla = 0;
 
   for (const row of afiliadosLiderIds) {
     const lid = row.lider_id;
@@ -116,6 +117,8 @@ export async function cargarDashboardAction() {
       (esRolEmpleado(responsable.rol) || esRolAdminOSuper(responsable.rol))
     ) {
       trabajadores++;
+    } else if (responsable && esRolPlanilla(responsable.rol)) {
+      planilla++;
     } else {
       lideres++;
     }
@@ -126,6 +129,7 @@ export async function cargarDashboardAction() {
     sede,
     lideres,
     trabajadores,
+    planilla,
   };
 
   const lugares = lugaresRes.data || [];

@@ -9,13 +9,14 @@ import {
   Trash2,
   Building2,
   MoreVertical,
-  ChevronsRight,
 } from "lucide-react";
+import { ArrowRight, ChevronsRight } from "lucide";
 import { motion, AnimatePresence } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import { obtenerConfiguracionAction } from "@/components/dashboard/actions/configuracion";
+import HoverMorphIcon from "@/components/ui/HoverMorphIcon";
 import { eliminar } from "./acciones";
-import { esRolEmpleado, esUsuarioSede } from "./esquemas";
+import { esRolEmpleado, esRolPlanilla, esUsuarioSede } from "./esquemas";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -25,6 +26,33 @@ import {
 } from "@/components/ui/dropdown-menu";
 import type { TemaLista } from "./temaPestana";
 import { TEMA_LIDERES, temaDesdeLider } from "./temaPestana";
+
+function BtnEntrarMorph({
+  onClick,
+  className,
+}: {
+  onClick: () => void;
+  className?: string;
+}) {
+  const [hovered, setHovered] = useState(false);
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={className}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      Entrar
+      <HoverMorphIcon
+        idle={ChevronsRight}
+        hover={ArrowRight}
+        size={16}
+        active={hovered}
+      />
+    </button>
+  );
+}
 
 export interface Lider {
   id: string;
@@ -86,8 +114,9 @@ export default function Lideres({
   const rolUpper = (rolUsuarioSesion || "").toUpperCase();
   const isLider = rolUpper === "LIDER";
   const esEmpleadoSesion = esRolEmpleado(rolUsuarioSesion);
-  /** Líder/empleado: ven a todos, pero solo entran a su propia célula. */
-  const soloPropiaCelula = isLider || esEmpleadoSesion;
+  const esPlanillaSesion = esRolPlanilla(rolUsuarioSesion);
+  /** Líder/empleado/concejal: ven a todos, pero solo entran a su propia célula. */
+  const soloPropiaCelula = isLider || esEmpleadoSesion || esPlanillaSesion;
   const esAdminOSuper =
     rolUpper === "ADMINISTRADOR" ||
     rolUpper === "ADMIN" ||
@@ -350,14 +379,10 @@ export default function Lideres({
                     <span />
                   )}
                   {puedeEntrar && (
-                    <button
-                      type="button"
+                    <BtnEntrarMorph
                       onClick={() => onVerCelula(lider)}
                       className={`inline-flex h-9 items-center justify-center gap-1 rounded-lg border border-gray-200 bg-gray-100 px-3 text-xs font-bold uppercase whitespace-nowrap shrink-0 ml-auto text-gray-500 transition-all duration-300 ease-in-out dark:border-neutral-700 dark:bg-neutral-800 dark:text-gray-400 ${temaFila.hoverEntrar}`}
-                    >
-                      Entrar
-                      <ChevronsRight className="h-4 w-4 shrink-0" />
-                    </button>
+                    />
                   )}
                 </div>
               </div>

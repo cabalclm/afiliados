@@ -1,0 +1,19 @@
+diff --git a/package.json b/package.json
+--- a/package.json
++++ b/package.json
+@@ -28,6 +28,16 @@
+   "module": "dist/esm/lucide.js",
+   "unpkg": "dist/umd/lucide.min.js",
+   "typings": "dist/lucide.d.ts",
++  "types": "dist/lucide.d.ts",
++  "exports": {
++    ".": {
++      "types": "./dist/lucide.d.ts",
++      "import": "./dist/esm/lucide.js",
++      "require": "./dist/cjs/lucide.js",
++      "default": "./dist/esm/lucide.js"
++    }
++  },
+   "sideEffects": false,
+   "files": [
+     "dist"

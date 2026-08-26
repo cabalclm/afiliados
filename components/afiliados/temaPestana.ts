@@ -9,13 +9,18 @@ export type TemaLista = {
   btnHover: string;
   activeToggle: string;
   pagination: string;
+  /** Hover del botón Entrar dentro de un `group` (fila). */
   hoverEntrar: string;
+  /** Mismo hover para botón suelto (p. ej. Atrás). */
+  hoverEntrarSelf: string;
   hoverMenu: string;
   hoverBordeLateral: string;
   telefonoPill: string;
   telefonoBar: string;
   cardBorder: string;
   filaHover: string;
+  /** Fondo sticky de No. + group-hover alineado a filaHover. */
+  filaHoverSticky: string;
 };
 
 export const TEMA_SEDE: TemaLista = {
@@ -32,6 +37,8 @@ export const TEMA_SEDE: TemaLista = {
   pagination: "text-blue-600 dark:text-blue-400",
   hoverEntrar:
     "group-hover:border-blue-500 group-hover:bg-blue-50 group-hover:text-blue-600 dark:group-hover:border-blue-400 dark:group-hover:bg-blue-950/50 dark:group-hover:text-blue-400",
+  hoverEntrarSelf:
+    "hover:border-blue-500 hover:bg-blue-50 hover:text-blue-600 dark:hover:border-blue-400 dark:hover:bg-blue-950/50 dark:hover:text-blue-400",
   hoverMenu: "group-hover:text-blue-600 dark:group-hover:text-blue-400",
   hoverBordeLateral:
     "hover:border-l-blue-500 hover:border-r-blue-500 dark:hover:border-l-blue-400 dark:hover:border-r-blue-400",
@@ -40,6 +47,8 @@ export const TEMA_SEDE: TemaLista = {
   telefonoBar: "bg-blue-50 text-blue-800 dark:bg-blue-950/30 dark:text-blue-200",
   cardBorder: "border-blue-200 dark:border-blue-800/60",
   filaHover: "hover:bg-blue-50/60 dark:hover:bg-blue-950/20",
+  filaHoverSticky:
+    "bg-white dark:bg-neutral-900 group-hover:bg-blue-50/60 dark:group-hover:bg-blue-950/20",
 };
 
 export const TEMA_LIDERES: TemaLista = {
@@ -56,6 +65,8 @@ export const TEMA_LIDERES: TemaLista = {
   pagination: "text-orange-600 dark:text-orange-400",
   hoverEntrar:
     "group-hover:border-orange-500 group-hover:bg-orange-50 group-hover:text-orange-600 dark:group-hover:border-orange-400 dark:group-hover:bg-orange-950/50 dark:group-hover:text-orange-400",
+  hoverEntrarSelf:
+    "hover:border-orange-500 hover:bg-orange-50 hover:text-orange-600 dark:hover:border-orange-400 dark:hover:bg-orange-950/50 dark:hover:text-orange-400",
   hoverMenu: "group-hover:text-orange-600 dark:group-hover:text-orange-400",
   hoverBordeLateral:
     "hover:border-l-orange-500 hover:border-r-orange-500 dark:hover:border-l-orange-400 dark:hover:border-r-orange-400",
@@ -64,6 +75,8 @@ export const TEMA_LIDERES: TemaLista = {
   telefonoBar: "bg-orange-50 text-orange-800 dark:bg-orange-950/30 dark:text-orange-200",
   cardBorder: "border-orange-200 dark:border-orange-800/60",
   filaHover: "hover:bg-orange-50/60 dark:hover:bg-orange-950/20",
+  filaHoverSticky:
+    "bg-white dark:bg-neutral-900 group-hover:bg-orange-50/60 dark:group-hover:bg-orange-950/20",
 };
 
 export const TEMA_EMPLEADOS: TemaLista = {
@@ -80,6 +93,8 @@ export const TEMA_EMPLEADOS: TemaLista = {
   pagination: "text-violet-600 dark:text-violet-400",
   hoverEntrar:
     "group-hover:border-violet-500 group-hover:bg-violet-50 group-hover:text-violet-600 dark:group-hover:border-violet-400 dark:group-hover:bg-violet-950/50 dark:group-hover:text-violet-400",
+  hoverEntrarSelf:
+    "hover:border-violet-500 hover:bg-violet-50 hover:text-violet-600 dark:hover:border-violet-400 dark:hover:bg-violet-950/50 dark:hover:text-violet-400",
   hoverMenu: "group-hover:text-violet-600 dark:group-hover:text-violet-400",
   hoverBordeLateral:
     "hover:border-l-violet-500 hover:border-r-violet-500 dark:hover:border-l-violet-400 dark:hover:border-r-violet-400",
@@ -88,6 +103,36 @@ export const TEMA_EMPLEADOS: TemaLista = {
   telefonoBar: "bg-violet-50 text-violet-800 dark:bg-violet-950/30 dark:text-violet-200",
   cardBorder: "border-violet-200 dark:border-violet-800/60",
   filaHover: "hover:bg-violet-50/60 dark:hover:bg-violet-950/20",
+  filaHoverSticky:
+    "bg-white dark:bg-neutral-900 group-hover:bg-violet-50/60 dark:group-hover:bg-violet-950/20",
+};
+
+export const TEMA_PLANILLA: TemaLista = {
+  borderTop: "border-t-red-500",
+  theadText: "text-red-600 dark:text-red-400",
+  theadBg: "bg-red-50 dark:bg-red-950/30",
+  focusRing: "focus-visible:ring-red-500",
+  btnOutline: "border-red-500 text-red-600 dark:border-red-400 dark:text-red-400",
+  btnPrimary:
+    "border-red-400 bg-red-50 text-red-600 hover:bg-red-100 dark:border-red-500 dark:bg-red-950/50 dark:text-red-400 dark:hover:bg-red-950/70",
+  btnText: "text-red-600 dark:text-red-400",
+  btnHover: "hover:bg-red-50 dark:hover:bg-red-950/40",
+  activeToggle: "bg-red-100 text-red-600 dark:bg-red-950/60 dark:text-red-400 shadow-sm",
+  pagination: "text-red-600 dark:text-red-400",
+  hoverEntrar:
+    "group-hover:border-red-500 group-hover:bg-red-50 group-hover:text-red-600 dark:group-hover:border-red-400 dark:group-hover:bg-red-950/50 dark:group-hover:text-red-400",
+  hoverEntrarSelf:
+    "hover:border-red-500 hover:bg-red-50 hover:text-red-600 dark:hover:border-red-400 dark:hover:bg-red-950/50 dark:hover:text-red-400",
+  hoverMenu: "group-hover:text-red-600 dark:group-hover:text-red-400",
+  hoverBordeLateral:
+    "hover:border-l-red-500 hover:border-r-red-500 dark:hover:border-l-red-400 dark:hover:border-r-red-400",
+  telefonoPill:
+    "border-red-200 bg-red-50 text-red-800 hover:bg-red-100 dark:border-red-800/50 dark:bg-red-900/20 dark:text-red-300 dark:hover:bg-red-900/40",
+  telefonoBar: "bg-red-50 text-red-800 dark:bg-red-950/30 dark:text-red-200",
+  cardBorder: "border-red-200 dark:border-red-800/60",
+  filaHover: "hover:bg-red-50/60 dark:hover:bg-red-950/20",
+  filaHoverSticky:
+    "bg-white dark:bg-neutral-900 group-hover:bg-red-50/60 dark:group-hover:bg-red-950/20",
 };
 
 export const TEMA_MIEMBROS: TemaLista = {
@@ -104,6 +149,8 @@ export const TEMA_MIEMBROS: TemaLista = {
   pagination: "text-sky-600 dark:text-sky-400",
   hoverEntrar:
     "group-hover:border-sky-500 group-hover:bg-sky-50 group-hover:text-sky-600 dark:group-hover:border-sky-400 dark:group-hover:bg-sky-950/50 dark:group-hover:text-sky-400",
+  hoverEntrarSelf:
+    "hover:border-sky-500 hover:bg-sky-50 hover:text-sky-600 dark:hover:border-sky-400 dark:hover:bg-sky-950/50 dark:hover:text-sky-400",
   hoverMenu: "group-hover:text-sky-600 dark:group-hover:text-sky-400",
   hoverBordeLateral:
     "hover:border-l-sky-500 hover:border-r-sky-500 dark:hover:border-l-sky-400 dark:hover:border-r-sky-400",
@@ -112,6 +159,8 @@ export const TEMA_MIEMBROS: TemaLista = {
   telefonoBar: "bg-sky-50 text-sky-800 dark:bg-sky-950/30 dark:text-sky-200",
   cardBorder: "border-sky-200 dark:border-sky-800/60",
   filaHover: "hover:bg-sky-50/60 dark:hover:bg-sky-950/20",
+  filaHoverSticky:
+    "bg-white dark:bg-neutral-900 group-hover:bg-sky-50/60 dark:group-hover:bg-sky-950/20",
 };
 
 export const TEMA_ADMIN: TemaLista = {
@@ -128,6 +177,8 @@ export const TEMA_ADMIN: TemaLista = {
   pagination: "text-indigo-600 dark:text-indigo-400",
   hoverEntrar:
     "group-hover:border-indigo-500 group-hover:bg-indigo-50 group-hover:text-indigo-600 dark:group-hover:border-indigo-400 dark:group-hover:bg-indigo-950/50 dark:group-hover:text-indigo-400",
+  hoverEntrarSelf:
+    "hover:border-indigo-500 hover:bg-indigo-50 hover:text-indigo-600 dark:hover:border-indigo-400 dark:hover:bg-indigo-950/50 dark:hover:text-indigo-400",
   hoverMenu: "group-hover:text-indigo-600 dark:group-hover:text-indigo-400",
   hoverBordeLateral:
     "hover:border-l-indigo-500 hover:border-r-indigo-500 dark:hover:border-l-indigo-400 dark:hover:border-r-indigo-400",
@@ -136,6 +187,8 @@ export const TEMA_ADMIN: TemaLista = {
   telefonoBar: "bg-indigo-50 text-indigo-800 dark:bg-indigo-950/30 dark:text-indigo-200",
   cardBorder: "border-indigo-200 dark:border-indigo-800/60",
   filaHover: "hover:bg-indigo-50/60 dark:hover:bg-indigo-950/20",
+  filaHoverSticky:
+    "bg-white dark:bg-neutral-900 group-hover:bg-indigo-50/60 dark:group-hover:bg-indigo-950/20",
 };
 
 export const TEMA_MENSAJES: TemaLista = {
@@ -152,6 +205,8 @@ export const TEMA_MENSAJES: TemaLista = {
   pagination: "text-green-600 dark:text-green-400",
   hoverEntrar:
     "group-hover:border-green-500 group-hover:bg-green-50 group-hover:text-green-600 dark:group-hover:border-green-400 dark:group-hover:bg-green-950/50 dark:group-hover:text-green-400",
+  hoverEntrarSelf:
+    "hover:border-green-500 hover:bg-green-50 hover:text-green-600 dark:hover:border-green-400 dark:hover:bg-green-950/50 dark:hover:text-green-400",
   hoverMenu: "group-hover:text-green-600 dark:group-hover:text-green-400",
   hoverBordeLateral:
     "hover:border-l-green-500 hover:border-r-green-500 dark:hover:border-l-green-400 dark:hover:border-r-green-400",
@@ -160,13 +215,76 @@ export const TEMA_MENSAJES: TemaLista = {
   telefonoBar: "bg-green-50 text-green-800 dark:bg-green-950/30 dark:text-green-200",
   cardBorder: "border-green-200 dark:border-green-800/60",
   filaHover: "hover:bg-green-50/60 dark:hover:bg-green-950/20",
+  filaHoverSticky:
+    "bg-white dark:bg-neutral-900 group-hover:bg-green-50/60 dark:group-hover:bg-green-950/20",
 };
 
 export function temaDesdeLider(lider: { rol?: string }, esSede: boolean): TemaLista {
   if (esSede) return TEMA_SEDE;
   const r = (lider.rol || "").toUpperCase();
   if (r === "EMPLEADO" || r === "TRABAJADOR") return TEMA_EMPLEADOS;
-  if (r === "ADMIN" || r === "ADMINISTRADOR") return TEMA_ADMIN;
-  if (r === "SUPER") return TEMA_MENSAJES;
+  if (r === "PLANILLA") return TEMA_PLANILLA;
+  // Admin/Super afilian como empleados → mismo color de pestaña Empleados.
+  if (r === "ADMIN" || r === "ADMINISTRADOR" || r === "SUPER") return TEMA_EMPLEADOS;
   return TEMA_LIDERES;
+}
+
+/** Base compartida con el botón Entrar de la lista. */
+export const BTN_ENTRAR_BASE =
+  "inline-flex h-9 items-center justify-center gap-1 rounded-lg border border-gray-200 bg-gray-100 px-3 text-xs font-bold uppercase whitespace-nowrap shrink-0 text-gray-500 transition-all duration-300 ease-in-out dark:border-neutral-700 dark:bg-neutral-800 dark:text-gray-400";
+
+/** Clases de hover del botón Entrar/Atrás (sueltas, no group-hover). */
+export function hoverEntrarDeTema(tema: TemaLista): string {
+  if (tema === TEMA_SEDE) {
+    return "hover:border-blue-500 hover:bg-blue-50 hover:text-blue-600 dark:hover:border-blue-400 dark:hover:bg-blue-950/50 dark:hover:text-blue-400";
+  }
+  if (tema === TEMA_LIDERES) {
+    return "hover:border-orange-500 hover:bg-orange-50 hover:text-orange-600 dark:hover:border-orange-400 dark:hover:bg-orange-950/50 dark:hover:text-orange-400";
+  }
+  if (tema === TEMA_PLANILLA) {
+    return "hover:border-red-500 hover:bg-red-50 hover:text-red-600 dark:hover:border-red-400 dark:hover:bg-red-950/50 dark:hover:text-red-400";
+  }
+  if (tema === TEMA_EMPLEADOS) {
+    return "hover:border-violet-500 hover:bg-violet-50 hover:text-violet-600 dark:hover:border-violet-400 dark:hover:bg-violet-950/50 dark:hover:text-violet-400";
+  }
+  if (tema === TEMA_MIEMBROS) {
+    return "hover:border-sky-500 hover:bg-sky-50 hover:text-sky-600 dark:hover:border-sky-400 dark:hover:bg-sky-950/50 dark:hover:text-sky-400";
+  }
+  if (tema === TEMA_ADMIN) {
+    return "hover:border-indigo-500 hover:bg-indigo-50 hover:text-indigo-600 dark:hover:border-indigo-400 dark:hover:bg-indigo-950/50 dark:hover:text-indigo-400";
+  }
+  if (tema === TEMA_MENSAJES) {
+    return "hover:border-green-500 hover:bg-green-50 hover:text-green-600 dark:hover:border-green-400 dark:hover:bg-green-950/50 dark:hover:text-green-400";
+  }
+  return tema.hoverEntrarSelf;
+}
+
+export function clasesBotonEntrar(tema: TemaLista): string {
+  return `${BTN_ENTRAR_BASE} ${hoverEntrarDeTema(tema)}`;
+}
+
+/** Solo el texto/ícono toma el color del tema al hover (p. ej. switch de Célula). */
+export function textoHoverDeTema(tema: TemaLista): string {
+  if (tema === TEMA_SEDE) {
+    return "hover:text-blue-600 dark:hover:text-blue-400";
+  }
+  if (tema === TEMA_LIDERES) {
+    return "hover:text-orange-600 dark:hover:text-orange-400";
+  }
+  if (tema === TEMA_PLANILLA) {
+    return "hover:text-red-600 dark:hover:text-red-400";
+  }
+  if (tema === TEMA_EMPLEADOS) {
+    return "hover:text-violet-600 dark:hover:text-violet-400";
+  }
+  if (tema === TEMA_MIEMBROS) {
+    return "hover:text-sky-600 dark:hover:text-sky-400";
+  }
+  if (tema === TEMA_ADMIN) {
+    return "hover:text-indigo-600 dark:hover:text-indigo-400";
+  }
+  if (tema === TEMA_MENSAJES) {
+    return "hover:text-green-600 dark:hover:text-green-400";
+  }
+  return "";
 }

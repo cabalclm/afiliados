@@ -297,10 +297,12 @@ export default function Tabla({
                   <td
                     className={columnaNoFijaCelda(
                       esAfiliadoLider(afiliado) && tema
-                        ? tema.theadBg
+                        ? `${tema.theadBg} group-hover:brightness-[0.98] dark:group-hover:brightness-110`
                         : esAfiliadoLider(afiliado)
-                          ? "bg-sky-100 dark:bg-sky-950/40"
-                          : FONDO_CELDA_TABLA,
+                          ? "bg-sky-100 dark:bg-sky-950/40 group-hover:bg-sky-100 dark:group-hover:bg-sky-950/40"
+                          : tema
+                            ? tema.filaHoverSticky
+                            : FONDO_CELDA_TABLA,
                       "px-3 py-2 whitespace-nowrap font-bold text-gray-500 dark:text-gray-400",
                     )}
                   >

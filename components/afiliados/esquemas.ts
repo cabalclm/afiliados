@@ -28,6 +28,10 @@ export function esRolEmpleado(rol: string | null | undefined) {
   return r === "EMPLEADO" || r === "TRABAJADOR";
 }
 
+export function esRolPlanilla(rol: string | null | undefined) {
+  return normalizarRol(rol) === "PLANILLA";
+}
+
 /** Admin / Super: sus afiliados cuentan en el bucket de Empleados (meta). */
 export function esRolAdminOSuper(rol: string | null | undefined) {
   const r = normalizarRol(rol);

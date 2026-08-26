@@ -1,10 +1,19 @@
 "use client";
 
 import { obtenerConfiguracionAction } from "@/components/dashboard/actions/configuracion";
+import { MorphHoverRow } from "@/components/ui/HoverMorphIcon";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { Building2 } from "lucide-react";
-import { PiBriefcaseDuotone, PiMedalDuotone } from "react-icons/pi";
+import {
+  Award,
+  Briefcase,
+  BriefcaseBusiness,
+  Building,
+  Building2,
+  ClipboardList,
+  Landmark,
+  Medal,
+} from "lucide";
 
 interface Props {
   totalSede: number;
@@ -12,6 +21,8 @@ interface Props {
   totalLideres: number;
   /** Integrantes empadronados bajo empleados. */
   totalTrabajadores: number;
+  /** Integrantes empadronados bajo planilla. */
+  totalPlanilla?: number;
   /** Total real de la tabla afiliados (si viene, se usa en vez de sumar segmentos). */
   totalGeneral?: number;
 }
@@ -20,6 +31,7 @@ export default function MetaGeneral({
   totalSede,
   totalLideres,
   totalTrabajadores,
+  totalPlanilla = 0,
   totalGeneral,
 }: Props) {
   const { data: config } = useQuery({
@@ -31,10 +43,45 @@ export default function MetaGeneral({
   const total =
     typeof totalGeneral === "number"
       ? totalGeneral
-      : totalSede + totalLideres + totalTrabajadores;
+      : totalSede + totalLideres + totalTrabajadores + totalPlanilla;
   const pct = (n: number) => Math.min((n / objetivoGeneral) * 100, 100);
   const progreso = pct(total);
   const texto = "text-xs md:text-lg font-bold leading-snug";
+
+  const items = [
+    {
+      key: "sede",
+      label: "Sede",
+      value: totalSede,
+      idle: Building2,
+      hover: Building,
+      color: "text-blue-700 dark:text-blue-400",
+    },
+    {
+      key: "lideres",
+      label: "Líderes",
+      value: totalLideres,
+      idle: Medal,
+      hover: Award,
+      color: "text-orange-600 dark:text-orange-400",
+    },
+    {
+      key: "empleados",
+      label: "Empleados",
+      value: totalTrabajadores,
+      idle: Briefcase,
+      hover: BriefcaseBusiness,
+      color: "text-violet-600 dark:text-violet-400",
+    },
+    {
+      key: "planilla",
+      label: "Planilla",
+      value: totalPlanilla,
+      idle: Landmark,
+      hover: ClipboardList,
+      color: "text-red-600 dark:text-red-400",
+    },
+  ] as const;
 
   return (
     <div className="mb-4 w-full rounded-xl border border-gray-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-4 shadow-sm">
@@ -72,26 +119,25 @@ export default function MetaGeneral({
           transition={{ duration: 1, ease: "easeOut", delay: 0.15 }}
           className="bg-violet-500 h-full shrink-0"
         />
+        <motion.div
+          initial={{ width: 0 }}
+          animate={{ width: `${pct(totalPlanilla)}%` }}
+          transition={{ duration: 1, ease: "easeOut", delay: 0.2 }}
+          className="bg-red-500 h-full shrink-0"
+        />
       </div>
       <div className="mt-2.5 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 md:justify-start">
-          <span
-            className={`flex items-center gap-1.5 ${texto} uppercase text-blue-700 dark:text-blue-400`}
+        {items.map((item) => (
+          <MorphHoverRow
+            key={item.key}
+            idle={item.idle}
+            hover={item.hover}
+            size={20}
+            className={`flex items-center gap-1.5 ${texto} uppercase ${item.color}`}
           >
-            <Building2 className="size-5 shrink-0" />
-            Sede: {totalSede.toLocaleString()}
-          </span>
-          <span
-            className={`flex items-center gap-1.5 ${texto} uppercase text-orange-600 dark:text-orange-400`}
-          >
-            <PiMedalDuotone className="size-5 shrink-0" />
-            Líderes: {totalLideres.toLocaleString()}
-          </span>
-          <span
-            className={`flex items-center gap-1.5 ${texto} uppercase text-violet-600 dark:text-violet-400`}
-          >
-            <PiBriefcaseDuotone className="size-5 shrink-0" />
-            Empleados: {totalTrabajadores.toLocaleString()}
-          </span>
+            {item.label}: {item.value.toLocaleString()}
+          </MorphHoverRow>
+        ))}
       </div>
     </div>
   );

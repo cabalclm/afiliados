@@ -5,6 +5,7 @@ import { fetchAllRows } from "@/lib/supabaseFetchAll";
 import {
   esRolAdminOSuper,
   esRolEmpleado,
+  esRolPlanilla,
   esUsuarioSede,
 } from "@/components/afiliados/esquemas";
 
@@ -91,6 +92,7 @@ export async function GET() {
   let sede = 0;
   let lideres = 0;
   let trabajadores = 0;
+  let planilla = 0;
 
   for (const row of afiliadosLiderIds) {
     const lid = row.lider_id;
@@ -104,6 +106,8 @@ export async function GET() {
     ) {
       // Empleados + afiliados hechos por Admin/Super → bucket Empleados.
       trabajadores++;
+    } else if (responsable && esRolPlanilla(responsable.rol)) {
+      planilla++;
     } else {
       // Líder, sin líder o responsable ya no en perfiles.
       lideres++;
@@ -115,6 +119,7 @@ export async function GET() {
     sede,
     lideres,
     trabajadores,
+    planilla,
   };
 
   console.timeEnd("🚀 API /api/dashboard TOTAL");
