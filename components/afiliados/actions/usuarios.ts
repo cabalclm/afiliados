@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/utils/supabase/server";
+import { fetchAllRows } from "@/lib/supabaseFetchAll";
 import { getCachedAuthUsers } from "./cache";
 
 export async function listarUsuariosAction(rol_filtro?: string | string[]) {
@@ -31,20 +32,20 @@ export async function listarUsuariosAction(rol_filtro?: string | string[]) {
     }
   }
 
-  // Ejecutamos las dos queries en paralelo — ambas son rápidas (< 500ms)
-  const [perfilesRes, conteoRes] = await Promise.all([
+  // Conteos paginados de TODAS las filas (límite Supabase = 1000).
+  const [perfilesRes, afiliadosLiderIds] = await Promise.all([
     filtroPerfiles,
-    supabase.from("afiliados").select("lider_id").not("lider_id", "is", null)
+    fetchAllRows<{ lider_id: string | null }>((from, to) =>
+      supabase.from("afiliados").select("lider_id").range(from, to),
+    ),
   ]);
   console.timeEnd("🔵 SERVER: query perfiles");
 
   if (perfilesRes.error) throw new Error(perfilesRes.error.message);
-  if (conteoRes.error) throw new Error(conteoRes.error.message);
 
   const perfiles = perfilesRes.data || [];
   console.log("🔵 SERVER: perfiles count:", perfiles.length);
-  const conteoRaw = conteoRes.data || [];
-  console.log("🔵 SERVER: conteoRaw count:", conteoRaw.length);
+  console.log("🔵 SERVER: afiliados count:", afiliadosLiderIds.length);
   const authUsers = await getCachedAuthUsers();
   const emailMap = new Map(
     authUsers.map((u) => [u.id, u.email || ""]),
@@ -52,7 +53,7 @@ export async function listarUsuariosAction(rol_filtro?: string | string[]) {
 
   // Conteo eficiente en memoria
   const conteoMap = new Map<string, number>();
-  conteoRaw.forEach((row) => {
+  afiliadosLiderIds.forEach((row) => {
     if (row.lider_id) {
       conteoMap.set(row.lider_id, (conteoMap.get(row.lider_id) || 0) + 1);
     }

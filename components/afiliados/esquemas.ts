@@ -28,6 +28,12 @@ export function esRolEmpleado(rol: string | null | undefined) {
   return r === "EMPLEADO" || r === "TRABAJADOR";
 }
 
+/** Admin / Super: sus afiliados cuentan en el bucket de Empleados (meta). */
+export function esRolAdminOSuper(rol: string | null | undefined) {
+  const r = normalizarRol(rol);
+  return r === "ADMIN" || r === "ADMINISTRADOR" || r === "SUPER";
+}
+
 /** Detecta el usuario especial "Sede" (rol SEDE, o nombre/usuario legado). */
 export function esUsuarioSede(lider: {
   nombres?: string | null;

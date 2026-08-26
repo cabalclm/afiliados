@@ -1,28 +1,31 @@
 "use server";
 
 import { createClient } from "@/utils/supabase/server";
+import { fetchAllRows } from "@/lib/supabaseFetchAll";
 
 export async function obtenerAfiliadosAction(liderId?: string) {
   const supabase = await createClient();
 
-  let query = supabase.from("afiliados").select("*");
-
-  if (liderId) {
-    query = query.eq("lider_id", liderId);
-  }
-
-  const { data: afiliados, error } = await query.order("created_at", {
-    ascending: false,
+  // Paginar: Supabase limita a 1000 filas por request.
+  const afiliados = await fetchAllRows<Record<string, unknown>>((from, to) => {
+    let query = supabase.from("afiliados").select("*");
+    if (liderId) {
+      query = query.eq("lider_id", liderId);
+    }
+    return query.order("created_at", { ascending: false }).range(from, to);
   });
 
-  if (error) throw new Error(error.message);
-  if (!afiliados) return [];
+  if (afiliados.length === 0) return [];
 
   const liderIds = [
-    ...new Set(afiliados.map((a) => a.lider_id).filter((id) => id)),
+    ...new Set(afiliados.map((a) => a.lider_id as string | null).filter((id): id is string => !!id)),
   ];
   const lugarIds = [
-    ...new Set(afiliados.map((a) => a.lugar_id).filter((id) => id)),
+    ...new Set(
+      afiliados
+        .map((a) => a.lugar_id as number | null)
+        .filter((id): id is number => id != null),
+    ),
   ];
 
   // Solo queries directas a Supabase — sin listUsers de Auth

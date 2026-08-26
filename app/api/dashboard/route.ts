@@ -1,6 +1,12 @@
 import { createClient } from "@/utils/supabase/server";
 import { NextResponse } from "next/server";
 import { getCachedAuthUsers } from "@/components/afiliados/actions/cache";
+import { fetchAllRows } from "@/lib/supabaseFetchAll";
+import {
+  esRolAdminOSuper,
+  esRolEmpleado,
+  esUsuarioSede,
+} from "@/components/afiliados/esquemas";
 
 export async function GET() {
   console.time("🚀 API /api/dashboard TOTAL");
@@ -8,7 +14,9 @@ export async function GET() {
 
   // Leer sesión del JWT (sin llamada de red)
   console.time("🚀 getSession");
-  const { data: { session } } = await supabase.auth.getSession();
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
   console.timeEnd("🚀 getSession");
 
   if (!session?.user) {
@@ -18,23 +26,32 @@ export async function GET() {
   const user = session.user;
 
   // TODAS las queries en PARALELO
+  // Afiliados: paginar TODAS las filas (límite default Supabase = 1000).
   console.time("🚀 queries");
-  const [profileRes, perfilesRes, conteoRes, lugaresRes] = await Promise.all([
-    supabase
-      .from("info_perfil")
-      .select("nombres, apellidos, rol_id, roles ( nombre )")
-      .eq("user_id", user.id)
-      .single(),
+  const [profileRes, perfilesRes, afiliadosLiderIds, lugaresRes] =
+    await Promise.all([
+      supabase
+        .from("info_perfil")
+        .select("nombres, apellidos, rol_id, roles ( nombre )")
+        .eq("user_id", user.id)
+        .single(),
 
-    supabase
-      .from("info_perfil")
-      .select("user_id, nombres, apellidos, activo, rol_id, roles!inner ( id, nombre )")
-      .order("nombres", { ascending: true }),
+      supabase
+        .from("info_perfil")
+        .select(
+          "user_id, nombres, apellidos, activo, rol_id, roles!inner ( id, nombre )",
+        )
+        .order("nombres", { ascending: true }),
 
-    supabase.from("afiliados").select("lider_id").not("lider_id", "is", null),
+      fetchAllRows<{ lider_id: string | null }>((from, to) =>
+        supabase.from("afiliados").select("lider_id").range(from, to),
+      ),
 
-    supabase.from("lugares_clm").select("id, nombre").order("nombre", { ascending: true }),
-  ]);
+      supabase
+        .from("lugares_clm")
+        .select("id, nombre")
+        .order("nombre", { ascending: true }),
+    ]);
   console.timeEnd("🚀 queries");
 
   const profileAny = profileRes.data as any;
@@ -48,18 +65,15 @@ export async function GET() {
   };
 
   const perfiles = perfilesRes.data || [];
-  const conteoRaw = conteoRes.data || [];
   const authUsers = await getCachedAuthUsers();
-  const emailMap = new Map(
-    authUsers.map((u) => [u.id, u.email || ""]),
-  );
+  const emailMap = new Map(authUsers.map((u) => [u.id, u.email || ""]));
 
   const conteoMap = new Map<string, number>();
-  conteoRaw.forEach((row) => {
+  for (const row of afiliadosLiderIds) {
     if (row.lider_id) {
       conteoMap.set(row.lider_id, (conteoMap.get(row.lider_id) || 0) + 1);
     }
-  });
+  }
 
   const usuarios = perfiles.map((p: any) => ({
     id: p.user_id,
@@ -72,11 +86,43 @@ export async function GET() {
     conteoAfiliados: conteoMap.get(p.user_id) || 0,
   }));
 
+  // Meta = TODOS los registros de la tabla afiliados, clasificados por responsable.
+  const porId = new Map(usuarios.map((u) => [u.id, u]));
+  let sede = 0;
+  let lideres = 0;
+  let trabajadores = 0;
+
+  for (const row of afiliadosLiderIds) {
+    const lid = row.lider_id;
+    const responsable = lid ? porId.get(lid) : undefined;
+
+    if (responsable && esUsuarioSede(responsable)) {
+      sede++;
+    } else if (
+      responsable &&
+      (esRolEmpleado(responsable.rol) || esRolAdminOSuper(responsable.rol))
+    ) {
+      // Empleados + afiliados hechos por Admin/Super → bucket Empleados.
+      trabajadores++;
+    } else {
+      // Líder, sin líder o responsable ya no en perfiles.
+      lideres++;
+    }
+  }
+
+  const meta = {
+    total: afiliadosLiderIds.length,
+    sede,
+    lideres,
+    trabajadores,
+  };
+
   console.timeEnd("🚀 API /api/dashboard TOTAL");
 
   return NextResponse.json({
     session: sessionData,
     usuarios,
     lugares: lugaresRes.data || [],
+    meta,
   });
 }

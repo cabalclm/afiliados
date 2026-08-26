@@ -5,7 +5,7 @@ import { toast } from "@/lib/toast";
 import { motion } from "framer-motion";
 import { BarChart3, Building2, Mail, X } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { Fragment, useMemo, useState, type ReactNode } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
   PiBriefcaseDuotone,
   PiBuildingsDuotone,
@@ -30,7 +30,7 @@ import Lideres from "./Lideres";
 import MetaGeneral from "./MetaGeneral";
 import ModalBienvenida from "./ModalBienvenida";
 import type { Afiliado, Lider } from "./esquemas";
-import { esRolEmpleado, esRolLider, esUsuarioSede } from "./esquemas";
+import { esRolAdminOSuper, esRolEmpleado, esRolLider, esUsuarioSede } from "./esquemas";
 import Form from "./forms/afiliados/Afiliados";
 import PanelListaPestana from "./PanelListaPestana";
 import {
@@ -255,16 +255,30 @@ export default function Ver() {
       }));
   /** SEDE puede crear líderes y empleados; el resto de gestión sigue restringido. */
   const puedeCrearLiderOEmpleado = puedeCrearLider || esSedeSesion;
-  /** SUPER / ADMIN / SEDE ven pestañas; el resto solo meta + su célula. */
-  const vistaConPestanas = esAdminOSuper || esSedeSesion;
+  const esLiderOEmpleado = esRolLider(rol) || esRolEmpleado(rol);
+  /** Admin/Super/Sede: pestañas completas. Líder/empleado: solo Líderes + Empleados. */
+  const vistaAdminPestanas = esAdminOSuper || esSedeSesion;
+  const vistaConPestanas = vistaAdminPestanas || esLiderOEmpleado;
   /** Aviso de líderes faltantes para la meta: solo admin, super y sede. */
   const puedeVerAvisoMetaEquipo =
-    (esAdminOSuper || esSedeSesion) &&
-    !esRolLider(rol) &&
-    !esRolEmpleado(rol);
+    vistaAdminPestanas && !esRolLider(rol) && !esRolEmpleado(rol);
   /** SEDE: sin Administrativos ni Mensajes; puede crear líderes/empleados. */
   const soloLecturaSede = esSedeSesion;
   const esLider = rolUpper === "LIDER";
+
+  const tabInicialRef = useRef(false);
+  useEffect(() => {
+    if (tabInicialRef.current || !rol) return;
+    if (esRolEmpleado(rol)) {
+      setActiveTab("Trabajadores");
+      tabInicialRef.current = true;
+    } else if (esRolLider(rol)) {
+      setActiveTab("Lideres");
+      tabInicialRef.current = true;
+    } else if (vistaAdminPestanas) {
+      tabInicialRef.current = true;
+    }
+  }, [rol, vistaAdminPestanas]);
 
   const handleSimular = () => {
     setLiderSimulado((prev) => (prev ? null : LIDER_SIMULADO));
@@ -312,51 +326,45 @@ export default function Ver() {
     (esSedeSesion && miPerfilGlobal ? miPerfilGlobal : null);
 
   const totalesMeta = useMemo(() => {
-    const idsEmpleado = new Set(
-      allUsers.filter((u) => esRolEmpleado(u.rol)).map((u) => u.id),
-    );
-    const idsLider = new Set(
-      allUsers.filter((u) => esRolLider(u.rol)).map((u) => u.id),
-    );
-    const sedeId = sedeUsuario?.id;
-    const conLider = afiliados.filter((a) => a.lider_id);
-
-    if (conLider.length > 0) {
-      let sede = 0;
-      let lideres = 0;
-      let trabajadoresCount = 0;
-
-      for (const a of conLider) {
-        const lid = a.lider_id!;
-        const responsable = allUsers.find((u) => u.id === lid);
-
-        if (
-          (sedeId && lid === sedeId) ||
-          (responsable && esUsuarioSede(responsable))
-        ) {
-          sede++;
-        } else if (idsEmpleado.has(lid)) {
-          trabajadoresCount++;
-        } else {
-          lideres++;
-        }
-      }
-
+    // Preferir meta del API: cuenta TODAS las filas de `afiliados` (paginado).
+    const meta = dashboardData?.meta as
+      | { total: number; sede: number; lideres: number; trabajadores: number }
+      | undefined;
+    if (meta && typeof meta.total === "number") {
       return {
-        sede,
-        lideres,
-        trabajadores: trabajadoresCount,
-        total: sede + lideres + trabajadoresCount,
+        sede: meta.sede || 0,
+        lideres: meta.lideres || 0,
+        trabajadores: meta.trabajadores || 0,
+        total: meta.total,
       };
     }
 
-    const sede = sedeUsuario?.conteoAfiliados || 0;
-    const lideres = allUsers
-      .filter((u) => idsLider.has(u.id))
-      .reduce((acc, u) => acc + (u.conteoAfiliados || 0), 0);
-    const trabajadoresCount = allUsers
-      .filter((u) => idsEmpleado.has(u.id))
-      .reduce((acc, u) => acc + (u.conteoAfiliados || 0), 0);
+    // Fallback local (por si el API aún no trae meta).
+    const idsEmpleado = new Set(
+      allUsers
+        .filter(
+          (u) => esRolEmpleado(u.rol) || esRolAdminOSuper(u.rol),
+        )
+        .map((u) => u.id),
+    );
+    const sedeId = sedeUsuario?.id;
+
+    let sede = 0;
+    let lideres = 0;
+    let trabajadoresCount = 0;
+
+    for (const u of allUsers) {
+      const n = u.conteoAfiliados || 0;
+      if (!n) continue;
+
+      if ((sedeId && u.id === sedeId) || esUsuarioSede(u)) {
+        sede += n;
+      } else if (idsEmpleado.has(u.id)) {
+        trabajadoresCount += n;
+      } else {
+        lideres += n;
+      }
+    }
 
     return {
       sede,
@@ -364,7 +372,7 @@ export default function Ver() {
       trabajadores: trabajadoresCount,
       total: sede + lideres + trabajadoresCount,
     };
-  }, [afiliados, allUsers, sedeUsuario]);
+  }, [dashboardData?.meta, allUsers, sedeUsuario]);
 
   const totalAfiliadosSede = totalesMeta.sede;
   const totalAfiliadosLideres = totalesMeta.lideres;
@@ -385,6 +393,29 @@ export default function Ver() {
     const base = liderSimulado ? [liderSimulado, ...lideres] : lideres;
     return base.filter((l) => l.rol !== "DOCUMENTADOR" && !esUsuarioSede(l));
   })();
+
+  /** Listas para pestañas, asegurando que el usuario en sesión aparezca en la suya. */
+  const lideresParaLista = useMemo(() => {
+    if (
+      esRolLider(rol) &&
+      miPerfilGlobal &&
+      !lideresVisibles.some((u) => u.id === miPerfilGlobal.id)
+    ) {
+      return [miPerfilGlobal, ...lideresVisibles];
+    }
+    return lideresVisibles;
+  }, [rol, miPerfilGlobal, lideresVisibles]);
+
+  const empleadosParaLista = useMemo(() => {
+    if (
+      esRolEmpleado(rol) &&
+      miPerfilGlobal &&
+      !trabajadores.some((u) => u.id === miPerfilGlobal.id)
+    ) {
+      return [miPerfilGlobal, ...trabajadores];
+    }
+    return trabajadores;
+  }, [rol, miPerfilGlobal, trabajadores]);
 
   /** Líderes y empleados pueden tener célula (afiliados bajo su user_id). */
   const usuariosConCelula = allUsers.filter((u) => {
@@ -418,9 +449,26 @@ export default function Ver() {
     if (soloLecturaSede && (tab === "Mensajes" || tab === "Administrativos")) {
       return;
     }
+    if (
+      esLiderOEmpleado &&
+      tab !== "Lideres" &&
+      tab !== "Trabajadores"
+    ) {
+      return;
+    }
     setActiveTab(tab);
     setLiderParaCelula(null);
   };
+
+  /** Evita flash en Sede antes de fijar la pestaña propia de líder/empleado. */
+  const tabActiva: Tab =
+    esLiderOEmpleado &&
+    activeTab !== "Lideres" &&
+    activeTab !== "Trabajadores"
+      ? esRolEmpleado(rol)
+        ? "Trabajadores"
+        : "Lideres"
+      : activeTab;
 
   const cargandoLideres = isDashboardLoading;
   const cargandoMiembros = isLoadingAfiliados || cargandoLideres;
@@ -491,6 +539,8 @@ export default function Ver() {
 
   const handleOpenCelula = (lider: Lider) => {
     if (!lider) return;
+    // Líder/empleado solo pueden entrar a su propia célula.
+    if (esLiderOEmpleado && lider.id !== userId) return;
     setLiderParaCelula(lider);
   };
 
@@ -661,7 +711,7 @@ export default function Ver() {
               </div>
             </div>
 
-            {vistaConPestanas && (
+            {vistaAdminPestanas && (
               <button
                 type="button"
                 onClick={() => setIsEstadisticasOpen(true)}
@@ -700,6 +750,7 @@ export default function Ver() {
               totalSede={totalAfiliadosSede}
               totalLideres={totalAfiliadosLideres}
               totalTrabajadores={totalAfiliadosTrabajadores}
+              totalGeneral={totalMiembrosGeneral}
             />
             {miPerfilGlobal ? (
               <Celula
@@ -724,61 +775,73 @@ export default function Ver() {
               totalSede={totalAfiliadosSede}
               totalLideres={totalAfiliadosLideres}
               totalTrabajadores={totalAfiliadosTrabajadores}
+              totalGeneral={totalMiembrosGeneral}
             />
             <div className="mb-6 w-full min-w-0 border-b border-gray-200 dark:border-neutral-800">
               <div
-                className={`w-full min-w-0 gap-1 sm:gap-0 grid grid-cols-2 md:flex md:flex-nowrap md:overflow-x-auto`}
+                className="w-full min-w-0 gap-1 sm:gap-0 grid grid-cols-2 md:flex md:flex-nowrap md:overflow-x-auto"
               >
                 {(
-                  [
-                    {
-                      id: "Sede" as Tab,
-                      label: "Sede",
-                      count: totalAfiliadosSede,
-                      icon: PiBuildingsDuotone,
-                      show: true,
-                    },
-                    {
-                      id: "Lideres" as Tab,
-                      label: "Líderes",
-                      count: totalLideresRegistrados,
-                      icon: PiMedalDuotone,
-                      show: true,
-                    },
-                    {
-                      id: "Trabajadores" as Tab,
-                      label: "Empleados",
-                      count: totalEmpleadosRegistrados,
-                      icon: PiBriefcaseDuotone,
-                      show: true,
-                    },
-                    {
-                      id: "Afiliados" as Tab,
-                      label: "Miembros",
-                      count: totalMiembrosGeneral,
-                      icon: PiUsersThreeDuotone,
-                      show: true,
-                    },
-                    {
-                      id: "Administrativos" as Tab,
-                      label: "Administrativos",
-                      count: totalAdministrativosRegistrados,
-                      icon: PiShieldCheckDuotone,
-                      show: esAdminOSuper,
-                    },
-                    {
-                      id: "Mensajes" as Tab,
-                      label: "Mensajes",
-                      count: null as number | null,
-                      icon: Mail,
-                      show: esAdminOSuper,
-                    },
-                  ] as const
-                )
-                  .filter((t) => t.show)
-                  .map((tab) => {
+                  (
+                    [
+                      {
+                        id: "Sede" as Tab,
+                        label: "Sede",
+                        count: totalAfiliadosSede,
+                        icon: PiBuildingsDuotone,
+                        show: vistaAdminPestanas,
+                      },
+                      {
+                        id: "Lideres" as Tab,
+                        label: "Líderes",
+                        count: totalLideresRegistrados,
+                        icon: PiMedalDuotone,
+                        show: true,
+                      },
+                      {
+                        id: "Trabajadores" as Tab,
+                        label: "Empleados",
+                        count: totalEmpleadosRegistrados,
+                        icon: PiBriefcaseDuotone,
+                        show: true,
+                      },
+                      {
+                        id: "Afiliados" as Tab,
+                        label: "Miembros",
+                        count: totalMiembrosGeneral,
+                        icon: PiUsersThreeDuotone,
+                        show: vistaAdminPestanas,
+                      },
+                      {
+                        id: "Administrativos" as Tab,
+                        label: "Administrativos",
+                        count: totalAdministrativosRegistrados,
+                        icon: PiShieldCheckDuotone,
+                        show: esAdminOSuper,
+                      },
+                      {
+                        id: "Mensajes" as Tab,
+                        label: "Mensajes",
+                        count: null as number | null,
+                        icon: Mail,
+                        show: esAdminOSuper,
+                      },
+                    ] as const
+                  )
+                    .filter((t) => t.show)
+                    // Líder/empleado: su pestaña primero.
+                    .sort((a, b) => {
+                      if (!esLiderOEmpleado) return 0;
+                      const propia = esRolEmpleado(rol)
+                        ? "Trabajadores"
+                        : "Lideres";
+                      if (a.id === propia) return -1;
+                      if (b.id === propia) return 1;
+                      return 0;
+                    })
+                ).map((tab) => {
                     const Icon = tab.icon;
-                    const activo = activeTab === tab.id;
+                    const activo = tabActiva === tab.id;
                     const theme = TAB_THEMES[tab.id];
                     return (
                       <motion.button
@@ -818,7 +881,7 @@ export default function Ver() {
             </div>
 
             <>
-              {liderParaCelula && activeTab !== "Sede" && (
+              {liderParaCelula && tabActiva !== "Sede" && (
                 <Celula
                   embedded
                   isOpen
@@ -834,13 +897,14 @@ export default function Ver() {
               )}
 
               {/* Paneles siempre montados: al cambiar de pestaña no se remonta ni se vuelve a cargar. */}
+              {vistaAdminPestanas && (
               <div
                 className={
-                  activeTab === "Sede" && !liderParaCelula
+                  tabActiva === "Sede" && !liderParaCelula
                     ? undefined
                     : "hidden"
                 }
-                aria-hidden={!(activeTab === "Sede" && !liderParaCelula)}
+                aria-hidden={!(tabActiva === "Sede" && !liderParaCelula)}
               >
                 {sedeUsuario ? (
                   <Celula
@@ -878,19 +942,20 @@ export default function Ver() {
                   )
                 )}
               </div>
+              )}
 
               <div
                 className={
-                  activeTab === "Lideres" && !liderParaCelula
+                  tabActiva === "Lideres" && !liderParaCelula
                     ? undefined
                     : "hidden"
                 }
-                aria-hidden={!(activeTab === "Lideres" && !liderParaCelula)}
+                aria-hidden={!(tabActiva === "Lideres" && !liderParaCelula)}
               >
                 {renderPanelTab(
                   "Lideres",
                   <Lideres
-                    lideres={lideresVisibles}
+                    lideres={lideresParaLista}
                     onVerCelula={handleOpenCelula}
                     onEditar={handleOpenEditLiderModal}
                     rolUsuarioSesion={esSedeSesion ? "SEDE" : rol}
@@ -905,18 +970,18 @@ export default function Ver() {
 
               <div
                 className={
-                  activeTab === "Trabajadores" && !liderParaCelula
+                  tabActiva === "Trabajadores" && !liderParaCelula
                     ? undefined
                     : "hidden"
                 }
                 aria-hidden={
-                  !(activeTab === "Trabajadores" && !liderParaCelula)
+                  !(tabActiva === "Trabajadores" && !liderParaCelula)
                 }
               >
                 {renderPanelTab(
                   "Trabajadores",
                   <Lideres
-                    lideres={trabajadores}
+                    lideres={empleadosParaLista}
                     onVerCelula={handleOpenCelula}
                     onEditar={handleOpenEditLiderModal}
                     rolUsuarioSesion={esSedeSesion ? "SEDE" : rol}
@@ -929,13 +994,14 @@ export default function Ver() {
                 )}
               </div>
 
+              {vistaAdminPestanas && (
               <div
                 className={
-                  activeTab === "Afiliados" && !liderParaCelula
+                  tabActiva === "Afiliados" && !liderParaCelula
                     ? undefined
                     : "hidden"
                 }
-                aria-hidden={!(activeTab === "Afiliados" && !liderParaCelula)}
+                aria-hidden={!(tabActiva === "Afiliados" && !liderParaCelula)}
               >
                 <AfiliadosGeneral
                   afiliados={afiliados}
@@ -949,16 +1015,17 @@ export default function Ver() {
                   isLoading={cargandoMiembros}
                 />
               </div>
+              )}
 
               {esAdminOSuper && (
                 <div
                   className={
-                    activeTab === "Administrativos" && !liderParaCelula
+                    tabActiva === "Administrativos" && !liderParaCelula
                       ? undefined
                       : "hidden"
                   }
                   aria-hidden={
-                    !(activeTab === "Administrativos" && !liderParaCelula)
+                    !(tabActiva === "Administrativos" && !liderParaCelula)
                   }
                 >
                   {renderPanelTab(
@@ -981,11 +1048,11 @@ export default function Ver() {
               {esAdminOSuper && (
                 <div
                   className={
-                    activeTab === "Mensajes" && !liderParaCelula
+                    tabActiva === "Mensajes" && !liderParaCelula
                       ? undefined
                       : "hidden"
                   }
-                  aria-hidden={!(activeTab === "Mensajes" && !liderParaCelula)}
+                  aria-hidden={!(tabActiva === "Mensajes" && !liderParaCelula)}
                 >
                   {renderPanelTab(
                     "Mensajes",

@@ -12,12 +12,15 @@ interface Props {
   totalLideres: number;
   /** Integrantes empadronados bajo empleados. */
   totalTrabajadores: number;
+  /** Total real de la tabla afiliados (si viene, se usa en vez de sumar segmentos). */
+  totalGeneral?: number;
 }
 
 export default function MetaGeneral({
   totalSede,
   totalLideres,
   totalTrabajadores,
+  totalGeneral,
 }: Props) {
   const { data: config } = useQuery({
     queryKey: ["config_sistema"],
@@ -25,7 +28,10 @@ export default function MetaGeneral({
   });
 
   const objetivoGeneral = config?.meta_general ?? 3000;
-  const total = totalSede + totalLideres + totalTrabajadores;
+  const total =
+    typeof totalGeneral === "number"
+      ? totalGeneral
+      : totalSede + totalLideres + totalTrabajadores;
   const pct = (n: number) => Math.min((n / objetivoGeneral) * 100, 100);
   const progreso = pct(total);
   const texto = "text-xs md:text-lg font-bold leading-snug";

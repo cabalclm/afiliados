@@ -3,6 +3,7 @@
 import { createClient } from "@/utils/supabase/server";
 import supabaseAdmin from "@/lib/supabaseAdmin";
 import { enviarNotificacionPush } from "@/lib/push";
+import { fetchAllRows } from "@/lib/supabaseFetchAll";
 
 interface EnviarMensajeInput {
   titulo?: string;
@@ -25,20 +26,26 @@ function calcularNivel(
 
 /** Devuelve los user_id cuyo nivel de compromiso coincide con `nivel`. */
 async function resolverUserIdsPorNivel(nivel: string): Promise<string[]> {
-  const [configRes, perfilesRes, conteoRes] = await Promise.all([
+  const [configRes, perfilesRes, conteoRaw] = await Promise.all([
     supabaseAdmin
       .from("sis_configuracion")
       .select("meta_celula, meta_celula_minima")
       .single(),
     supabaseAdmin.from("info_perfil").select("user_id"),
-    supabaseAdmin.from("afiliados").select("lider_id").not("lider_id", "is", null),
+    fetchAllRows<{ lider_id: string }>((from, to) =>
+      supabaseAdmin
+        .from("afiliados")
+        .select("lider_id")
+        .not("lider_id", "is", null)
+        .range(from, to),
+    ),
   ]);
 
   const metaCelula = configRes.data?.meta_celula ?? 15;
   const metaMinima = configRes.data?.meta_celula_minima ?? 10;
 
   const conteoMap = new Map<string, number>();
-  (conteoRes.data || []).forEach((row: any) => {
+  conteoRaw.forEach((row) => {
     if (row.lider_id) {
       conteoMap.set(row.lider_id, (conteoMap.get(row.lider_id) || 0) + 1);
     }

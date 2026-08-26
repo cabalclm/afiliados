@@ -12,7 +12,7 @@ import {
 import { AnimatePresence, motion } from "framer-motion";
 import * as XLSX from "xlsx";
 import type { Afiliado, Lider } from "./esquemas";
-import { esRolEmpleado, esRolLider, esUsuarioSede } from "./esquemas";
+import { esRolAdminOSuper, esRolEmpleado, esRolLider, esUsuarioSede } from "./esquemas";
 import { formatearDpi, TelefonoInline } from "./contacto";
 import { calcularEdadLabel } from "@/utils/formatoFechaGT";
 import { TEMA_MIEMBROS, type TemaLista } from "./temaPestana";
@@ -95,7 +95,7 @@ const CATEGORIAS: Array<{
 
 function tipoDeLider(lider: Lider): Exclude<GrupoTipo, "todos"> | null {
   if (esUsuarioSede(lider)) return "sede";
-  if (esRolEmpleado(lider.rol)) return "trabajador";
+  if (esRolEmpleado(lider.rol) || esRolAdminOSuper(lider.rol)) return "trabajador";
   if (esRolLider(lider.rol)) return "lider";
   return null;
 }

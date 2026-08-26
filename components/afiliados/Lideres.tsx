@@ -15,7 +15,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import { obtenerConfiguracionAction } from "@/components/dashboard/actions/configuracion";
 import { eliminar } from "./acciones";
-import { esUsuarioSede } from "./esquemas";
+import { esRolEmpleado, esUsuarioSede } from "./esquemas";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -85,6 +85,9 @@ export default function Lideres({
 
   const rolUpper = (rolUsuarioSesion || "").toUpperCase();
   const isLider = rolUpper === "LIDER";
+  const esEmpleadoSesion = esRolEmpleado(rolUsuarioSesion);
+  /** Líder/empleado: ven a todos, pero solo entran a su propia célula. */
+  const soloPropiaCelula = isLider || esEmpleadoSesion;
   const esAdminOSuper =
     rolUpper === "ADMINISTRADOR" ||
     rolUpper === "ADMIN" ||
@@ -113,13 +116,14 @@ export default function Lideres({
   const sortedLideres = useMemo(
     () =>
       [...lideres].sort((a, b) => {
+        // El usuario en sesión siempre primero.
+        if (a.id === idUsuarioSesion) return -1;
+        if (b.id === idUsuarioSesion) return 1;
         const aSede = esUsuarioSede(a);
         const bSede = esUsuarioSede(b);
         if (aSede !== bSede) return aSede ? -1 : 1;
         if (a.simulado) return -1;
         if (b.simulado) return 1;
-        if (a.id === idUsuarioSesion) return -1;
-        if (b.id === idUsuarioSesion) return 1;
         return (b.conteoAfiliados || 0) - (a.conteoAfiliados || 0);
       }),
     [lideres, idUsuarioSesion],
@@ -197,7 +201,7 @@ export default function Lideres({
             textoColor = "text-red-600 dark:text-red-400";
           }
 
-          const puedeEntrar = !(isLider && lider.id !== idUsuarioSesion);
+          const puedeEntrar = !(soloPropiaCelula && lider.id !== idUsuarioSesion);
           const temaFila = temaDesdeLider(lider, esSede);
 
           return (
