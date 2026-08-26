@@ -35,7 +35,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Fragment, useEffect, useMemo, useState } from "react";
 import HoverMorphIcon from "@/components/ui/HoverMorphIcon";
 import type { Afiliado, Lider } from "./esquemas";
-import { esUsuarioSede } from "./esquemas";
+import { esUsuarioSede, metasCelulaParaRol } from "./esquemas";
 import EstadisticasEdades from "./estadisticas/Edades";
 import EstadisticasLugares from "./estadisticas/Lugares";
 import EstadisticasPoliticas from "./estadisticas/Politicas";
@@ -270,8 +270,10 @@ export default function Celula({
     queryFn: () => obtenerConfiguracionAction(),
   });
 
-  const META_CELULA = config?.meta_celula ?? 15;
-  const META_MINIMA = config?.meta_celula_minima ?? 10;
+  const { meta: META_CELULA, minima: META_MINIMA } = metasCelulaParaRol(
+    lider?.rol,
+    config,
+  );
 
   const { data: afiliadosQuery = [], isLoading: isLoadingQuery } = useQuery({
     queryKey: ["afiliados-lider", lider?.id],
@@ -596,7 +598,7 @@ export default function Celula({
               )}
 
               <div
-                className={`overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-neutral-800 dark:bg-neutral-900 border-t-4 ${tema.borderTop}`}
+                className={`overflow-hidden rounded-xl border ${tema.borderPanel} bg-white shadow-sm dark:bg-neutral-900`}
               >
                 <div className="flex flex-col gap-3 border-b border-gray-100 bg-white p-3 dark:border-neutral-800 dark:bg-neutral-900 sm:flex-row sm:items-center">
                   <div
@@ -736,7 +738,7 @@ export default function Celula({
             </>
           ) : vistaActual === "mensajes" ? (
             <div
-              className={`overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-neutral-800 dark:bg-neutral-900 border-t-4 ${tema.borderTop}`}
+              className={`overflow-hidden rounded-xl border ${tema.borderPanel} bg-white shadow-sm dark:bg-neutral-900`}
             >
               <MensajesUsuario
                 userId={lider.id}

@@ -16,7 +16,12 @@ import { useQuery } from "@tanstack/react-query";
 import { obtenerConfiguracionAction } from "@/components/dashboard/actions/configuracion";
 import HoverMorphIcon from "@/components/ui/HoverMorphIcon";
 import { eliminar } from "./acciones";
-import { esRolEmpleado, esRolPlanilla, esUsuarioSede } from "./esquemas";
+import {
+  esRolEmpleado,
+  esRolPlanilla,
+  esUsuarioSede,
+  metasCelulaParaRol,
+} from "./esquemas";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -130,9 +135,6 @@ export default function Lideres({
     queryFn: () => obtenerConfiguracionAction(),
   });
 
-  const META_CELULA = config?.meta_celula ?? 15;
-  const META_MINIMA = config?.meta_celula_minima ?? 10;
-
   useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm, itemsPerPage]);
@@ -204,23 +206,24 @@ export default function Lideres({
         <AnimatePresence initial={false}>
         {lideresPaginados.map((lider, index) => {
           const esSede = esUsuarioSede(lider);
+          const { meta, minima } = metasCelulaParaRol(lider.rol, config);
           const totalEnGrupo = lider.conteoAfiliados || 0;
-          const progreso = Math.min((totalEnGrupo / META_CELULA) * 100, 100);
+          const progreso = Math.min((totalEnGrupo / meta) * 100, 100);
           const tieneAfiliados = totalEnGrupo > 0;
 
           let nivelCompromiso = "";
           let colorBarra = "";
           let textoColor = "";
 
-          if (totalEnGrupo > META_CELULA) {
+          if (totalEnGrupo > meta) {
             nivelCompromiso = "Alto";
             colorBarra = "bg-green-500";
             textoColor = "text-green-600 dark:text-green-400";
-          } else if (totalEnGrupo === META_CELULA) {
+          } else if (totalEnGrupo === meta) {
             nivelCompromiso = "Cumple";
             colorBarra = "bg-blue-600";
             textoColor = "text-blue-600 dark:text-blue-400";
-          } else if (totalEnGrupo >= META_MINIMA && totalEnGrupo < META_CELULA) {
+          } else if (totalEnGrupo >= minima && totalEnGrupo < meta) {
             nivelCompromiso = "Medio";
             colorBarra = "bg-yellow-500";
             textoColor = "text-yellow-600 dark:text-yellow-400";
@@ -304,7 +307,7 @@ export default function Lideres({
                         /
                         {esSede
                           ? totalEnGrupo.toLocaleString()
-                          : META_CELULA}
+                          : meta}
                       </span>
                     </span>
                     {puedeGestionarUsuarios && (

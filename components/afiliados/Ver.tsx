@@ -119,12 +119,12 @@ const TAB_THEMES: Record<
     lineBg: "bg-violet-500 dark:bg-violet-400",
   },
   Planilla: {
-    activeText: "text-red-600 dark:text-red-400",
-    activeIconBg: "bg-red-100 dark:bg-red-950/60",
-    activeIconText: "text-red-600 dark:text-red-400",
-    activeBadgeBg: "bg-red-100 dark:bg-red-950/60",
-    activeBadgeText: "text-red-700 dark:text-red-300",
-    lineBg: "bg-red-500 dark:bg-red-400",
+    activeText: "text-emerald-600 dark:text-emerald-400",
+    activeIconBg: "bg-emerald-100 dark:bg-emerald-950/60",
+    activeIconText: "text-emerald-600 dark:text-emerald-400",
+    activeBadgeBg: "bg-emerald-100 dark:bg-emerald-950/60",
+    activeBadgeText: "text-emerald-700 dark:text-emerald-300",
+    lineBg: "bg-emerald-500 dark:bg-emerald-400",
   },
   Administrativos: {
     activeText: "text-indigo-600 dark:text-indigo-400",
@@ -192,7 +192,7 @@ function BtnNuevoTab({
       type="button"
       disabled={disabled}
       onClick={onClick}
-      className={`inline-flex h-11 md:h-12 shrink-0 items-center justify-center gap-2 rounded-lg border px-3.5 md:px-5 text-base md:text-lg font-semibold whitespace-nowrap transition-colors disabled:opacity-60 ${className}`}
+      className={`inline-flex h-11 md:h-12 w-full sm:w-auto shrink-0 items-center justify-center gap-2 rounded-lg border px-3.5 md:px-5 text-base md:text-lg font-semibold whitespace-nowrap transition-colors disabled:opacity-60 ${className}`}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
@@ -756,6 +756,7 @@ export default function Ver() {
         afiliados,
         config?.meta_celula ?? 15,
         config?.meta_celula_minima ?? 10,
+        config,
       );
       toast.success("Excel del equipo descargado");
     } catch (err) {
@@ -778,7 +779,11 @@ export default function Ver() {
   );
 
   const conExcel = (extra: ReactNode = null) => (
-    <div className="flex w-full min-w-0 flex-wrap items-center gap-2 sm:justify-end">
+    <div
+      className={`grid w-full gap-2 sm:flex sm:w-auto sm:justify-end ${
+        extra ? "grid-cols-2" : "grid-cols-1"
+      }`}
+    >
       {btnExcelEquipo}
       {extra}
     </div>
@@ -821,7 +826,7 @@ export default function Ver() {
             idle={Landmark}
             hover={ClipboardList}
             onClick={() => abrirNuevoUsuario("PLANILLA")}
-            className="border-red-400 bg-red-50 text-red-600 hover:bg-red-100 dark:border-red-500 dark:bg-red-950/50 dark:text-red-400 dark:hover:bg-red-950/70"
+            className="border-emerald-400 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 dark:border-emerald-500 dark:bg-emerald-950/50 dark:text-emerald-400 dark:hover:bg-emerald-950/70"
           />
         ) : null,
       );
@@ -889,6 +894,7 @@ export default function Ver() {
           userId={userId}
           conteoAfiliados={miPerfilGlobal?.conteoAfiliados || 0}
           nombreLider={miPerfilGlobal?.nombres || "Usuario"}
+          rol={miPerfilGlobal?.rol}
         />
       )}
       <div className="px-2 md:px-6 max-w-full overflow-x-hidden min-w-0 w-full">

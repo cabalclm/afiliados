@@ -9,6 +9,7 @@ import { obtenerConfiguracionAction } from "@/components/dashboard/actions/confi
 import { obtenerMensajePendienteAction, marcarLeidoAction, contarMensajesPendientesAction } from "@/components/dashboard/actions/mensajes";
 import { toast } from "@/lib/toast";
 import { Loader2 } from "lucide-react";
+import { metasCelulaParaRol } from "./esquemas";
 
 function formatearFechaLectura(fecha: Date) {
   const dias = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
@@ -40,9 +41,10 @@ interface ModalBienvenidaProps {
   userId: string;
   conteoAfiliados: number;
   nombreLider: string;
+  rol?: string;
 }
 
-export default function ModalBienvenida({ userId, conteoAfiliados, nombreLider }: ModalBienvenidaProps) {
+export default function ModalBienvenida({ userId, conteoAfiliados, nombreLider, rol }: ModalBienvenidaProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [mensajeTitulo, setMensajeTitulo] = useState("");
   const [mensajeTexto, setMensajeTexto] = useState("");
@@ -54,8 +56,10 @@ export default function ModalBienvenida({ userId, conteoAfiliados, nombreLider }
     queryFn: () => obtenerConfiguracionAction(),
   });
 
-  const META_CELULA = config?.meta_celula ?? 15;
-  const META_MINIMA = config?.meta_celula_minima ?? 10;
+  const { meta: META_CELULA, minima: META_MINIMA } = metasCelulaParaRol(
+    rol,
+    config,
+  );
 
   let nivelCompromiso = "";
   let colorFondo = "";

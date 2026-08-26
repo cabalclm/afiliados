@@ -79,11 +79,11 @@ function estiloRol(nombre: string) {
   if (n === "PLANILLA") {
     return {
       icon: <ClipboardList className="w-4 h-4" />,
-      text: "text-red-600 dark:text-red-400",
-      border: "border-red-400 dark:border-red-500",
-      bg: "bg-red-50 dark:bg-red-950/40",
+      text: "text-emerald-600 dark:text-emerald-400",
+      border: "border-emerald-400 dark:border-emerald-500",
+      bg: "bg-emerald-50 dark:bg-emerald-950/40",
       iconWrap:
-        "bg-red-100 text-red-600 dark:bg-red-950/60 dark:text-red-400",
+        "bg-emerald-100 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400",
     };
   }
   if (n === "EMPLEADO" || n === "TRABAJADOR") {

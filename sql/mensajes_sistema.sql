@@ -137,3 +137,9 @@ alter table public.sis_mensajes
 
 alter table public.sis_configuracion
   add column if not exists meta_general integer not null default 3000;
+
+alter table public.sis_configuracion
+  add column if not exists meta_planilla integer not null default 100;
+
+alter table public.sis_configuracion
+  add column if not exists meta_planilla_minima integer not null default 67;

@@ -3,7 +3,7 @@
 import { obtenerConfiguracionAction } from "@/components/dashboard/actions/configuracion";
 import { MorphHoverRow } from "@/components/ui/HoverMorphIcon";
 import { useQuery } from "@tanstack/react-query";
-import { motion } from "framer-motion";
+import { animate, motion, useMotionValue } from "framer-motion";
 import {
   Award,
   Briefcase,
@@ -14,6 +14,56 @@ import {
   Landmark,
   Medal,
 } from "lucide";
+import { useEffect, useState } from "react";
+
+function NumeroConteo({
+  value,
+  decimals = 0,
+  className,
+  suffix = "",
+  delay = 0,
+}: {
+  value: number;
+  decimals?: number;
+  className?: string;
+  suffix?: string;
+  delay?: number;
+}) {
+  const motionVal = useMotionValue(0);
+  const [texto, setTexto] = useState(
+    decimals
+      ? (0).toFixed(decimals)
+      : "0",
+  );
+
+  useEffect(() => {
+    const formatear = (n: number) => {
+      if (decimals > 0) {
+        return n.toLocaleString("es-GT", {
+          minimumFractionDigits: decimals,
+          maximumFractionDigits: decimals,
+        });
+      }
+      return Math.round(n).toLocaleString("es-GT");
+    };
+
+    setTexto(formatear(motionVal.get()));
+    const controls = animate(motionVal, value, {
+      duration: 2.6,
+      ease: "easeOut",
+      delay,
+      onUpdate: (v) => setTexto(formatear(v)),
+    });
+    return () => controls.stop();
+  }, [value, decimals, delay, motionVal]);
+
+  return (
+    <span className={className}>
+      {texto}
+      {suffix}
+    </span>
+  );
+}
 
 interface Props {
   totalSede: number;
@@ -55,7 +105,12 @@ export default function MetaGeneral({
       value: totalSede,
       idle: Building2,
       hover: Building,
-      color: "text-blue-700 dark:text-blue-400",
+      bar: "bg-blue-600",
+      card: "border-blue-200/70 bg-blue-50/60 dark:border-blue-800/40 dark:bg-blue-950/25",
+      iconWrap: "text-blue-700 dark:text-blue-300",
+      valueColor: "text-blue-800 dark:text-blue-300",
+      pctChip:
+        "bg-white/80 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300",
     },
     {
       key: "planilla",
@@ -63,7 +118,12 @@ export default function MetaGeneral({
       value: totalPlanilla,
       idle: Landmark,
       hover: ClipboardList,
-      color: "text-red-600 dark:text-red-400",
+      bar: "bg-emerald-500",
+      card: "border-emerald-200/70 bg-emerald-50/60 dark:border-emerald-800/40 dark:bg-emerald-950/25",
+      iconWrap: "text-emerald-700 dark:text-emerald-300",
+      valueColor: "text-emerald-800 dark:text-emerald-300",
+      pctChip:
+        "bg-white/80 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300",
     },
     {
       key: "empleados",
@@ -71,7 +131,12 @@ export default function MetaGeneral({
       value: totalTrabajadores,
       idle: Briefcase,
       hover: BriefcaseBusiness,
-      color: "text-violet-600 dark:text-violet-400",
+      bar: "bg-violet-500",
+      card: "border-violet-200/70 bg-violet-50/60 dark:border-violet-800/40 dark:bg-violet-950/25",
+      iconWrap: "text-violet-700 dark:text-violet-300",
+      valueColor: "text-violet-800 dark:text-violet-300",
+      pctChip:
+        "bg-white/80 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300",
     },
     {
       key: "lideres",
@@ -79,7 +144,12 @@ export default function MetaGeneral({
       value: totalLideres,
       idle: Medal,
       hover: Award,
-      color: "text-orange-600 dark:text-orange-400",
+      bar: "bg-orange-500",
+      card: "border-orange-200/70 bg-orange-50/60 dark:border-orange-800/40 dark:bg-orange-950/25",
+      iconWrap: "text-orange-700 dark:text-orange-300",
+      valueColor: "text-orange-800 dark:text-orange-300",
+      pctChip:
+        "bg-white/80 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300",
     },
   ] as const;
 
@@ -94,48 +164,58 @@ export default function MetaGeneral({
         <span
           className={`${texto} text-blue-700 dark:text-blue-400 whitespace-nowrap`}
         >
-          {total.toLocaleString()} / {objetivoGeneral.toLocaleString()}{" "}
+          <NumeroConteo
+            value={total}
+            className="tabular-nums"
+          />{" "}
+          / {objetivoGeneral.toLocaleString("es-GT")}{" "}
           <span className="text-gray-500 dark:text-gray-400">
-            ({progreso.toFixed(1)}%)
+            (
+            <NumeroConteo value={progreso} decimals={1} suffix="%" />
+            )
           </span>
         </span>
       </div>
       <div className="w-full bg-gray-200 dark:bg-neutral-800 rounded-full h-3 overflow-hidden flex items-center relative">
-        <motion.div
-          initial={{ width: 0 }}
-          animate={{ width: `${pct(totalSede)}%` }}
-          transition={{ duration: 1, ease: "easeOut" }}
-          className="bg-blue-600 h-full shrink-0"
-        />
-        <motion.div
-          initial={{ width: 0 }}
-          animate={{ width: `${pct(totalPlanilla)}%` }}
-          transition={{ duration: 1, ease: "easeOut", delay: 0.1 }}
-          className="bg-red-500 h-full shrink-0"
-        />
-        <motion.div
-          initial={{ width: 0 }}
-          animate={{ width: `${pct(totalTrabajadores)}%` }}
-          transition={{ duration: 1, ease: "easeOut", delay: 0.15 }}
-          className="bg-violet-500 h-full shrink-0"
-        />
-        <motion.div
-          initial={{ width: 0 }}
-          animate={{ width: `${pct(totalLideres)}%` }}
-          transition={{ duration: 1, ease: "easeOut", delay: 0.2 }}
-          className="bg-orange-500 h-full shrink-0"
-        />
+        {items.map((item, i) => (
+          <motion.div
+            key={item.key}
+            initial={{ width: 0 }}
+            animate={{ width: `${pct(item.value)}%` }}
+            transition={{ duration: 2.6, ease: "easeOut", delay: i * 0.12 }}
+            className={`${item.bar} h-full shrink-0`}
+          />
+        ))}
       </div>
-      <div className="mt-2.5 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 md:justify-start">
-        {items.map((item) => (
+      <div className="mt-3 flex flex-wrap items-stretch justify-center gap-2">
+        {items.map((item, i) => (
           <MorphHoverRow
             key={item.key}
             idle={item.idle}
             hover={item.hover}
-            size={20}
-            className={`flex items-center gap-1.5 ${texto} uppercase ${item.color}`}
+            size={28}
+            className={`flex w-full min-w-[148px] max-w-[210px] flex-1 items-center justify-start gap-2.5 rounded-xl border px-3 py-2.5 ${item.card}`}
+            iconClassName={item.iconWrap}
           >
-            {item.label}: {item.value.toLocaleString()}
+            <span className="min-w-0 text-left">
+              <span className="block text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                {item.label}
+              </span>
+              <span className="mt-0.5 flex items-baseline justify-start gap-1.5">
+                <NumeroConteo
+                  value={item.value}
+                  delay={i * 0.12}
+                  className={`text-lg font-black tabular-nums leading-none md:text-xl ${item.valueColor}`}
+                />
+                <NumeroConteo
+                  value={pct(item.value)}
+                  decimals={1}
+                  suffix="%"
+                  delay={i * 0.12}
+                  className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold tabular-nums ${item.pctChip}`}
+                />
+              </span>
+            </span>
           </MorphHoverRow>
         ))}
       </div>

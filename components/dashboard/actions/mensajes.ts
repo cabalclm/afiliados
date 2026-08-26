@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/utils/supabase/server";
+import { metasCelulaParaRol } from "@/components/afiliados/esquemas";
 import supabaseAdmin from "@/lib/supabaseAdmin";
 import { enviarNotificacionPush } from "@/lib/push";
 import { fetchAllRows } from "@/lib/supabaseFetchAll";
@@ -29,9 +30,9 @@ async function resolverUserIdsPorNivel(nivel: string): Promise<string[]> {
   const [configRes, perfilesRes, conteoRaw] = await Promise.all([
     supabaseAdmin
       .from("sis_configuracion")
-      .select("meta_celula, meta_celula_minima")
+      .select("*")
       .single(),
-    supabaseAdmin.from("info_perfil").select("user_id"),
+    supabaseAdmin.from("info_perfil").select("user_id, roles ( nombre )"),
     fetchAllRows<{ lider_id: string }>((from, to) =>
       supabaseAdmin
         .from("afiliados")
@@ -41,9 +42,7 @@ async function resolverUserIdsPorNivel(nivel: string): Promise<string[]> {
     ),
   ]);
 
-  const metaCelula = configRes.data?.meta_celula ?? 15;
-  const metaMinima = configRes.data?.meta_celula_minima ?? 10;
-
+  const config = configRes.data;
   const conteoMap = new Map<string, number>();
   conteoRaw.forEach((row) => {
     if (row.lider_id) {
@@ -51,13 +50,18 @@ async function resolverUserIdsPorNivel(nivel: string): Promise<string[]> {
     }
   });
 
-  return (perfilesRes.data || [])
-    .map((p: any) => p.user_id as string)
-    .filter(
-      (uid) =>
-        calcularNivel(conteoMap.get(uid) || 0, metaCelula, metaMinima).toUpperCase() ===
-        nivel.toUpperCase(),
-    );
+  return ((perfilesRes.data || []) as { user_id: string; roles: RolJoin }[])
+    .filter((p) => {
+      const { meta, minima } = metasCelulaParaRol(
+        nombreRolDesdeJoin(p.roles),
+        config,
+      );
+      return (
+        calcularNivel(conteoMap.get(p.user_id) || 0, meta, minima).toUpperCase() ===
+        nivel.toUpperCase()
+      );
+    })
+    .map((p) => p.user_id);
 }
 
 type RolJoin = { nombre?: string } | { nombre?: string }[] | null | undefined;

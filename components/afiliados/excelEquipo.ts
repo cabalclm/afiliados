@@ -4,6 +4,8 @@ import {
   esRolLider,
   esRolPlanilla,
   esUsuarioSede,
+  metasCelulaParaRol,
+  type ConfigMetas,
 } from "./esquemas";
 import {
   calcularEdadAnios,
@@ -125,8 +127,15 @@ export function filasEquipoExcel(
   afiliados: Afiliado[],
   metaCelula = 15,
   metaMinima = 10,
+  config?: ConfigMetas,
 ): FilaEquipo[] {
   const filas: FilaEquipo[] = [];
+  const cfg: ConfigMetas = {
+    meta_celula: metaCelula,
+    meta_celula_minima: metaMinima,
+    meta_planilla: config?.meta_planilla,
+    meta_planilla_minima: config?.meta_planilla_minima,
+  };
 
   for (const user of usuarios) {
     if (user.simulado) continue;
@@ -136,6 +145,7 @@ export function filasEquipoExcel(
     const afiliado = perfilAfiliadoDeUsuario(user, afiliados);
     const miembros = user.conteoAfiliados || 0;
     const edad = afiliado ? calcularEdadAnios(afiliado.nacimiento) : null;
+    const { meta, minima } = metasCelulaParaRol(user.rol, cfg);
 
     filas.push({
       Nombre: (user.nombres || afiliado?.nombres || "").trim(),
@@ -162,8 +172,8 @@ export function filasEquipoExcel(
       Religión: religionDe(afiliado),
       Política: afiliado?.politica || "",
       Miembros: miembros,
-      Meta: metaCelula,
-      Compromiso: nivelCompromiso(miembros, metaCelula, metaMinima),
+      Meta: meta,
+      Compromiso: nivelCompromiso(miembros, meta, minima),
     });
   }
 
@@ -272,7 +282,7 @@ async function escribirHoja(
       fila.Tipo === "Líder"
         ? "FFFFF7ED"
         : fila.Tipo === "Planilla"
-          ? "FFFEF2F2"
+          ? "FFECFDF5"
           : "FFF5F3FF";
 
     COLUMNAS.forEach((col, i) => {
@@ -290,7 +300,7 @@ async function escribirHoja(
             ? fila.Tipo === "Líder"
               ? "FFFDBA74"
               : fila.Tipo === "Planilla"
-                ? "FFFECACA"
+                ? "FF6EE7B7"
                 : "FFC4B5FD"
             : col.key === "Compromiso"
               ? fila.Compromiso === "Alto"
@@ -354,10 +364,17 @@ export async function descargarExcelEquipo(
   afiliados: Afiliado[],
   metaCelula = 15,
   metaMinima = 10,
+  config?: ConfigMetas,
 ) {
   const mod = await import("exceljs");
   const ExcelJS = (mod as { default?: typeof import("exceljs") }).default ?? mod;
-  const todas = filasEquipoExcel(usuarios, afiliados, metaCelula, metaMinima);
+  const todas = filasEquipoExcel(
+    usuarios,
+    afiliados,
+    metaCelula,
+    metaMinima,
+    config,
+  );
   const lideres = todas.filter((f) => f.Tipo === "Líder");
   const empleados = todas.filter((f) => f.Tipo === "Empleado");
   const planilla = todas.filter((f) => f.Tipo === "Planilla");
@@ -370,7 +387,7 @@ export async function descargarExcelEquipo(
   await escribirHoja(wb, "Equipo", todas, "#0F766E");
   await escribirHoja(wb, "Líderes", lideres, "#EA580C");
   await escribirHoja(wb, "Empleados", empleados, "#7C3AED");
-  await escribirHoja(wb, "Planilla", planilla, "#DC2626");
+  await escribirHoja(wb, "Planilla", planilla, "#059669");
 
   const buffer = await wb.xlsx.writeBuffer();
   const fecha = new Date().toISOString().slice(0, 10);

@@ -93,6 +93,8 @@ export default function ConfiguracionModal() {
   const [metaGeneral, setMetaGeneral] = useState(3000);
   const [metaCelula, setMetaCelula] = useState(15);
   const [metaMinima, setMetaMinima] = useState(10);
+  const [metaPlanilla, setMetaPlanilla] = useState(100);
+  const [metaPlanillaMinima, setMetaPlanillaMinima] = useState(67);
 
   useEffect(() => {
     if (!config || !isOpen) return;
@@ -102,6 +104,8 @@ export default function ConfiguracionModal() {
     setMetaGeneral(config.meta_general ?? 3000);
     setMetaCelula(config.meta_celula ?? 15);
     setMetaMinima(config.meta_celula_minima ?? 10);
+    setMetaPlanilla(config.meta_planilla ?? 100);
+    setMetaPlanillaMinima(config.meta_planilla_minima ?? 67);
   }, [config, isOpen]);
 
   const handleClose = () => {
@@ -125,6 +129,16 @@ export default function ConfiguracionModal() {
         );
         return;
       }
+      if (metaPlanilla <= 0) {
+        toast.warning("La meta de planilla debe ser mayor a 0");
+        return;
+      }
+      if (metaPlanillaMinima >= metaPlanilla) {
+        toast.warning(
+          "La meta mínima de planilla debe ser menor que la meta de planilla",
+        );
+        return;
+      }
 
       setIsSaving(true);
       await actualizarConfiguracionAction(
@@ -134,6 +148,8 @@ export default function ConfiguracionModal() {
         metaCelula,
         metaMinima,
         metaGeneral,
+        metaPlanilla,
+        metaPlanillaMinima,
       );
       queryClient.invalidateQueries({ queryKey: ["config_sistema"] });
       toast.success("Configuración general guardada");
@@ -296,6 +312,9 @@ export default function ConfiguracionModal() {
                             />
                           </div>
 
+                          <p className="text-sm font-bold text-gray-700 dark:text-gray-200">
+                            Líderes y empleados
+                          </p>
                           <div className="grid sm:grid-cols-2 gap-4">
                             <div className="flex items-center justify-between gap-3 rounded-xl border-2 border-yellow-300 dark:border-yellow-700 bg-yellow-50/50 dark:bg-yellow-950/20 p-4">
                               <div>
@@ -348,6 +367,63 @@ export default function ConfiguracionModal() {
                             </div>
                           </div>
 
+                          <p className="text-sm font-bold text-gray-700 dark:text-gray-200">
+                            Planilla
+                          </p>
+                          <div className="grid sm:grid-cols-2 gap-4">
+                            <div className="flex items-center justify-between gap-3 rounded-xl border-2 border-yellow-300 dark:border-yellow-700 bg-yellow-50/50 dark:bg-yellow-950/20 p-4">
+                              <div>
+                                <p className="text-sm font-bold text-gray-800 dark:text-gray-100">
+                                  Meta mínima
+                                </p>
+                                <p className="text-sm text-gray-600 dark:text-gray-400 mt-0.5">
+                                  De <strong className="text-red-600 dark:text-red-400">Bajo</strong> a{" "}
+                                  <strong className="text-yellow-600 dark:text-yellow-400">Medio</strong>
+                                </p>
+                              </div>
+                              <Input
+                                type="number"
+                                inputMode="numeric"
+                                min={0}
+                                value={metaPlanillaMinima}
+                                onChange={(e) =>
+                                  setMetaPlanillaMinima(
+                                    parseInt(e.target.value, 10) || 0,
+                                  )
+                                }
+                                className={cn(
+                                  numberInputClass,
+                                  "shrink-0 text-yellow-700 dark:text-yellow-400 border-yellow-400 dark:border-yellow-600",
+                                )}
+                              />
+                            </div>
+
+                            <div className="flex items-center justify-between gap-3 rounded-xl border-2 border-emerald-300 dark:border-emerald-700 bg-emerald-50/50 dark:bg-emerald-950/20 p-4">
+                              <div>
+                                <p className="text-sm font-bold text-gray-800 dark:text-gray-100">
+                                  Meta
+                                </p>
+                                <p className="text-sm text-gray-600 dark:text-gray-400 mt-0.5">
+                                  <strong className="text-blue-600 dark:text-blue-400">Cumple</strong> o{" "}
+                                  <strong className="text-green-600 dark:text-green-400">Alto</strong>
+                                </p>
+                              </div>
+                              <Input
+                                type="number"
+                                inputMode="numeric"
+                                min={1}
+                                value={metaPlanilla}
+                                onChange={(e) =>
+                                  setMetaPlanilla(parseInt(e.target.value, 10) || 0)
+                                }
+                                className={cn(
+                                  numberInputClass,
+                                  "shrink-0 text-emerald-700 dark:text-emerald-400 border-emerald-400 dark:border-emerald-600",
+                                )}
+                              />
+                            </div>
+                          </div>
+
                           {metaCelula > 0 && (
                             <p className="text-sm font-bold text-gray-700 dark:text-gray-200">
                               Necesitas al menos{" "}
@@ -391,11 +467,22 @@ export default function ConfiguracionModal() {
                                     {nivel.nombre}
                                   </span>
                                   <span className="text-sm font-bold text-gray-700 dark:text-gray-200">
-                                    {descripcionNivel(
-                                      nivel.key,
-                                      metaMinima,
-                                      metaCelula,
-                                    )}
+                                    <span className="block">
+                                      Líderes/empleados:{" "}
+                                      {descripcionNivel(
+                                        nivel.key,
+                                        metaMinima,
+                                        metaCelula,
+                                      )}
+                                    </span>
+                                    <span className="block text-emerald-700 dark:text-emerald-400">
+                                      Planilla:{" "}
+                                      {descripcionNivel(
+                                        nivel.key,
+                                        metaPlanillaMinima,
+                                        metaPlanilla,
+                                      )}
+                                    </span>
                                   </span>
                                 </div>
                               ))}

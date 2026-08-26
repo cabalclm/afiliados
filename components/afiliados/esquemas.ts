@@ -32,6 +32,35 @@ export function esRolPlanilla(rol: string | null | undefined) {
   return normalizarRol(rol) === "PLANILLA";
 }
 
+export const META_CELULA_DEFAULT = 15;
+export const META_CELULA_MINIMA_DEFAULT = 10;
+/** Meta de integrantes por persona de planilla (distinta a líderes/empleados). */
+export const META_PLANILLA_DEFAULT = 100;
+export const META_PLANILLA_MINIMA_DEFAULT = 67;
+
+export type ConfigMetas = {
+  meta_celula?: number | null;
+  meta_celula_minima?: number | null;
+  meta_planilla?: number | null;
+  meta_planilla_minima?: number | null;
+} | null | undefined;
+
+/** Meta y umbral mínimo según el rol de quien encabeza la célula. */
+export function metasCelulaParaRol(
+  rol: string | null | undefined,
+  config: ConfigMetas,
+): { meta: number; minima: number } {
+  const metaCelula = config?.meta_celula ?? META_CELULA_DEFAULT;
+  const metaMinima = config?.meta_celula_minima ?? META_CELULA_MINIMA_DEFAULT;
+  if (esRolPlanilla(rol)) {
+    const meta = config?.meta_planilla ?? META_PLANILLA_DEFAULT;
+    const minima =
+      config?.meta_planilla_minima ?? META_PLANILLA_MINIMA_DEFAULT;
+    return { meta, minima };
+  }
+  return { meta: metaCelula, minima: metaMinima };
+}
+
 /** Admin / Super: sus afiliados cuentan en el bucket de Empleados (meta). */
 export function esRolAdminOSuper(rol: string | null | undefined) {
   const r = normalizarRol(rol);

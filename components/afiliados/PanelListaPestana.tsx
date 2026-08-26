@@ -29,7 +29,7 @@ export default function PanelListaPestana({
 }: Props) {
   return (
     <div
-      className={`overflow-hidden rounded-xl border border-gray-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-sm border-t-4 ${tema.borderTop}`}
+      className={`overflow-hidden rounded-xl border ${tema.borderPanel} bg-white dark:bg-neutral-900 shadow-sm`}
     >
       <div
         className={`flex flex-col sm:flex-row sm:items-center gap-3 p-3 ${tema.theadBg}`}

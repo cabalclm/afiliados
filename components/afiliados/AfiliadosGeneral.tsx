@@ -97,10 +97,10 @@ const CATEGORIAS: Array<{
     titulo: "Planilla",
     icon: Landmark,
     active:
-      "bg-red-100 text-red-600 dark:bg-red-950/60 dark:text-red-400",
+      "bg-emerald-100 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400",
     idle:
       "bg-gray-100 text-gray-500 hover:text-gray-700 dark:bg-neutral-800 dark:text-gray-400 dark:hover:text-gray-300",
-    rowActive: "bg-red-50 dark:bg-red-950/30",
+    rowActive: "bg-emerald-50 dark:bg-emerald-950/30",
   },
 ];
 

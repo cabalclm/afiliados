@@ -1,5 +1,7 @@
 export type TemaLista = {
   borderTop: string;
+  /** Borde completo del panel de lista (mismo color que la pestaña). */
+  borderPanel: string;
   theadText: string;
   theadBg: string;
   focusRing: string;
@@ -25,6 +27,7 @@ export type TemaLista = {
 
 export const TEMA_SEDE: TemaLista = {
   borderTop: "border-t-blue-500",
+  borderPanel: "border-blue-200 dark:border-blue-800/80",
   theadText: "text-blue-600 dark:text-blue-400",
   theadBg: "bg-blue-50 dark:bg-blue-950/30",
   focusRing: "focus-visible:ring-blue-500",
@@ -53,6 +56,7 @@ export const TEMA_SEDE: TemaLista = {
 
 export const TEMA_LIDERES: TemaLista = {
   borderTop: "border-t-orange-500",
+  borderPanel: "border-orange-200 dark:border-orange-800/80",
   theadText: "text-orange-600 dark:text-orange-400",
   theadBg: "bg-orange-50 dark:bg-orange-950/30",
   focusRing: "focus-visible:ring-orange-500",
@@ -81,6 +85,7 @@ export const TEMA_LIDERES: TemaLista = {
 
 export const TEMA_EMPLEADOS: TemaLista = {
   borderTop: "border-t-violet-500",
+  borderPanel: "border-violet-200 dark:border-violet-800/80",
   theadText: "text-violet-600 dark:text-violet-400",
   theadBg: "bg-violet-50 dark:bg-violet-950/30",
   focusRing: "focus-visible:ring-violet-500",
@@ -108,35 +113,37 @@ export const TEMA_EMPLEADOS: TemaLista = {
 };
 
 export const TEMA_PLANILLA: TemaLista = {
-  borderTop: "border-t-red-500",
-  theadText: "text-red-600 dark:text-red-400",
-  theadBg: "bg-red-50 dark:bg-red-950/30",
-  focusRing: "focus-visible:ring-red-500",
-  btnOutline: "border-red-500 text-red-600 dark:border-red-400 dark:text-red-400",
+  borderTop: "border-t-emerald-500",
+  borderPanel: "border-emerald-200 dark:border-emerald-800/80",
+  theadText: "text-emerald-600 dark:text-emerald-400",
+  theadBg: "bg-emerald-50 dark:bg-emerald-950/30",
+  focusRing: "focus-visible:ring-emerald-500",
+  btnOutline: "border-emerald-500 text-emerald-600 dark:border-emerald-400 dark:text-emerald-400",
   btnPrimary:
-    "border-red-400 bg-red-50 text-red-600 hover:bg-red-100 dark:border-red-500 dark:bg-red-950/50 dark:text-red-400 dark:hover:bg-red-950/70",
-  btnText: "text-red-600 dark:text-red-400",
-  btnHover: "hover:bg-red-50 dark:hover:bg-red-950/40",
-  activeToggle: "bg-red-100 text-red-600 dark:bg-red-950/60 dark:text-red-400 shadow-sm",
-  pagination: "text-red-600 dark:text-red-400",
+    "border-emerald-400 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 dark:border-emerald-500 dark:bg-emerald-950/50 dark:text-emerald-400 dark:hover:bg-emerald-950/70",
+  btnText: "text-emerald-600 dark:text-emerald-400",
+  btnHover: "hover:bg-emerald-50 dark:hover:bg-emerald-950/40",
+  activeToggle: "bg-emerald-100 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400 shadow-sm",
+  pagination: "text-emerald-600 dark:text-emerald-400",
   hoverEntrar:
-    "group-hover:border-red-500 group-hover:bg-red-50 group-hover:text-red-600 dark:group-hover:border-red-400 dark:group-hover:bg-red-950/50 dark:group-hover:text-red-400",
+    "group-hover:border-emerald-500 group-hover:bg-emerald-50 group-hover:text-emerald-600 dark:group-hover:border-emerald-400 dark:group-hover:bg-emerald-950/50 dark:group-hover:text-emerald-400",
   hoverEntrarSelf:
-    "hover:border-red-500 hover:bg-red-50 hover:text-red-600 dark:hover:border-red-400 dark:hover:bg-red-950/50 dark:hover:text-red-400",
-  hoverMenu: "group-hover:text-red-600 dark:group-hover:text-red-400",
+    "hover:border-emerald-500 hover:bg-emerald-50 hover:text-emerald-600 dark:hover:border-emerald-400 dark:hover:bg-emerald-950/50 dark:hover:text-emerald-400",
+  hoverMenu: "group-hover:text-emerald-600 dark:group-hover:text-emerald-400",
   hoverBordeLateral:
-    "hover:border-l-red-500 hover:border-r-red-500 dark:hover:border-l-red-400 dark:hover:border-r-red-400",
+    "hover:border-l-emerald-500 hover:border-r-emerald-500 dark:hover:border-l-emerald-400 dark:hover:border-r-emerald-400",
   telefonoPill:
-    "border-red-200 bg-red-50 text-red-800 hover:bg-red-100 dark:border-red-800/50 dark:bg-red-900/20 dark:text-red-300 dark:hover:bg-red-900/40",
-  telefonoBar: "bg-red-50 text-red-800 dark:bg-red-950/30 dark:text-red-200",
-  cardBorder: "border-red-200 dark:border-red-800/60",
-  filaHover: "hover:bg-red-50/60 dark:hover:bg-red-950/20",
+    "border-emerald-200 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 dark:border-emerald-800/50 dark:bg-emerald-900/20 dark:text-emerald-300 dark:hover:bg-emerald-900/40",
+  telefonoBar: "bg-emerald-50 text-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-200",
+  cardBorder: "border-emerald-200 dark:border-emerald-800/60",
+  filaHover: "hover:bg-emerald-50/60 dark:hover:bg-emerald-950/20",
   filaHoverSticky:
-    "bg-white dark:bg-neutral-900 group-hover:bg-red-50/60 dark:group-hover:bg-red-950/20",
+    "bg-white dark:bg-neutral-900 group-hover:bg-emerald-50/60 dark:group-hover:bg-emerald-950/20",
 };
 
 export const TEMA_MIEMBROS: TemaLista = {
   borderTop: "border-t-sky-500",
+  borderPanel: "border-sky-200 dark:border-sky-800/80",
   theadText: "text-sky-600 dark:text-sky-400",
   theadBg: "bg-sky-50 dark:bg-sky-950/30",
   focusRing: "focus-visible:ring-sky-500",
@@ -165,6 +172,7 @@ export const TEMA_MIEMBROS: TemaLista = {
 
 export const TEMA_ADMIN: TemaLista = {
   borderTop: "border-t-indigo-500",
+  borderPanel: "border-indigo-200 dark:border-indigo-800/80",
   theadText: "text-indigo-600 dark:text-indigo-400",
   theadBg: "bg-indigo-50 dark:bg-indigo-950/30",
   focusRing: "focus-visible:ring-indigo-500",
@@ -193,6 +201,7 @@ export const TEMA_ADMIN: TemaLista = {
 
 export const TEMA_MENSAJES: TemaLista = {
   borderTop: "border-t-green-500",
+  borderPanel: "border-green-200 dark:border-green-800/80",
   theadText: "text-green-600 dark:text-green-400",
   theadBg: "bg-green-50 dark:bg-green-950/30",
   focusRing: "focus-visible:ring-green-500",
@@ -242,7 +251,7 @@ export function hoverEntrarDeTema(tema: TemaLista): string {
     return "hover:border-orange-500 hover:bg-orange-50 hover:text-orange-600 dark:hover:border-orange-400 dark:hover:bg-orange-950/50 dark:hover:text-orange-400";
   }
   if (tema === TEMA_PLANILLA) {
-    return "hover:border-red-500 hover:bg-red-50 hover:text-red-600 dark:hover:border-red-400 dark:hover:bg-red-950/50 dark:hover:text-red-400";
+    return "hover:border-emerald-500 hover:bg-emerald-50 hover:text-emerald-600 dark:hover:border-emerald-400 dark:hover:bg-emerald-950/50 dark:hover:text-emerald-400";
   }
   if (tema === TEMA_EMPLEADOS) {
     return "hover:border-violet-500 hover:bg-violet-50 hover:text-violet-600 dark:hover:border-violet-400 dark:hover:bg-violet-950/50 dark:hover:text-violet-400";
@@ -272,7 +281,7 @@ export function textoHoverDeTema(tema: TemaLista): string {
     return "hover:text-orange-600 dark:hover:text-orange-400";
   }
   if (tema === TEMA_PLANILLA) {
-    return "hover:text-red-600 dark:hover:text-red-400";
+    return "hover:text-emerald-600 dark:hover:text-emerald-400";
   }
   if (tema === TEMA_EMPLEADOS) {
     return "hover:text-violet-600 dark:hover:text-violet-400";
