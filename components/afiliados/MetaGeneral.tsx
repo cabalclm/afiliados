@@ -58,12 +58,12 @@ export default function MetaGeneral({
       color: "text-blue-700 dark:text-blue-400",
     },
     {
-      key: "lideres",
-      label: "Líderes",
-      value: totalLideres,
-      idle: Medal,
-      hover: Award,
-      color: "text-orange-600 dark:text-orange-400",
+      key: "planilla",
+      label: "Planilla",
+      value: totalPlanilla,
+      idle: Landmark,
+      hover: ClipboardList,
+      color: "text-red-600 dark:text-red-400",
     },
     {
       key: "empleados",
@@ -74,12 +74,12 @@ export default function MetaGeneral({
       color: "text-violet-600 dark:text-violet-400",
     },
     {
-      key: "planilla",
-      label: "Planilla",
-      value: totalPlanilla,
-      idle: Landmark,
-      hover: ClipboardList,
-      color: "text-red-600 dark:text-red-400",
+      key: "lideres",
+      label: "Líderes",
+      value: totalLideres,
+      idle: Medal,
+      hover: Award,
+      color: "text-orange-600 dark:text-orange-400",
     },
   ] as const;
 
@@ -109,9 +109,9 @@ export default function MetaGeneral({
         />
         <motion.div
           initial={{ width: 0 }}
-          animate={{ width: `${pct(totalLideres)}%` }}
+          animate={{ width: `${pct(totalPlanilla)}%` }}
           transition={{ duration: 1, ease: "easeOut", delay: 0.1 }}
-          className="bg-orange-500 h-full shrink-0"
+          className="bg-red-500 h-full shrink-0"
         />
         <motion.div
           initial={{ width: 0 }}
@@ -121,9 +121,9 @@ export default function MetaGeneral({
         />
         <motion.div
           initial={{ width: 0 }}
-          animate={{ width: `${pct(totalPlanilla)}%` }}
+          animate={{ width: `${pct(totalLideres)}%` }}
           transition={{ duration: 1, ease: "easeOut", delay: 0.2 }}
-          className="bg-red-500 h-full shrink-0"
+          className="bg-orange-500 h-full shrink-0"
         />
       </div>
       <div className="mt-2.5 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 md:justify-start">

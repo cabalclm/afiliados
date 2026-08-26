@@ -1009,19 +1009,19 @@ export default function Ver() {
                         show: true,
                       },
                       {
-                        id: "Lideres" as Tab,
-                        label: "Líderes",
-                        count: totalLideresRegistrados,
-                        idle: Medal,
-                        hover: Award,
-                        show: true,
-                      },
-                      {
                         id: "Trabajadores" as Tab,
                         label: "Empleados",
                         count: totalEmpleadosRegistrados,
                         idle: Briefcase,
                         hover: BriefcaseBusiness,
+                        show: true,
+                      },
+                      {
+                        id: "Lideres" as Tab,
+                        label: "Líderes",
+                        count: totalLideresRegistrados,
+                        idle: Medal,
+                        hover: Award,
                         show: true,
                       },
                       {
