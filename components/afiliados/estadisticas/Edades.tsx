@@ -69,6 +69,9 @@ export default function Edades({ afiliados }: Props) {
   const pctTotalM =
     totalGeneral > 0 ? (totales.mujeres / totalGeneral) * 100 : 0;
 
+  const fmtPct = (n: number, total: number) =>
+    total > 0 ? `${Math.round((n / total) * 100)}%` : "0%";
+
   const handleBarClick = (_: unknown, index: number) => {
     setPinnedIndex((prev) => (prev === index ? undefined : index));
   };
@@ -194,111 +197,125 @@ export default function Edades({ afiliados }: Props) {
         </div>
 
         <div className="mt-2 overflow-hidden rounded-lg border border-gray-100 bg-gray-50/50 dark:border-zinc-800 dark:bg-zinc-900/40">
-          <table className="w-full table-fixed border-collapse text-left">
-            <colgroup>
-              <col className="w-[4.5rem]" />
-              <col />
-              <col className="w-[4.5rem]" />
-            </colgroup>
-            <thead>
-              <tr className="border-b border-gray-200 dark:border-zinc-700">
-                <th className="px-3 pb-2 pt-2 text-left text-[9px] font-bold uppercase tracking-wide text-blue-600 dark:text-blue-400 md:text-[10px]">
-                  Hombres
-                </th>
-                <th className="px-3 pb-2 pt-2 text-center text-[9px] font-bold uppercase tracking-wide text-gray-500 dark:text-zinc-400 md:text-[10px]">
-                  Rango
-                </th>
-                <th className="px-3 pb-2 pt-2 text-right text-[9px] font-bold uppercase tracking-wide text-pink-600 dark:text-pink-400 md:text-[10px]">
-                  Mujeres
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {rangos.map((rango, index) => {
-                const isActive = activeIndex === index;
-                const filaTotal = rango.hombres + rango.mujeres;
-                const pctH =
-                  filaTotal > 0 ? (rango.hombres / filaTotal) * 100 : 0;
-                const pctM =
-                  filaTotal > 0 ? (rango.mujeres / filaTotal) * 100 : 0;
+          <div className="grid grid-cols-[5rem_1fr_5rem] border-b border-gray-200 px-3 py-2 dark:border-zinc-700">
+            <span className="text-left text-[9px] font-bold uppercase tracking-wide text-blue-600 dark:text-blue-400 md:text-[10px]">
+              Hombres
+            </span>
+            <span className="text-center text-[9px] font-bold uppercase tracking-wide text-gray-500 dark:text-zinc-400 md:text-[10px]">
+              Rango
+            </span>
+            <span className="text-right text-[9px] font-bold uppercase tracking-wide text-pink-600 dark:text-pink-400 md:text-[10px]">
+              Mujeres
+            </span>
+          </div>
 
-                return (
-                  <tr
-                    key={rango.name}
-                    onMouseEnter={() => setHoverIndex(index)}
-                    onClick={() => handleRowClick(index)}
-                    className="cursor-pointer"
-                  >
-                    <td colSpan={3} className="relative border-b border-gray-100 p-0 last:border-0 dark:border-zinc-800">
-                      <div
-                        className={`absolute inset-0 transition-colors duration-200 ${
-                          isActive
-                            ? "bg-gray-100 dark:bg-zinc-800/80"
-                            : "bg-transparent hover:bg-gray-50 dark:hover:bg-zinc-800/40"
-                        }`}
-                      />
-                      <div className="relative px-3 py-2.5">
-                        <div className="grid grid-cols-[4.5rem_1fr_4.5rem] items-center gap-2">
-                          <span className="text-left text-xs font-black tabular-nums text-blue-600 md:text-sm">
-                            {rango.hombres}
-                          </span>
-                          <span
-                            className={`text-center text-[9px] font-bold uppercase leading-snug md:text-[10px] ${
-                              isActive
-                                ? "text-gray-900 dark:text-zinc-100"
-                                : "text-gray-700 dark:text-zinc-300"
-                            }`}
-                          >
-                            {rango.name}
-                          </span>
-                          <span className="text-right text-xs font-black tabular-nums text-pink-600 md:text-sm">
-                            {rango.mujeres}
-                          </span>
-                        </div>
-                        <div className="mt-2 flex h-1.5 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-zinc-700">
-                          <div
-                            className="h-full bg-blue-500 transition-[width] duration-300 ease-out"
-                            style={{ width: `${pctH}%` }}
-                          />
-                          <div
-                            className="h-full bg-pink-500 transition-[width] duration-300 ease-out"
-                            style={{ width: `${pctM}%` }}
-                          />
-                        </div>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-              <tr className="border-t-2 border-gray-200 dark:border-zinc-700">
-                <td colSpan={3} className="relative bg-gray-50/80 p-0 dark:bg-zinc-900/60">
-                  <div className="relative px-3 py-3">
-                    <div className="grid grid-cols-[4.5rem_1fr_4.5rem] items-center gap-2">
-                      <span className="text-left text-sm font-black tabular-nums text-blue-600 md:text-base">
-                        {totales.hombres}
-                      </span>
-                      <span className="text-center text-[10px] font-black uppercase tracking-wide text-gray-800 dark:text-zinc-100 md:text-xs">
-                        Total
-                      </span>
-                      <span className="text-right text-sm font-black tabular-nums text-pink-600 md:text-base">
-                        {totales.mujeres}
-                      </span>
-                    </div>
-                    <div className="mt-2 flex h-2 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-zinc-700">
-                      <div
-                        className="h-full bg-blue-500"
-                        style={{ width: `${pctTotalH}%` }}
-                      />
-                      <div
-                        className="h-full bg-pink-500"
-                        style={{ width: `${pctTotalM}%` }}
-                      />
-                    </div>
+          {rangos.map((rango, index) => {
+            const isActive = activeIndex === index;
+            const filaTotal = rango.hombres + rango.mujeres;
+            const pctH =
+              filaTotal > 0 ? (rango.hombres / filaTotal) * 100 : 0;
+            const pctM =
+              filaTotal > 0 ? (rango.mujeres / filaTotal) * 100 : 0;
+
+            return (
+              <div
+                key={rango.name}
+                onMouseEnter={() => setHoverIndex(index)}
+                onClick={() => handleRowClick(index)}
+                className={`relative cursor-pointer border-b border-gray-100 dark:border-zinc-800 ${
+                  isActive
+                    ? "bg-gray-100 dark:bg-zinc-800/80"
+                    : "hover:bg-gray-50 dark:hover:bg-zinc-800/40"
+                }`}
+              >
+                <div className="grid grid-cols-[5rem_1fr_5rem] items-end gap-x-2 px-3 pb-1 pt-2.5">
+                  <div className="text-left">
+                    <span className="block text-base font-black tabular-nums leading-none text-blue-600 md:text-lg">
+                      {rango.hombres}
+                    </span>
+                    <span className="mt-1 block text-[10px] font-bold tabular-nums text-blue-500/80 md:text-xs">
+                      {fmtPct(rango.hombres, totalGeneral)}
+                    </span>
                   </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+                  <div
+                    className={`pb-0.5 text-center ${
+                      isActive
+                        ? "text-gray-900 dark:text-zinc-100"
+                        : "text-gray-700 dark:text-zinc-300"
+                    }`}
+                  >
+                    <span className="block text-[9px] font-bold uppercase leading-snug md:text-[10px]">
+                      {rango.name}
+                    </span>
+                    <span className="mt-1 block text-xs font-black tabular-nums text-gray-500 dark:text-zinc-400 md:text-sm">
+                      {filaTotal} · {fmtPct(filaTotal, totalGeneral)}
+                    </span>
+                  </div>
+                  <div className="text-right">
+                    <span className="block text-base font-black tabular-nums leading-none text-pink-600 md:text-lg">
+                      {rango.mujeres}
+                    </span>
+                    <span className="mt-1 block text-[10px] font-bold tabular-nums text-pink-500/80 md:text-xs">
+                      {fmtPct(rango.mujeres, totalGeneral)}
+                    </span>
+                  </div>
+                </div>
+                <div className="px-3 pb-2.5 pt-1">
+                  <div className="flex h-3 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-zinc-700">
+                    <div
+                      className="h-full bg-blue-500 transition-[width] duration-300 ease-out"
+                      style={{ width: `${pctH}%` }}
+                    />
+                    <div
+                      className="h-full bg-pink-500 transition-[width] duration-300 ease-out"
+                      style={{ width: `${pctM}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+
+          <div className="relative bg-gray-50/80 dark:bg-zinc-900/60">
+            <div className="grid grid-cols-[5rem_1fr_5rem] items-end gap-x-2 px-3 pb-1 pt-3">
+              <div className="text-left">
+                <span className="block text-lg font-black tabular-nums leading-none text-blue-600 md:text-xl">
+                  {totales.hombres}
+                </span>
+                <span className="mt-1 block text-xs font-bold tabular-nums text-blue-500/80 md:text-sm">
+                  {fmtPct(totales.hombres, totalGeneral)}
+                </span>
+              </div>
+              <div className="pb-0.5 text-center">
+                <span className="block text-[10px] font-black uppercase tracking-wide text-gray-800 dark:text-zinc-100 md:text-xs">
+                  Total
+                </span>
+                <span className="mt-1 block text-lg font-black tabular-nums leading-none text-gray-800 dark:text-zinc-100 md:text-xl">
+                  {totalGeneral}
+                </span>
+              </div>
+              <div className="text-right">
+                <span className="block text-lg font-black tabular-nums leading-none text-pink-600 md:text-xl">
+                  {totales.mujeres}
+                </span>
+                <span className="mt-1 block text-xs font-bold tabular-nums text-pink-500/80 md:text-sm">
+                  {fmtPct(totales.mujeres, totalGeneral)}
+                </span>
+              </div>
+            </div>
+            <div className="px-3 pb-3 pt-1">
+              <div className="flex h-4 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-zinc-700">
+                <div
+                  className="h-full bg-blue-500"
+                  style={{ width: `${pctTotalH}%` }}
+                />
+                <div
+                  className="h-full bg-pink-500"
+                  style={{ width: `${pctTotalM}%` }}
+                />
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
