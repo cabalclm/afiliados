@@ -32,9 +32,13 @@ export default function PanelListaPestana({
       className={`overflow-hidden rounded-xl border ${tema.borderPanel} bg-white dark:bg-neutral-900 shadow-sm`}
     >
       <div
-        className={`flex flex-col sm:flex-row sm:items-center gap-3 p-3 ${tema.theadBg}`}
+        className={`flex flex-col gap-3 p-3 ${tema.theadBg} ${
+          acciones
+            ? "sm:flex-row sm:items-end sm:pb-3 sm:pt-7"
+            : "sm:flex-row sm:items-center"
+        }`}
       >
-        <div className="flex items-center gap-3 flex-1 min-w-0">
+        <div className="flex min-h-10 flex-1 min-w-0 items-center gap-3">
           <div className="relative flex-1 min-w-0">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
             <input
@@ -42,13 +46,15 @@ export default function PanelListaPestana({
               placeholder={placeholder}
               value={value}
               onChange={(e) => onChange(e.target.value)}
-              className={`pl-9 pr-4 py-2.5 h-11 border border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 rounded-lg w-full text-sm focus:outline-none focus:ring-2 ${tema.focusRing}`}
+              className={`h-10 w-full rounded-lg border border-gray-200 bg-white py-2 pl-9 pr-4 text-sm dark:border-neutral-700 dark:bg-neutral-900 focus:outline-none focus:ring-2 ${tema.focusRing}`}
             />
           </div>
           {extra}
         </div>
         {acciones ? (
-          <div className="w-full min-w-0 shrink-0 sm:w-auto">{acciones}</div>
+          <div className="flex w-full min-w-0 shrink-0 items-center sm:w-auto">
+            {acciones}
+          </div>
         ) : null}
       </div>
       <div className={contenidoSinPadding ? undefined : "px-3 pb-3 pt-3"}>

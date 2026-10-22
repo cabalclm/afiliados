@@ -391,7 +391,7 @@ export default function AfiliadosGeneral({
   const theadClass = `${tema.theadBg} ${tema.theadText} border-b border-black/5 dark:border-white/10`;
 
   const toolbarAcciones = (
-    <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-end sm:gap-2 sm:pt-5">
+    <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:gap-2">
       <div className="grid w-full grid-cols-3 gap-2 sm:flex sm:min-w-0 sm:flex-1 sm:flex-wrap sm:items-center">
         {CATEGORIAS.map((cat) => {
           const Icon = cat.icon;
@@ -405,7 +405,7 @@ export default function AfiliadosGeneral({
                 setCategoria(cat.tipo);
                 setLiderSeleccionadoId(null);
               }}
-              className={`inline-flex w-full items-center justify-center gap-1.5 rounded-lg px-2 py-2 text-xs font-semibold transition-colors duration-300 sm:w-auto sm:gap-2 sm:px-3 sm:text-sm ${
+              className={`inline-flex h-10 w-full items-center justify-center gap-1.5 rounded-lg px-2 text-xs font-semibold transition-colors duration-300 sm:w-auto sm:gap-2 sm:px-3 sm:text-sm ${
                 activo ? cat.active : cat.idle
               }`}
             >
@@ -418,7 +418,7 @@ export default function AfiliadosGeneral({
       </div>
 
       <div className="relative w-full sm:ml-auto sm:w-auto sm:shrink-0">
-        <p className="mb-1 text-center text-xs font-semibold text-sky-700 dark:text-sky-300 sm:absolute sm:bottom-full sm:left-0 sm:right-0 sm:mb-1">
+        <p className="mb-1 text-center text-xs font-semibold leading-tight text-sky-700 dark:text-sky-300 sm:absolute sm:bottom-full sm:left-0 sm:right-0 sm:mb-1 sm:whitespace-nowrap">
           Descargar reportes
         </p>
         <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center sm:gap-1.5">
@@ -447,7 +447,7 @@ export default function AfiliadosGeneral({
               <button
                 type="button"
                 disabled={exportandoEdad !== null}
-                className={`inline-flex w-full items-center justify-center gap-1.5 rounded-lg border px-2.5 py-2 text-xs font-semibold transition-colors disabled:opacity-60 sm:w-auto sm:px-3 sm:text-sm ${boton.className}`}
+                className={`inline-flex h-10 w-full items-center justify-center gap-1.5 rounded-lg border px-2.5 text-xs font-semibold transition-colors disabled:opacity-60 sm:w-auto sm:px-3 sm:text-sm ${boton.className}`}
               >
                 <HoverMorphIcon idle={boton.idle} hover={boton.hover} size={16} />
                 {exportandoEdad === boton.id ? "…" : boton.label}
