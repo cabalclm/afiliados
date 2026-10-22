@@ -460,7 +460,11 @@ export default function AfiliadosGeneral({
               }
               sideOffset={6}
               collisionPadding={12}
-              className="z-[80] w-[var(--radix-dropdown-menu-trigger-width)] min-w-0 border-gray-200 bg-white p-1 dark:border-neutral-700 dark:bg-neutral-900"
+              className={`z-[80] border-gray-200 bg-white p-1 dark:border-neutral-700 dark:bg-neutral-900 ${
+                esTelefono
+                  ? "w-[var(--radix-dropdown-menu-trigger-width)] min-w-0"
+                  : "w-52 min-w-52"
+              }`}
             >
               {(
                 [
@@ -475,10 +479,10 @@ export default function AfiliadosGeneral({
                 <DropdownMenuItem
                   key={opcion.id}
                   onSelect={() => exportarEdad(boton.id, opcion.id)}
-                  className="flex w-full cursor-pointer items-center justify-between gap-2 px-2.5 py-2 text-xs font-semibold text-gray-900 focus:bg-sky-50 dark:text-white dark:focus:bg-sky-950/40"
+                  className="flex w-full cursor-pointer items-center justify-between gap-3 whitespace-nowrap px-2.5 py-2 text-xs font-semibold text-gray-900 focus:bg-sky-50 dark:text-white dark:focus:bg-sky-950/40"
                 >
                   <span>{opcion.nombre}</span>
-                  <span className="font-bold text-sky-600 dark:text-sky-400">
+                  <span className="shrink-0 font-bold text-sky-600 dark:text-sky-400">
                     ({opcion.rango})
                   </span>
                 </DropdownMenuItem>
