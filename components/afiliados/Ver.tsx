@@ -146,7 +146,7 @@ const TAB_THEMES: Record<
 
 const tabBtnClass = (active: boolean, tab: Tab) => {
   const theme = TAB_THEMES[tab];
-  return `relative flex w-full md:w-auto md:shrink-0 flex-row items-center justify-center px-1.5 sm:px-2 py-3 md:py-3 text-base md:text-lg font-semibold transition-colors duration-300 ${
+  return `relative flex w-full min-w-0 flex-row items-center justify-center px-1.5 sm:px-2 py-3 md:py-3 text-base md:text-lg font-semibold transition-colors duration-300 ${
     active
       ? theme.activeText
       : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
@@ -362,7 +362,15 @@ export default function Ver() {
     esRolLider(rol) || esRolEmpleado(rol) || esRolPlanilla(rol);
   /** Admin/Super/Sede: pestañas completas. Líder/empleado: solo Líderes + Empleados. */
   const vistaAdminPestanas = esAdminOSuper || esSedeSesion;
-  const vistaConPestanas = vistaAdminPestanas || esLiderOEmpleado;
+  const puedeVerPestanaMiembros =
+    esAdminOSuper ||
+    esSedeSesion ||
+    rolUpper === "DOCUMENTADOR" ||
+    esRolPlanilla(rol);
+  const puedeExportarExcelEquipo =
+    esAdminOSuper || esSedeSesion || esRolPlanilla(rol);
+  const vistaConPestanas =
+    vistaAdminPestanas || esLiderOEmpleado || rolUpper === "DOCUMENTADOR";
   /** Aviso de líderes faltantes para la meta: solo admin, super y sede. */
   const puedeVerAvisoMetaEquipo =
     vistaAdminPestanas &&
@@ -592,8 +600,12 @@ export default function Ver() {
       esLiderOEmpleado &&
       tab !== "Lideres" &&
       tab !== "Trabajadores" &&
-      tab !== "Planilla"
+      tab !== "Planilla" &&
+      !(puedeVerPestanaMiembros && tab === "Afiliados")
     ) {
+      return;
+    }
+    if (tab === "Afiliados" && !puedeVerPestanaMiembros) {
       return;
     }
     setActiveTab(tab);
@@ -605,13 +617,20 @@ export default function Ver() {
     esLiderOEmpleado &&
     activeTab !== "Lideres" &&
     activeTab !== "Trabajadores" &&
-    activeTab !== "Planilla"
+    activeTab !== "Planilla" &&
+    !(puedeVerPestanaMiembros && activeTab === "Afiliados")
       ? esRolEmpleado(rol)
         ? "Trabajadores"
         : esRolPlanilla(rol)
           ? "Planilla"
           : "Lideres"
-      : activeTab;
+      : activeTab === "Afiliados" && !puedeVerPestanaMiembros
+        ? esRolEmpleado(rol)
+          ? "Trabajadores"
+          : esRolPlanilla(rol)
+            ? "Planilla"
+            : "Lideres"
+        : activeTab;
 
   const cargandoLideres = isDashboardLoading;
   const cargandoMiembros = isLoadingAfiliados || cargandoLideres;
@@ -778,16 +797,23 @@ export default function Ver() {
     />
   );
 
-  const conExcel = (extra: ReactNode = null) => (
-    <div
-      className={`grid w-full gap-2 sm:flex sm:w-auto sm:justify-end ${
-        extra ? "grid-cols-2" : "grid-cols-1"
-      }`}
-    >
-      {btnExcelEquipo}
-      {extra}
-    </div>
-  );
+  const conExcel = (extra: ReactNode = null) => {
+    if (!puedeExportarExcelEquipo && !extra) return null;
+    const tieneDos =
+      puedeExportarExcelEquipo &&
+      extra &&
+      (Array.isArray(extra) ? extra.length > 0 : true);
+    return (
+      <div
+        className={`grid w-full gap-2 sm:flex sm:w-auto sm:justify-end ${
+          tieneDos ? "grid-cols-2" : "grid-cols-1"
+        }`}
+      >
+        {puedeExportarExcelEquipo ? btnExcelEquipo : null}
+        {extra}
+      </div>
+    );
+  };
 
   const getAccionesTab = (tab: Tab): ReactNode => {
     if (tab === "Lideres") {
@@ -992,9 +1018,7 @@ export default function Ver() {
               totalGeneral={totalMiembrosGeneral}
             />
             <div className="mb-6 w-full min-w-0 border-b border-gray-200 dark:border-neutral-800">
-              <div
-                className="w-full min-w-0 gap-1 sm:gap-0 grid grid-cols-2 md:flex md:flex-nowrap md:overflow-x-auto"
-              >
+              <div className="grid w-full min-w-0 grid-cols-2 gap-1 sm:gap-2 pb-0.5 md:grid-cols-4">
                 {(
                   (
                     [
@@ -1036,7 +1060,7 @@ export default function Ver() {
                         count: totalMiembrosGeneral,
                         idle: Users,
                         hover: UsersRound,
-                        show: vistaAdminPestanas,
+                        show: puedeVerPestanaMiembros,
                       },
                       {
                         id: "Administrativos" as Tab,
@@ -1224,7 +1248,7 @@ export default function Ver() {
                 )}
               </div>
 
-              {vistaAdminPestanas && (
+              {puedeVerPestanaMiembros && (
               <div
                 className={
                   tabActiva === "Afiliados" && !liderParaCelula

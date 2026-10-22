@@ -17,12 +17,18 @@ import {
   ChartColumn,
   ChartColumnIncreasing,
   ChevronsLeft,
+  Download,
+  FileDown,
+  FileText,
+  IdCard,
+  RectangleHorizontal,
   LayoutDashboard,
   LayoutGrid,
   List,
   Mail,
   MailOpen,
   Pencil,
+  Sheet,
   SquarePen,
   Table2,
   UserPlus,
@@ -48,6 +54,9 @@ import {
   textoHoverDeTema,
 } from "./temaPestana";
 import MensajesUsuario from "./MensajesUsuario";
+import { descargarExcelCelula, descargarPdfCelula } from "./exportCelula";
+import { descargarPdfCarnetsCelula } from "./pdfCarnetsCelula";
+import { toast } from "@/lib/toast";
 
 function BtnAtrasMorph({
   onClick,
@@ -83,6 +92,7 @@ function BtnAccionMorph({
   onClick,
   className,
   size = 16,
+  disabled = false,
 }: {
   label: string;
   idle: unknown;
@@ -90,12 +100,14 @@ function BtnAccionMorph({
   onClick: () => void;
   className?: string;
   size?: number;
+  disabled?: boolean;
 }) {
   const [hovered, setHovered] = useState(false);
   return (
     <button
       type="button"
       onClick={onClick}
+      disabled={disabled}
       className={className}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
@@ -106,7 +118,7 @@ function BtnAccionMorph({
         size={size}
         active={hovered}
       />
-      <span className="truncate">{label}</span>
+      <span className="min-w-0 text-center leading-tight">{label}</span>
     </button>
   );
 }
@@ -254,6 +266,9 @@ export default function Celula({
   const [formatoVista, setFormatoVista] = useState<FormatoVista>("tabla");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState<number | "all">(15);
+  const [exportando, setExportando] = useState<
+    "excel" | "pdf" | "carnets" | null
+  >(null);
 
   const esSimulado = !!lider?.simulado;
   const esSede = !!lider && esUsuarioSede(lider);
@@ -308,6 +323,38 @@ export default function Celula({
     () => (lider ? ordenarAfiliados(afiliadosFiltrados, lider) : []),
     [afiliadosFiltrados, lider],
   );
+  const integrantesCelula = useMemo(
+    () => (lider ? ordenarAfiliados(afiliadosDelLider, lider) : []),
+    [afiliadosDelLider, lider],
+  );
+
+  const exportarCelula = async (tipo: "excel" | "pdf" | "carnets") => {
+    if (!lider || exportando || integrantesCelula.length === 0) return;
+    setExportando(tipo);
+    try {
+      if (tipo === "excel") {
+        await descargarExcelCelula(lider, integrantesCelula);
+        toast.success("Excel de la célula descargado");
+      } else if (tipo === "pdf") {
+        await descargarPdfCelula(lider, integrantesCelula);
+        toast.success("PDF de la célula descargado");
+      } else {
+        await descargarPdfCarnetsCelula(lider, integrantesCelula);
+        toast.success("Carnets de la célula descargados");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error(
+        tipo === "excel"
+          ? "No se pudo generar el Excel"
+          : tipo === "pdf"
+            ? "No se pudo generar el PDF"
+            : "No se pudieron generar los carnets",
+      );
+    } finally {
+      setExportando(null);
+    }
+  };
 
   useEffect(() => {
     setCurrentPage(1);
@@ -600,7 +647,8 @@ export default function Celula({
               <div
                 className={`overflow-hidden rounded-xl border ${tema.borderPanel} bg-white shadow-sm dark:bg-neutral-900`}
               >
-                <div className="flex flex-col gap-3 border-b border-gray-100 bg-white p-3 dark:border-neutral-800 dark:bg-neutral-900 sm:flex-row sm:items-center">
+                <div className="flex flex-col gap-3 border-b border-gray-100 bg-white p-3 dark:border-neutral-800 dark:bg-neutral-900">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                   <div
                     className={`order-1 flex w-full min-w-0 gap-2 sm:order-2 sm:w-auto sm:shrink-0 ${ocultarBuscador ? "sm:ml-auto" : ""}`}
                   >
@@ -661,6 +709,35 @@ export default function Celula({
                       />
                     </div>
                   )}
+                </div>
+                <div className="grid grid-cols-3 gap-2 sm:flex sm:items-center">
+                  <BtnAccionMorph
+                    label={exportando === "excel" ? "Generando…" : "Excel"}
+                    idle={Download}
+                    hover={Sheet}
+                    disabled={exportando !== null || integrantesCelula.length === 0}
+                    onClick={() => exportarCelula("excel")}
+                    className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg border border-emerald-600 bg-emerald-50 px-3 text-sm font-semibold text-emerald-800 transition-colors hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-emerald-500 dark:bg-emerald-950/50 dark:text-emerald-300 dark:hover:bg-emerald-950/70 sm:w-48"
+                  />
+                  <BtnAccionMorph
+                    label={exportando === "pdf" ? "Generando…" : "PDF"}
+                    idle={FileText}
+                    hover={FileDown}
+                    disabled={exportando !== null || integrantesCelula.length === 0}
+                    onClick={() => exportarCelula("pdf")}
+                    className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg border border-red-500 bg-red-50 px-3 text-sm font-semibold text-red-700 transition-colors hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-red-500 dark:bg-red-950/40 dark:text-red-300 dark:hover:bg-red-950/60 sm:w-48"
+                  />
+                  <BtnAccionMorph
+                    label={
+                      exportando === "carnets" ? "Generando…" : "Descargar carnet"
+                    }
+                    idle={RectangleHorizontal}
+                    hover={IdCard}
+                    disabled={exportando !== null || integrantesCelula.length === 0}
+                    onClick={() => exportarCelula("carnets")}
+                    className="inline-flex h-11 w-full items-center justify-center gap-1 rounded-lg border border-indigo-200 bg-indigo-50 px-2 text-center text-[10px] font-bold uppercase leading-tight text-indigo-700 transition hover:bg-indigo-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-indigo-800/50 dark:bg-indigo-900/30 dark:text-indigo-300 dark:hover:bg-indigo-900/50 sm:ml-auto sm:w-48 sm:px-3 sm:text-xs"
+                  />
+                </div>
                 </div>
 
                 <div className="overflow-hidden">

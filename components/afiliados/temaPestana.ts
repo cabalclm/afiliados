@@ -165,9 +165,9 @@ export const TEMA_MIEMBROS: TemaLista = {
     "border-sky-200 bg-sky-50 text-sky-800 hover:bg-sky-100 dark:border-sky-800/50 dark:bg-sky-900/20 dark:text-sky-300 dark:hover:bg-sky-900/40",
   telefonoBar: "bg-sky-50 text-sky-800 dark:bg-sky-950/30 dark:text-sky-200",
   cardBorder: "border-sky-200 dark:border-sky-800/60",
-  filaHover: "hover:bg-sky-50/60 dark:hover:bg-sky-950/20",
+  filaHover: "hover:bg-sky-50 dark:hover:bg-sky-950/30",
   filaHoverSticky:
-    "bg-white dark:bg-neutral-900 group-hover:bg-sky-50/60 dark:group-hover:bg-sky-950/20",
+    "bg-white dark:bg-neutral-900 group-hover:bg-sky-50 dark:group-hover:bg-sky-950/30",
 };
 
 export const TEMA_ADMIN: TemaLista = {

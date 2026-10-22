@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState } from "react";
 import {
-  ArrowLeft,
   Building2,
   Briefcase,
   Download,
@@ -10,7 +9,9 @@ import {
   Medal,
   Users,
 } from "lucide-react";
+import { ArrowLeft, ArrowRight, ChevronsLeft, ChevronsRight } from "lucide";
 import { AnimatePresence, motion } from "framer-motion";
+import HoverMorphIcon from "@/components/ui/HoverMorphIcon";
 import * as XLSX from "xlsx";
 import type { Afiliado, Lider } from "./esquemas";
 import { esRolAdminOSuper, esRolEmpleado, esRolLider, esRolPlanilla, esUsuarioSede } from "./esquemas";
@@ -21,7 +22,6 @@ import PanelListaPestana from "./PanelListaPestana";
 import {
   columnaNoFijaCelda,
   columnaNoFijaEncabezado,
-  FONDO_CELDA_TABLA,
 } from "@/lib/tablaSticky";
 
 interface Props {
@@ -162,6 +162,40 @@ function filaExcel(
   };
 }
 
+type TamanoPagina = 15 | 30 | 45 | "all";
+
+function BtnPaginaMorph({
+  direction,
+  disabled,
+  onClick,
+  className,
+}: {
+  direction: "prev" | "next";
+  disabled: boolean;
+  onClick: () => void;
+  className?: string;
+}) {
+  const [hovered, setHovered] = useState(false);
+  return (
+    <button
+      type="button"
+      aria-label={direction === "prev" ? "Página anterior" : "Página siguiente"}
+      disabled={disabled}
+      onClick={onClick}
+      className={className}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      <HoverMorphIcon
+        idle={direction === "prev" ? ChevronsLeft : ChevronsRight}
+        hover={direction === "prev" ? ArrowLeft : ArrowRight}
+        size={16}
+        active={hovered && !disabled}
+      />
+    </button>
+  );
+}
+
 function AfiliadosSkeleton() {
   return (
     <div className="animate-pulse space-y-4">
@@ -191,6 +225,8 @@ export default function AfiliadosGeneral({
   const [liderSeleccionadoId, setLiderSeleccionadoId] = useState<string | null>(
     null,
   );
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState<TamanoPagina>(15);
 
   const grupos = useMemo(() => {
     const term = searchTerm.toLowerCase();
@@ -289,6 +325,27 @@ export default function AfiliadosGeneral({
   useEffect(() => {
     setLiderSeleccionadoId(null);
   }, [categoria, searchTerm]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, itemsPerPage, categoria]);
+
+  const effectiveItemsPerPage =
+    itemsPerPage === "all" ? miembrosTodos.length : itemsPerPage;
+  const totalPages = Math.max(
+    1,
+    Math.ceil(miembrosTodos.length / (effectiveItemsPerPage || 1)),
+  );
+  const startIndex =
+    itemsPerPage === "all" ? 0 : (currentPage - 1) * effectiveItemsPerPage;
+  const miembrosPagina =
+    itemsPerPage === "all"
+      ? miembrosTodos
+      : miembrosTodos.slice(startIndex, startIndex + effectiveItemsPerPage);
+
+  useEffect(() => {
+    if (currentPage > totalPages) setCurrentPage(totalPages);
+  }, [currentPage, totalPages]);
 
   const grupoActivo = useMemo(
     () =>
@@ -419,6 +476,47 @@ export default function AfiliadosGeneral({
       onChange={onSearchChange}
       acciones={toolbarAcciones}
       contenidoSinPadding
+      footer={
+        categoria === "todos" && miembrosTodos.length > 0 ? (
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            <span className="text-sm font-semibold tabular-nums text-gray-800 dark:text-gray-200">
+              Pág. {Math.min(currentPage, totalPages)}/{totalPages}
+            </span>
+            <div className="flex items-center gap-1">
+              <BtnPaginaMorph
+                direction="prev"
+                disabled={currentPage <= 1 || itemsPerPage === "all"}
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                className={`inline-flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 bg-white disabled:cursor-not-allowed disabled:opacity-30 dark:border-neutral-700 dark:bg-neutral-900 ${tema.pagination} ${tema.btnHover}`}
+              />
+              <select
+                value={itemsPerPage}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setItemsPerPage(
+                    val === "all" ? "all" : (parseInt(val, 10) as 15 | 30 | 45),
+                  );
+                }}
+                className="h-8 cursor-pointer rounded-lg border border-gray-200 bg-white px-2 text-sm font-semibold text-gray-700 outline-none dark:border-neutral-700 dark:bg-neutral-900 dark:text-gray-300"
+                aria-label="Cantidad por página"
+              >
+                <option value={15}>15</option>
+                <option value={30}>30</option>
+                <option value={45}>45</option>
+                <option value="all">Todos</option>
+              </select>
+              <BtnPaginaMorph
+                direction="next"
+                disabled={currentPage >= totalPages || itemsPerPage === "all"}
+                onClick={() =>
+                  setCurrentPage((p) => Math.min(totalPages, p + 1))
+                }
+                className={`inline-flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 bg-white disabled:cursor-not-allowed disabled:opacity-30 dark:border-neutral-700 dark:bg-neutral-900 ${tema.pagination} ${tema.btnHover}`}
+              />
+            </div>
+          </div>
+        ) : null
+      }
     >
       <AnimatePresence mode="wait" initial={false}>
         {categoria === "todos" ? (
@@ -470,18 +568,18 @@ export default function AfiliadosGeneral({
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 dark:divide-neutral-700">
-                  {miembrosTodos.map((row, index) => (
+                  {miembrosPagina.map((row, index) => (
                     <tr
                       key={row.afiliado.id}
-                      className="group hover:bg-gray-50 dark:hover:bg-neutral-800/50 uppercase"
+                      className={`group ${tema.filaHover} uppercase`}
                     >
                       <td
                         className={columnaNoFijaCelda(
-                          FONDO_CELDA_TABLA,
+                          tema.filaHoverSticky,
                           "px-4 py-2 whitespace-nowrap text-gray-500 dark:text-gray-400",
                         )}
                       >
-                        {index + 1}
+                        {startIndex + index + 1}
                       </td>
                       <td className="px-4 py-2 whitespace-nowrap font-bold text-gray-900 dark:text-gray-100">
                         {row.afiliado.nombres} {row.afiliado.apellidos}
@@ -559,11 +657,11 @@ export default function AfiliadosGeneral({
                   <tr
                     key={lider.id}
                     onClick={() => setLiderSeleccionadoId(lider.id)}
-                    className="group cursor-pointer hover:bg-gray-50 dark:hover:bg-neutral-800/60 transition-colors"
+                    className={`group cursor-pointer transition-colors ${tema.filaHover}`}
                   >
                     <td
                       className={columnaNoFijaCelda(
-                        FONDO_CELDA_TABLA,
+                        tema.filaHoverSticky,
                         "px-4 py-3 whitespace-nowrap text-gray-500 dark:text-gray-400",
                       )}
                     >
@@ -670,11 +768,11 @@ export default function AfiliadosGeneral({
                             delay: Math.min(index * 0.02, 0.24),
                             ease: [0.25, 0.46, 0.45, 0.94],
                           }}
-                          className="group hover:bg-gray-50 dark:hover:bg-neutral-800/50 uppercase"
+                          className={`group ${tema.filaHover} uppercase`}
                         >
                           <td
                             className={columnaNoFijaCelda(
-                              FONDO_CELDA_TABLA,
+                              tema.filaHoverSticky,
                               "px-4 py-2 whitespace-nowrap text-gray-500 dark:text-gray-400",
                             )}
                           >
