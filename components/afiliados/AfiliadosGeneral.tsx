@@ -4,20 +4,39 @@ import { useEffect, useMemo, useState } from "react";
 import {
   Building2,
   Briefcase,
-  Download,
   Landmark,
   Medal,
   Users,
   ArrowLeft,
 } from "lucide-react";
-import { ArrowRight, ChevronsLeft, ChevronsRight } from "lucide";
+import {
+  ArrowRight,
+  ChevronsLeft,
+  ChevronsRight,
+  Download,
+  FileDown,
+  FileText,
+  Sheet,
+} from "lucide";
 import { AnimatePresence, motion } from "framer-motion";
 import HoverMorphIcon from "@/components/ui/HoverMorphIcon";
-import * as XLSX from "xlsx";
+import { toast } from "@/lib/toast";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import type { Afiliado, Lider } from "./esquemas";
 import { esRolAdminOSuper, esRolEmpleado, esRolLider, esRolPlanilla, esUsuarioSede } from "./esquemas";
 import { formatearDpi, TelefonoInline } from "./contacto";
 import { calcularEdadLabel } from "@/utils/formatoFechaGT";
+import {
+  descargarExcelEdades,
+  descargarPdfEdades,
+  GRUPOS_EDAD,
+  type GrupoEdad,
+} from "./exportEdades";
 import { TEMA_MIEMBROS, type TemaLista } from "./temaPestana";
 import PanelListaPestana from "./PanelListaPestana";
 import {
@@ -144,25 +163,6 @@ function compararNombres(a: string, b: string) {
   return normalizarNombre(a).localeCompare(normalizarNombre(b), "es");
 }
 
-function filaExcel(
-  afiliado: Afiliado,
-  liderNombre: string,
-  grupo: string,
-) {
-  return {
-    Nombre: `${afiliado.nombres} ${afiliado.apellidos}`.trim(),
-    DPI: afiliado.dpi || "",
-    Teléfono: afiliado.telefono || "",
-    Edad: calcularEdadLabel(afiliado.nacimiento),
-    Sexo: afiliado.sexo || "",
-    Ubicación: afiliado.lugar_nombre || "",
-    Empadronado: afiliado.empadronado ? "Sí" : "No",
-    "No. Padrón": afiliado.no_padron || "",
-    Líder: liderNombre,
-    Grupo: grupo,
-  };
-}
-
 type TamanoPagina = 15 | 30 | 45 | "all";
 
 function BtnPaginaMorph({
@@ -228,6 +228,18 @@ export default function AfiliadosGeneral({
   );
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState<TamanoPagina>(15);
+  const [exportandoEdad, setExportandoEdad] = useState<"excel" | "pdf" | null>(
+    null,
+  );
+  const [esTelefono, setEsTelefono] = useState(false);
+
+  useEffect(() => {
+    const media = window.matchMedia("(max-width: 639px)");
+    const sincronizar = () => setEsTelefono(media.matches);
+    sincronizar();
+    media.addEventListener("change", sincronizar);
+    return () => media.removeEventListener("change", sincronizar);
+  }, []);
 
   const grupos = useMemo(() => {
     const term = searchTerm.toLowerCase();
@@ -357,73 +369,30 @@ export default function AfiliadosGeneral({
   const categoriaCfg =
     CATEGORIAS.find((c) => c.tipo === categoria) || CATEGORIAS[0];
 
-  const descargarExcel = () => {
-    const porTipo = {
-      sede: [] as ReturnType<typeof filaExcel>[],
-      lider: [] as ReturnType<typeof filaExcel>[],
-      trabajador: [] as ReturnType<typeof filaExcel>[],
-      planilla: [] as ReturnType<typeof filaExcel>[],
-    };
-
-    grupos.forEach((g) => {
-      const liderNombre = `${g.lider.nombres} ${g.lider.apellidos}`.trim();
-      const grupo = etiquetaGrupo(g.tipo);
-      const ordenados = [...g.afiliados].sort((a, b) =>
-        compararNombres(
-          `${a.nombres} ${a.apellidos}`,
-          `${b.nombres} ${b.apellidos}`,
-        ),
+  const exportarEdad = async (tipo: "excel" | "pdf", grupo: GrupoEdad) => {
+    if (exportandoEdad) return;
+    setExportandoEdad(tipo);
+    try {
+      if (tipo === "excel") await descargarExcelEdades(afiliados, grupo);
+      else await descargarPdfEdades(afiliados, grupo);
+      toast.success(tipo === "excel" ? "Excel descargado" : "PDF descargado");
+    } catch (err) {
+      console.error(err);
+      toast.error(
+        tipo === "excel"
+          ? "No se pudo generar el Excel"
+          : "No se pudo generar el PDF",
       );
-      ordenados.forEach((a) => {
-        porTipo[g.tipo].push(filaExcel(a, liderNombre, grupo));
-      });
-    });
-
-    const todos = [
-      ...porTipo.sede,
-      ...porTipo.lider,
-      ...porTipo.trabajador,
-      ...porTipo.planilla,
-    ].sort(
-      (a, b) => compararNombres(a.Nombre, b.Nombre),
-    );
-
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(
-      wb,
-      XLSX.utils.json_to_sheet(todos),
-      "Todos",
-    );
-    XLSX.utils.book_append_sheet(
-      wb,
-      XLSX.utils.json_to_sheet(porTipo.sede),
-      "Sede",
-    );
-    XLSX.utils.book_append_sheet(
-      wb,
-      XLSX.utils.json_to_sheet(porTipo.lider),
-      "Lideres",
-    );
-    XLSX.utils.book_append_sheet(
-      wb,
-      XLSX.utils.json_to_sheet(porTipo.trabajador),
-      "Empleados",
-    );
-    XLSX.utils.book_append_sheet(
-      wb,
-      XLSX.utils.json_to_sheet(porTipo.planilla),
-      "Planilla",
-    );
-
-    const fecha = new Date().toISOString().slice(0, 10);
-    XLSX.writeFile(wb, `miembros_${fecha}.xlsx`);
+    } finally {
+      setExportandoEdad(null);
+    }
   };
 
   const theadClass = `${tema.theadBg} ${tema.theadText} border-b border-black/5 dark:border-white/10`;
 
   const toolbarAcciones = (
-    <div className="flex w-full items-center gap-2">
-      <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
+    <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-end sm:gap-2 sm:pt-5">
+      <div className="grid w-full grid-cols-3 gap-2 sm:flex sm:min-w-0 sm:flex-1 sm:flex-wrap sm:items-center">
         {CATEGORIAS.map((cat) => {
           const Icon = cat.icon;
           const activo = categoria === cat.tipo;
@@ -436,7 +405,7 @@ export default function AfiliadosGeneral({
                 setCategoria(cat.tipo);
                 setLiderSeleccionadoId(null);
               }}
-              className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-2 text-xs font-semibold transition-colors duration-300 sm:gap-2 sm:px-3 sm:text-sm ${
+              className={`inline-flex w-full items-center justify-center gap-1.5 rounded-lg px-2 py-2 text-xs font-semibold transition-colors duration-300 sm:w-auto sm:gap-2 sm:px-3 sm:text-sm ${
                 activo ? cat.active : cat.idle
               }`}
             >
@@ -448,14 +417,77 @@ export default function AfiliadosGeneral({
         })}
       </div>
 
-      <button
-        type="button"
-        onClick={descargarExcel}
-        className="ml-auto inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-green-600 bg-green-100 px-2.5 py-2 text-xs font-semibold text-green-800 transition-colors hover:bg-green-200 dark:border-green-500 dark:bg-green-950/50 dark:text-green-300 dark:hover:bg-green-950/70 sm:gap-2 sm:px-3 sm:text-sm [&_svg]:text-green-700 dark:[&_svg]:text-green-400"
-      >
-        <Download className="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" />
-        Excel
-      </button>
+      <div className="relative w-full sm:ml-auto sm:w-auto sm:shrink-0">
+        <p className="mb-1 text-center text-xs font-semibold text-sky-700 dark:text-sky-300 sm:absolute sm:bottom-full sm:left-0 sm:right-0 sm:mb-1">
+          Descargar reportes
+        </p>
+        <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center sm:gap-1.5">
+        {(
+          [
+            {
+              id: "excel" as const,
+              label: "Excel",
+              idle: Download,
+              hover: Sheet,
+              className:
+                "border-green-600 bg-green-100 text-green-800 hover:bg-green-200 dark:border-green-500 dark:bg-green-950/50 dark:text-green-300 dark:hover:bg-green-950/70",
+            },
+            {
+              id: "pdf" as const,
+              label: "PDF",
+              idle: FileText,
+              hover: FileDown,
+              className:
+                "border-red-500 bg-red-50 text-red-700 hover:bg-red-100 dark:border-red-500 dark:bg-red-950/40 dark:text-red-300 dark:hover:bg-red-950/60",
+            },
+          ] as const
+        ).map((boton) => (
+          <DropdownMenu key={boton.id}>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                disabled={exportandoEdad !== null}
+                className={`inline-flex w-full items-center justify-center gap-1.5 rounded-lg border px-2.5 py-2 text-xs font-semibold transition-colors disabled:opacity-60 sm:w-auto sm:px-3 sm:text-sm ${boton.className}`}
+              >
+                <HoverMorphIcon idle={boton.idle} hover={boton.hover} size={16} />
+                {exportandoEdad === boton.id ? "…" : boton.label}
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              side={esTelefono ? "bottom" : "left"}
+              align={
+                esTelefono && boton.id === "pdf" ? "end" : "start"
+              }
+              sideOffset={6}
+              collisionPadding={12}
+              className="z-[80] w-[var(--radix-dropdown-menu-trigger-width)] min-w-0 border-gray-200 bg-white p-1 dark:border-neutral-700 dark:bg-neutral-900"
+            >
+              {(
+                [
+                  { id: "todos" as GrupoEdad, nombre: "Todos", rango: "18+" },
+                  ...GRUPOS_EDAD.map((g) => ({
+                    id: g.id as GrupoEdad,
+                    nombre: g.corto,
+                    rango: g.id === "mayores" ? "65+" : `${g.min}-${g.max}`,
+                  })),
+                ]
+              ).map((opcion) => (
+                <DropdownMenuItem
+                  key={opcion.id}
+                  onSelect={() => exportarEdad(boton.id, opcion.id)}
+                  className="flex w-full cursor-pointer items-center justify-between gap-2 px-2.5 py-2 text-xs font-semibold text-gray-900 focus:bg-sky-50 dark:text-white dark:focus:bg-sky-950/40"
+                >
+                  <span>{opcion.nombre}</span>
+                  <span className="font-bold text-sky-600 dark:text-sky-400">
+                    ({opcion.rango})
+                  </span>
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ))}
+        </div>
+      </div>
     </div>
   );
 

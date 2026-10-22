@@ -36,8 +36,8 @@ export default function Edades({ afiliados }: Props) {
   const rangos = useMemo(() => {
     const data = [
       { name: "Jóvenes (18-30)", min: 18, max: 30, hombres: 0, mujeres: 0 },
-      { name: "Adultos (31-60)", min: 31, max: 60, hombres: 0, mujeres: 0 },
-      { name: "Mayores (61+)", min: 61, max: 150, hombres: 0, mujeres: 0 },
+      { name: "Adultos (31-64)", min: 31, max: 64, hombres: 0, mujeres: 0 },
+      { name: "Mayores (65+)", min: 65, max: 150, hombres: 0, mujeres: 0 },
     ];
 
     afiliados.forEach((af) => {
