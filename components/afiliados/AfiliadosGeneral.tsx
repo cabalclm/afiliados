@@ -8,8 +8,9 @@ import {
   Landmark,
   Medal,
   Users,
+  ArrowLeft,
 } from "lucide-react";
-import { ArrowLeft, ArrowRight, ChevronsLeft, ChevronsRight } from "lucide";
+import { ArrowRight, ChevronsLeft, ChevronsRight } from "lucide";
 import { AnimatePresence, motion } from "framer-motion";
 import HoverMorphIcon from "@/components/ui/HoverMorphIcon";
 import * as XLSX from "xlsx";
