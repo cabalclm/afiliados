@@ -538,16 +538,61 @@ const ANCHO_SEXO = 8;
 const COL_ESTADISTICA = 11;
 const COL_BARRA = COL_ESTADISTICA + 4;
 
+const MARCA = "Sistema de Organización Territorial Estratégica";
+
+async function logoSoteDataUrl() {
+  const res = await fetch("/icons/logo.png");
+  if (!res.ok) return null;
+  const blob = await res.blob();
+  const bitmap = await createImageBitmap(blob);
+  const canvas = document.createElement("canvas");
+  canvas.width = bitmap.width;
+  canvas.height = bitmap.height;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return null;
+  ctx.drawImage(bitmap, 0, 0);
+  const frame = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const px = frame.data;
+  for (let i = 0; i < px.length; i += 4) {
+    if (px[i] < 28 && px[i + 1] < 28 && px[i + 2] < 28) px[i + 3] = 0;
+  }
+  ctx.putImageData(frame, 0, 0);
+  return canvas.toDataURL("image/png");
+}
+
+function escribirMarcaExcel(
+  ws: import("exceljs").Worksheet,
+  ultimaCol: number,
+  logoId: number | null,
+) {
+  ws.getRow(1).height = 28;
+  ws.getRow(2).height = 28;
+  const colTexto = logoId === null ? 1 : 3;
+  ws.mergeCells(1, colTexto, 2, ultimaCol);
+  const marca = ws.getCell(1, colTexto);
+  marca.value = MARCA;
+  marca.font = { name: "Calibri", size: 18, bold: true, color: { argb: "FF0066CC" } };
+  marca.alignment = { vertical: "middle", horizontal: "left", indent: 1 };
+  if (logoId !== null) {
+    ws.addImage(logoId, {
+      tl: { col: 0.12, row: 0.08 },
+      ext: { width: 62, height: 62 },
+    });
+  }
+}
+
 function escribirEstadisticasExcel(
   ws: import("exceljs").Worksheet,
   titulo: string,
   subtitulo: string,
   stats: Conteo[],
+  logoId: number | null,
 ) {
   const maximo = Math.max(1, ...stats.flatMap((s) => [s.hombres, s.mujeres]));
   const ultimaCol = COL_BARRA + BARRAS;
-  ws.mergeCells(1, 1, 1, ultimaCol);
-  const celdaTitulo = ws.getCell("A1");
+  escribirMarcaExcel(ws, ultimaCol, logoId);
+  ws.mergeCells(3, 1, 3, ultimaCol);
+  const celdaTitulo = ws.getCell("A3");
   celdaTitulo.value = titulo;
   celdaTitulo.font = {
     name: "Calibri",
@@ -561,16 +606,16 @@ function escribirEstadisticasExcel(
     fgColor: { argb: "FF0369A1" },
   };
   celdaTitulo.alignment = { vertical: "middle", indent: 1 };
-  ws.getRow(1).height = 26;
+  ws.getRow(3).height = 26;
 
-  ws.mergeCells(2, 1, 2, ultimaCol);
-  const sub = ws.getCell("A2");
+  ws.mergeCells(4, 1, 4, ultimaCol);
+  const sub = ws.getCell("A4");
   sub.value = subtitulo;
   sub.font = { name: "Calibri", size: 10, italic: true, color: { argb: "FF475569" } };
-  ws.getRow(2).height = 18;
+  ws.getRow(4).height = 18;
 
-  ws.mergeCells(4, COL_ESTADISTICA, 4, COL_BARRA + BARRAS);
-  const tituloStats = ws.getCell(4, COL_ESTADISTICA);
+  ws.mergeCells(6, COL_ESTADISTICA, 6, COL_BARRA + BARRAS);
+  const tituloStats = ws.getCell(6, COL_ESTADISTICA);
   tituloStats.value = "Estadísticas totales";
   tituloStats.font = {
     name: "Calibri",
@@ -580,7 +625,7 @@ function escribirEstadisticasExcel(
   };
   tituloStats.alignment = { vertical: "middle", horizontal: "left" };
 
-  const head = ws.getRow(5);
+  const head = ws.getRow(7);
   ["Rango", "Hombres", "Mujeres", "Total"].forEach((texto, i) => {
     const cell = head.getCell(COL_ESTADISTICA + i);
     cell.value = texto;
@@ -588,19 +633,19 @@ function escribirEstadisticasExcel(
     cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFBAE6FD" } };
     cell.alignment = { horizontal: "center", vertical: "middle" };
   });
-  ws.mergeCells(5, COL_BARRA, 5, COL_BARRA + 7);
-  const leyendaH = ws.getCell(5, COL_BARRA);
+  ws.mergeCells(7, COL_BARRA, 7, COL_BARRA + 7);
+  const leyendaH = ws.getCell(7, COL_BARRA);
   leyendaH.value = "Hombres";
   leyendaH.font = { name: "Calibri", size: 10, bold: true, color: { argb: "FF1D4ED8" } };
   leyendaH.alignment = { vertical: "middle", horizontal: "left" };
-  ws.mergeCells(5, COL_BARRA + 8, 5, COL_BARRA + BARRAS);
-  const leyendaM = ws.getCell(5, COL_BARRA + 8);
+  ws.mergeCells(7, COL_BARRA + 8, 7, COL_BARRA + BARRAS);
+  const leyendaM = ws.getCell(7, COL_BARRA + 8);
   leyendaM.value = "Mujeres";
   leyendaM.font = { name: "Calibri", size: 10, bold: true, color: { argb: "FFBE185D" } };
   leyendaM.alignment = { vertical: "middle", horizontal: "left" };
 
   stats.forEach((stat, i) => {
-    const fila = 6 + i * 2;
+    const fila = 8 + i * 2;
     const celdas = [
       stat.label,
       stat.hombres,
@@ -631,7 +676,7 @@ function escribirEstadisticasExcel(
     pintarBarra(mujeres, COL_BARRA, stat.mujeres, maximo, "FFEC4899");
   });
 
-  const filaTotal = 6 + stats.length * 2;
+  const filaTotal = 8 + stats.length * 2;
   const totalH = stats.reduce((suma, stat) => suma + stat.hombres, 0);
   const totalM = stats.reduce((suma, stat) => suma + stat.mujeres, 0);
   ["Total", totalH, totalM, totalH + totalM].forEach((valor, col) => {
@@ -662,7 +707,7 @@ function escribirEstadisticasExcel(
   for (let c = COL_BARRA; c < COL_BARRA + BARRAS; c += 1) ws.getColumn(c).width = 2.4;
   ws.getColumn(COL_BARRA + BARRAS).width = 8;
 
-  return 4;
+  return 6;
 }
 
 function escribirEncabezadoLista(ws: import("exceljs").Worksheet, fila: number) {
@@ -747,6 +792,13 @@ export async function descargarExcelLugares(afiliados: Afiliado[]) {
 
   const wb = new ExcelJS.Workbook();
   wb.creator = "CLM Afiliados";
+  const logo = await logoSoteDataUrl();
+  const logoId = logo
+    ? wb.addImage({
+        base64: logo.slice(logo.indexOf(",") + 1),
+        extension: "png",
+      })
+    : null;
   const usados = new Set<string>();
 
   const general = wb.addWorksheet(nombreHojaSeguro("General", usados), {
@@ -757,6 +809,7 @@ export async function descargarExcelLugares(afiliados: Afiliado[]) {
     "Demografía por lugar",
     `Estadísticas totales  ·  ${afiliados.length} registro${afiliados.length === 1 ? "" : "s"}  ·  ${secciones.length} lugar${secciones.length === 1 ? "" : "es"}  ·  ${ahoraGT()}`,
     stats,
+    logoId,
   );
   secciones.forEach((seccion) => {
     fila = escribirSeccionLugar(general, fila, seccion.lugar, seccion.personas);
@@ -772,6 +825,7 @@ export async function descargarExcelLugares(afiliados: Afiliado[]) {
       seccion.lugar.toLocaleUpperCase("es"),
       `Estadísticas totales  ·  ${seccion.personas.length} registro${seccion.personas.length === 1 ? "" : "s"}  ·  ${ahoraGT()}`,
       conteos(seccion.personas),
+      logoId,
     );
     escribirEncabezadoLista(hoja, inicio);
     escribirPersonas(hoja, inicio + 1, seccion.personas);
@@ -805,21 +859,32 @@ export async function descargarPdfLugares(afiliados: Afiliado[]) {
     return yActual;
   };
 
+  const logoPdf = await logoSoteDataUrl();
+  const logoSize = 16;
+  if (logoPdf) {
+    doc.addImage(logoPdf, "PNG", margen, 4, logoSize, logoSize);
+  }
+  const marcaX = logoPdf ? margen + logoSize + 4 : margen;
+  doc.setTextColor(0, 102, 204);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(14);
+  doc.text(MARCA, marcaX, 13);
+
   doc.setFillColor(3, 105, 161);
-  doc.rect(0, 0, pageWidth, 16, "F");
+  doc.rect(0, 24, pageWidth, 12, "F");
   doc.setTextColor(255, 255, 255);
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(13);
-  doc.text("Demografía por lugar", margen, 7);
+  doc.setFontSize(12);
+  doc.text("Demografía por lugar", margen, 29);
   doc.setFont("helvetica", "normal");
   doc.setFontSize(8);
   doc.text(
     `${afiliados.length} registro${afiliados.length === 1 ? "" : "s"}  ·  ${secciones.length} lugar${secciones.length === 1 ? "" : "es"}  ·  ${ahoraGT()}`,
     margen,
-    12,
+    33.5,
   );
 
-  let y = 22;
+  let y = 42;
   doc.setTextColor(12, 74, 110);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(10);
