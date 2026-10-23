@@ -172,11 +172,11 @@ export default function ConfiguracionModal() {
       <Button
         type="button"
         variant="ghost"
-        className="h-11 w-11 md:h-12 md:w-12 p-0 rounded-full shrink-0 text-gray-500 hover:text-gray-900 hover:bg-gray-100/50 dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-gray-800/50 transition-colors"
+        className="h-9 w-9 shrink-0 rounded-full p-0 text-gray-500 transition-colors hover:bg-gray-100/50 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800/50 dark:hover:text-gray-100 sm:h-10 sm:w-10 lg:h-9 lg:w-9"
         onClick={() => setIsOpen(true)}
         title="Configuración de Candidato"
       >
-        <Settings className="h-6 w-6 md:h-7 md:w-7 hover:rotate-90 transition-transform duration-300" />
+        <Settings className="h-5 w-5 transition-transform duration-300 hover:rotate-90 sm:h-6 sm:w-6 lg:h-5 lg:w-5" />
       </Button>
 
       <Transition show={isOpen} as={Fragment}>

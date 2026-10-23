@@ -25,6 +25,8 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import type { Afiliado, Lider } from "./esquemas";
@@ -33,7 +35,9 @@ import { formatearDpi, TelefonoInline } from "./contacto";
 import { calcularEdadLabel } from "@/utils/formatoFechaGT";
 import {
   descargarExcelEdades,
+  descargarExcelLugares,
   descargarPdfEdades,
+  descargarPdfLugares,
   GRUPOS_EDAD,
   type GrupoEdad,
 } from "./exportEdades";
@@ -369,11 +373,17 @@ export default function AfiliadosGeneral({
   const categoriaCfg =
     CATEGORIAS.find((c) => c.tipo === categoria) || CATEGORIAS[0];
 
-  const exportarEdad = async (tipo: "excel" | "pdf", grupo: GrupoEdad) => {
+  const exportarEdad = async (
+    tipo: "excel" | "pdf",
+    grupo: GrupoEdad | "lugar",
+  ) => {
     if (exportandoEdad) return;
     setExportandoEdad(tipo);
     try {
-      if (tipo === "excel") await descargarExcelEdades(afiliados, grupo);
+      if (grupo === "lugar") {
+        if (tipo === "excel") await descargarExcelLugares(afiliados);
+        else await descargarPdfLugares(afiliados);
+      } else if (tipo === "excel") await descargarExcelEdades(afiliados, grupo);
       else await descargarPdfEdades(afiliados, grupo);
       toast.success(tipo === "excel" ? "Excel descargado" : "PDF descargado");
     } catch (err) {
@@ -466,6 +476,9 @@ export default function AfiliadosGeneral({
                   : "w-52 min-w-52"
               }`}
             >
+              <DropdownMenuLabel className="px-2.5 pb-1 pt-1.5 text-[10px] font-bold uppercase tracking-wider text-sky-600 dark:text-sky-400">
+                Por edad
+              </DropdownMenuLabel>
               {(
                 [
                   { id: "todos" as GrupoEdad, nombre: "Todos", rango: "18+" },
@@ -487,6 +500,13 @@ export default function AfiliadosGeneral({
                   </span>
                 </DropdownMenuItem>
               ))}
+              <DropdownMenuSeparator className="my-1 bg-gray-200 dark:bg-neutral-700" />
+              <DropdownMenuItem
+                onSelect={() => exportarEdad(boton.id, "lugar")}
+                className="cursor-pointer whitespace-nowrap px-2.5 py-2 text-[10px] font-bold uppercase tracking-wider text-sky-600 focus:bg-sky-50 dark:text-sky-400 dark:focus:bg-sky-950/40"
+              >
+                Por lugar
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         ))}

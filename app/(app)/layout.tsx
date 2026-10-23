@@ -1,20 +1,10 @@
-import HeaderAuth from "@/components/header-auth";
+import EncabezadoApp from "@/components/layout/EncabezadoApp";
 import FechaHoraActual from "@/components/ui/FechaHoraActual";
-import LogoLink from "@/components/ui/LogoLink";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <>
-      <nav className="w-full flex h-45">
-        <div className="w-full flex items-center justify-between pr-3 sm:pr-5">
-          <div className="flex items-center gap-3 flex-1 min-w-0">
-            <LogoLink />
-          </div>
-          <div className="shrink-0">
-            <HeaderAuth />
-          </div>
-        </div>
-      </nav>
+      <EncabezadoApp />
 
       <main className="flex flex-col gap-5 flex-grow w-full self-center max-w-full overflow-x-hidden min-w-0">
         {children}
