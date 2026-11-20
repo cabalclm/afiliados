@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/lib/toast";
 import { motion } from "framer-motion";
-import { Plus, X } from "lucide-react";
+import { X } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 
@@ -58,7 +58,6 @@ export default function AfiliadosForm({
   datosLider = null,
 }: Props) {
   const isEditMode = !!afiliadoAEditar;
-  const [mostrandoNuevaReligion, setMostrandoNuevaReligion] = useState(false);
 
   const form = useAfiliadosForm();
   const {
@@ -223,16 +222,6 @@ export default function AfiliadosForm({
     datosLider,
   );
 
-  useEffect(() => {
-    if (isOpen && isEditMode && afiliadoAEditar?.religion) {
-      const valor = afiliadoAEditar.religion;
-      const esEstandar = ["Católico", "Evangélico"].includes(valor);
-      if (!esEstandar) {
-        setValue("religion", valor);
-      }
-    }
-  }, [isOpen, isEditMode, afiliadoAEditar, setValue]);
-
   const onSubmit = async (formData: AfiliadoFormData) => {
     const nacimientoNorm = normalizarNacimientoForm(formData.nacimiento);
     if (!parseFechaCalendario(nacimientoNorm)) {
@@ -247,9 +236,6 @@ export default function AfiliadosForm({
     const datosProcesados = {
       ...formData,
       nacimiento: nacimientoNorm,
-      religion: mostrandoNuevaReligion
-        ? formData.religion_otra
-        : formData.religion,
     };
 
     delete (datosProcesados as any).religion_otra;
@@ -268,14 +254,9 @@ export default function AfiliadosForm({
     toast.success(
       `Afiliado ${isEditMode ? "actualizado" : "creado"} correctamente.`,
     );
-    setMostrandoNuevaReligion(false);
     onSave();
     onClose();
   };
-
-  const religionesExistentes = Array.from(
-    new Set((afiliados || []).map((a) => a.religion).filter(Boolean)),
-  ).filter((r) => r !== "Católico" && r !== "Evangélico");
 
   const handleNacimientoMobile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const formatted = formatearEntradaDMY(e.target.value);
@@ -552,55 +533,18 @@ export default function AfiliadosForm({
 
             <div className="space-y-1">
               <label className={labelClass}>Religión</label>
-              <div className="flex gap-2 min-h-11 sm:min-h-10">
-                {!mostrandoNuevaReligion ? (
-                  <>
-                    <select
-                      {...register("religion")}
-                      className={`flex-1 min-w-0 ${selectClass}`}
-                    >
-                      <option value="">Seleccione...</option>
-                      <option value="Católico">Católico</option>
-                      <option value="Evangélico">Evangélico</option>
-                      {religionesExistentes.map((r) => (
-                        <option key={r as string} value={r as string}>
-                          {r as string}
-                        </option>
-                      ))}
-                    </select>
-                    <Button
-                      type="button"
-                      size="icon"
-                      variant="outline"
-                      className="shrink-0 border-green-200 text-green-600 h-11 w-11 sm:h-10 sm:w-10"
-                      onClick={() => setMostrandoNuevaReligion(true)}
-                    >
-                      <Plus className="w-5 h-5" />
-                    </Button>
-                  </>
-                ) : (
-                  <div className="flex gap-2 w-full">
-                    <Input
-                      {...register("religion_otra")}
-                      placeholder="Religión..."
-                      className={`flex-1 min-w-0 ${fieldClass}`}
-                      autoFocus
-                    />
-                    <Button
-                      type="button"
-                      size="icon"
-                      variant="ghost"
-                      className="shrink-0 text-red-500 h-11 w-11 sm:h-10 sm:w-10"
-                      onClick={() => {
-                        setMostrandoNuevaReligion(false);
-                        setValue("religion_otra", "");
-                      }}
-                    >
-                      <X className="w-5 h-5" />
-                    </Button>
-                  </div>
-                )}
-              </div>
+              <select
+                {...register("religion")}
+                className={selectClass}
+              >
+                <option value="">Seleccione...</option>
+                <option value="Católico(a)">Católico(a)</option>
+                <option value="Evangélico(a)">Evangélico(a)</option>
+                <option value="Sabático(a)">Sabático(a)</option>
+                <option value="Mormón(a)">Mormón(a)</option>
+                <option value="Testigos de Jehová">Testigos de Jehová</option>
+                <option value="Otros">Otros</option>
+              </select>
             </div>
 
             <input

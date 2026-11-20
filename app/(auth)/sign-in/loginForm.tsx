@@ -94,7 +94,7 @@ export function LoginForm() {
             alt="Afiliaciones CLM"
             height={100}
             width={100}
-            className="w-20 md:w-36 h-auto object-contain my-5"
+            className="w-20 md:w-36 h-auto object-contain my-5 rounded-xl"
             priority
           />
         </motion.div>
