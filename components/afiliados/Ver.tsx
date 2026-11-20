@@ -369,6 +369,9 @@ export default function Ver() {
     esSedeSesion ||
     rolUpper === "DOCUMENTADOR" ||
     esRolPlanilla(rol);
+  /** Lupa de búsqueda de personas: admin, super, sede, planilla y documentador. */
+  const puedeBuscarPersona =
+    vistaAdminPestanas || esRolPlanilla(rol) || rolUpper === "DOCUMENTADOR";
   const puedeExportarExcelEquipo =
     esAdminOSuper || esSedeSesion || esRolPlanilla(rol);
   const vistaConPestanas =
@@ -952,15 +955,17 @@ export default function Ver() {
               </div>
             </div>
 
-            <button
-              type="button"
-              onClick={() => setIsBuscarPersonaOpen(true)}
-              aria-label="Buscar persona"
-              title="Buscar persona"
-              className="inline-flex h-10 w-10 shrink-0 items-center justify-center self-end rounded-full border border-sky-200 bg-white/80 text-sky-600 shadow-sm transition-all hover:bg-sky-50 hover:shadow-md dark:border-sky-800 dark:bg-neutral-800/70 dark:text-sky-400 dark:hover:bg-sky-950/40 sm:self-auto md:ml-auto"
-            >
-              <Search className="h-5 w-5" />
-            </button>
+            {puedeBuscarPersona && (
+              <button
+                type="button"
+                onClick={() => setIsBuscarPersonaOpen(true)}
+                aria-label="Buscar persona"
+                title="Buscar persona"
+                className="inline-flex h-10 w-10 shrink-0 items-center justify-center self-end rounded-full border border-sky-200 bg-white/80 text-sky-600 shadow-sm transition-all hover:bg-sky-50 hover:shadow-md dark:border-sky-800 dark:bg-neutral-800/70 dark:text-sky-400 dark:hover:bg-sky-950/40 sm:self-auto md:ml-auto"
+              >
+                <Search className="h-5 w-5" />
+              </button>
+            )}
 
             {vistaAdminPestanas && (
               <BtnNuevoTab
@@ -982,7 +987,7 @@ export default function Ver() {
         </div>
 
         <BuscarPersonaModal
-          open={isBuscarPersonaOpen}
+          open={puedeBuscarPersona && isBuscarPersonaOpen}
           onClose={() => setIsBuscarPersonaOpen(false)}
           afiliados={afiliados}
           lideres={allUsers}
