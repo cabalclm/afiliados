@@ -2,24 +2,30 @@
 
 import { useState, useRef, useEffect, useTransition } from "react";
 import { signInAction } from "@/app/actions/usuarios";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Loader2, Lock, User } from "lucide-react";
 import { motion } from "framer-motion";
 import Image from "next/image";
-import { Typewriter } from "react-simple-typewriter";
-import { Button } from "@/components/ui/button";
 import Swal from "@/lib/swal";
+
+const EASE = [0.22, 1, 0.36, 1] as const;
 
 function PendingSignInButton({ isPending }: { isPending: boolean }) {
   return (
-    <Button
+    <button
       type="submit"
       disabled={isPending}
-      className="text-2xl py-8 flex-1 bg-blue-700"
+      className="group relative inline-flex h-12 w-full items-center justify-center gap-2 overflow-hidden rounded-xl bg-gradient-to-r from-blue-700 to-sky-500 text-base font-semibold text-white shadow-lg shadow-blue-600/25 transition-all hover:shadow-xl hover:shadow-blue-600/30 hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-70 dark:focus-visible:ring-offset-neutral-900"
     >
-      {isPending ? "Iniciando..." : "Iniciar Sesión"}
-    </Button>
+      <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/25 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
+      {isPending ? (
+        <>
+          <Loader2 className="h-5 w-5 animate-spin" />
+          Iniciando...
+        </>
+      ) : (
+        "Iniciar sesión"
+      )}
+    </button>
   );
 }
 
@@ -55,6 +61,7 @@ export function LoginForm() {
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
+
   const handleFormAction = async (formData: FormData) => {
     const finalEmail = `${email.trim()}@app.com`;
 
@@ -75,148 +82,158 @@ export function LoginForm() {
     });
   };
 
-  return (
-    <div className="flex flex-col items-center">
-      <motion.div
-        className="cursor-pointer flex flex-row items-center gap-1 md:gap-3"
-        initial={{ opacity: 0, scale: 0.8 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.6, ease: "easeOut" }}
-      >
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.1 }}
-          className="flex justify-start"
-        >
-          <Image
-            src="/svg/logo-2.svg"
-            alt="Afiliaciones CLM"
-            height={100}
-            width={100}
-            className="w-20 md:w-36 h-auto object-contain my-5 rounded-xl"
-            priority
-          />
-        </motion.div>
+  const inputClass =
+    "h-12 w-full rounded-xl border border-gray-200 bg-gray-50/80 pl-11 pr-4 text-base text-gray-900 placeholder:text-gray-400 outline-none transition-all focus:border-sky-500 focus:bg-white focus:ring-4 focus:ring-sky-500/15 dark:border-neutral-700 dark:bg-neutral-900/60 dark:text-gray-100 dark:placeholder:text-gray-500 dark:focus:border-sky-400 dark:focus:bg-neutral-900";
 
-        <motion.div
-          initial={{ opacity: 0, x: -20, filter: "blur(8px)" }}
-          animate={{ opacity: 1, x: 0, filter: "blur(0px)" }}
-          transition={{ 
-            duration: 1, 
-            delay: 0.4, 
-            ease: [0.16, 1, 0.3, 1] 
-          }}
-        >
-          <h1
-            className="font-serif text-2xl md:text-4xl font-bold leading-tight text-left my-5 bg-gradient-to-r from-blue-800 via-blue-400 to-blue-800 dark:from-blue-400 dark:via-blue-200 dark:to-blue-400 bg-[length:200%_auto] text-transparent bg-clip-text animate-text-shine"
+  return (
+    <div className="relative flex min-h-screen w-full items-center justify-center overflow-hidden px-4 py-10">
+      {/* Fondo decorativo */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-br from-sky-50 via-white to-blue-100 dark:from-neutral-950 dark:via-neutral-900 dark:to-blue-950/60"
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -left-24 -top-24 -z-10 h-96 w-96 rounded-full bg-sky-300/30 blur-3xl dark:bg-sky-600/15"
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -bottom-32 -right-24 -z-10 h-[28rem] w-[28rem] rounded-full bg-blue-400/25 blur-3xl dark:bg-blue-700/20"
+      />
+
+      <motion.div
+        initial={{ opacity: 0, y: 24, scale: 0.98 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 0.7, ease: EASE }}
+        className="w-full max-w-md"
+      >
+        <div className="mb-8 flex flex-col items-center text-center">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.6, delay: 0.1, ease: EASE }}
+            className="mb-5 rounded-3xl bg-white p-3 shadow-xl shadow-blue-900/10 ring-1 ring-black/5 dark:bg-neutral-800 dark:ring-white/10"
+          >
+            <Image
+              src="/svg/logo-2.svg"
+              alt="Sistema de Organización Territorial Estratégica"
+              height={100}
+              width={100}
+              className="h-20 w-20 rounded-2xl object-contain"
+              priority
+            />
+          </motion.div>
+
+          <motion.h1
+            initial={{ opacity: 0, y: 10, filter: "blur(6px)" }}
+            animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+            transition={{ duration: 0.8, delay: 0.25, ease: EASE }}
+            className="text-2xl font-bold leading-tight tracking-tight text-gray-900 dark:text-white md:text-3xl"
             style={{ fontFamily: "'DM Serif Display', serif" }}
           >
-            Sistema de Organización <br /> Territorial Estratégica
-          </h1>
-        </motion.div>
-      </motion.div>
+            Sistema de Organización
+            <br />
+            <span className="bg-gradient-to-r from-blue-700 via-sky-500 to-blue-700 bg-clip-text text-transparent dark:from-blue-400 dark:via-sky-300 dark:to-blue-400">
+              Territorial Estratégica
+            </span>
+          </motion.h1>
+        </div>
 
-      <form
-        ref={formRef}
-        action={handleFormAction}
-        className="w-full md:max-w-2xl flex flex-col gap-8 text-2xl bg-white dark:bg-neutral-800 md:rounded-xl px-5 py-5 border border-gray-300 dark:border-neutral-700 transition-colors"
-      >
-        <motion.div
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.6 }}
-          className="w-full px-4 flex flex-col gap-4"
+        <form
+          ref={formRef}
+          action={handleFormAction}
+          className="flex flex-col gap-6 rounded-3xl border border-white/60 bg-white/80 p-7 shadow-2xl shadow-blue-900/10 backdrop-blur-xl dark:border-white/10 dark:bg-neutral-800/70 md:p-9"
         >
-          <div className="flex justify-center w-full">
-            <h1 className="text-2xl font-bold text-blue-600 md:text-3xl">
-              <Typewriter
-                words={["Iniciar sesión"]}
-                loop={1}
-                cursor
-                cursorStyle=""
-                typeSpeed={70}
-                deleteSpeed={50}
-                delaySpeed={1000}
-              />
-            </h1>
-          </div>
-        </motion.div>
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.4, ease: EASE }}
+          >
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+              Bienvenido
+            </h2>
+            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              Ingresa tus credenciales para continuar.
+            </p>
+          </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.8 }}
-          className="flex flex-col gap-6"
-        >
-          <div>
-            <Label
-              htmlFor="email"
-              className="text-2xl text-blue-600 mb-2 block"
-            >
-              Usuario
-            </Label>
-            <Input
-              name="email"
-              type="text"
-              value={email}
-              onChange={(e) => {
-                setEmail(e.target.value.replace(/@.*$/, ""));
-                setClientError(null);
-              }}
-              placeholder="Ingrese su usuario"
-              required
-              className="text-2xl py-8 px-4"
-            />
-          </div>
-
-          <div>
-            <Label
-              htmlFor="password"
-              className="text-2xl text-blue-600 mb-2 block"
-            >
-              Contraseña
-            </Label>
-            <div className="relative">
-              <Input
-                type={verPassword ? "text" : "password"}
-                name="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Tu Contraseña"
-                required
-                className="text-2xl py-8 px-4 pr-12"
-              />
-              <button
-                type="button"
-                onClick={() => setVerPassword((prev) => !prev)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500"
-                aria-label="Mostrar u ocultar contraseña"
+          <motion.div
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.5, ease: EASE }}
+            className="flex flex-col gap-5"
+          >
+            <div>
+              <label
+                htmlFor="email"
+                className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300"
               >
-                {verPassword ? <EyeOff size={24} /> : <Eye size={24} />}
-              </button>
+                Usuario
+              </label>
+              <div className="relative">
+                <User className="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+                <input
+                  id="email"
+                  name="email"
+                  type="text"
+                  autoComplete="username"
+                  value={email}
+                  onChange={(e) => {
+                    setEmail(e.target.value.replace(/@.*$/, ""));
+                    setClientError(null);
+                  }}
+                  placeholder="Ingrese su usuario"
+                  required
+                  className={inputClass}
+                />
+              </div>
             </div>
-          </div>
-        </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 1.4 }}
-          className="flex items-center gap-4"
-        >
-          <div className="w-[120px] h-[120px] ">
-            <Image
-              src="/gif/afiliados/gif0.gif"
-              alt="Iniciar sesión"
-              width={120}
-              height={120}
-              className="w-full h-full object-contain"
-            />
-          </div>
-          <PendingSignInButton isPending={isPending} />
-        </motion.div>
-      </form>
+            <div>
+              <label
+                htmlFor="password"
+                className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300"
+              >
+                Contraseña
+              </label>
+              <div className="relative">
+                <Lock className="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+                <input
+                  id="password"
+                  type={verPassword ? "text" : "password"}
+                  name="password"
+                  autoComplete="current-password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Tu contraseña"
+                  required
+                  className={`${inputClass} pr-12`}
+                />
+                <button
+                  type="button"
+                  onClick={() => setVerPassword((prev) => !prev)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-neutral-700 dark:hover:text-gray-200"
+                  aria-label="Mostrar u ocultar contraseña"
+                >
+                  {verPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                </button>
+              </div>
+            </div>
+
+            {clientError ? (
+              <p className="text-sm text-red-600">{clientError}</p>
+            ) : null}
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.65, ease: EASE }}
+          >
+            <PendingSignInButton isPending={isPending} />
+          </motion.div>
+        </form>
+      </motion.div>
     </div>
   );
 }

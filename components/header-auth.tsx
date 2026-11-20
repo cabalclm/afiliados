@@ -76,7 +76,7 @@ export default function AuthButton() {
         {nombres} {apellidos}
       </span>
 
-      <div className="mt-0.5 flex items-center gap-0.5 sm:gap-1.5">
+      <div className="mt-0.5 flex items-center gap-0.5 rounded-full border border-white/70 bg-white/70 px-1.5 py-0.5 shadow-sm backdrop-blur-md dark:border-white/10 dark:bg-neutral-800/60 sm:gap-1.5">
         {(rol === "ADMIN" || rol === "SUPER" || rol === "ADMINISTRADOR") && (
           <ConfiguracionModal />
         )}
@@ -105,7 +105,7 @@ export default function AuthButton() {
         variant="ghost"
         onClick={handleSignOut}
         disabled={isSigningOut}
-        className="mt-0.5 h-8 rounded-full px-3 text-xs font-semibold text-red-500 transition-colors hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/50 sm:h-9 sm:px-3.5 sm:text-sm lg:h-8 lg:px-2.5 lg:text-xs"
+        className="mt-0.5 h-8 rounded-full border border-red-200/70 bg-white/60 px-3 text-xs font-semibold text-red-500 transition-colors hover:bg-red-50 hover:text-red-600 dark:border-red-900/40 dark:bg-transparent dark:hover:bg-red-950/50 sm:h-9 sm:px-3.5 sm:text-sm lg:h-8 lg:px-2.5 lg:text-xs"
       >
         {isSigningOut ? "Cerrando..." : "Cerrar Sesión"}
       </Button>

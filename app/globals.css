@@ -206,3 +206,33 @@
 .swal-logout-cancel:hover {
   background: #005bb5 !important;
 }
+/* Modales SweetAlert: estilo moderno (vidrio, bordes grandes, botón degradado) */
+.swal2-container.swal2-backdrop-show,
+.swal2-container.swal2-noanimation {
+  backdrop-filter: blur(4px);
+}
+
+.swal2-popup {
+  border-radius: 1.5rem !important;
+  box-shadow: 0 25px 60px -15px rgba(15, 60, 140, 0.35) !important;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+}
+
+.swal2-confirm:not(.swal-logout-confirm) {
+  border-radius: 0.75rem !important;
+  background: linear-gradient(90deg, #1d4ed8, #0ea5e9) !important;
+  box-shadow: 0 8px 20px -6px rgba(14, 116, 220, 0.5) !important;
+  font-weight: 600 !important;
+  transition: filter 0.2s ease, transform 0.2s ease;
+}
+
+.swal2-confirm:not(.swal-logout-confirm):hover {
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+}
+
+.swal2-cancel:not(.swal-logout-cancel),
+.swal2-deny {
+  border-radius: 0.75rem !important;
+  font-weight: 600 !important;
+}

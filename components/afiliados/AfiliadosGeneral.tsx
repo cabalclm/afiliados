@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import {
+  ArrowDownAZ,
+  ArrowUpAZ,
   Building2,
   Briefcase,
   Landmark,
@@ -148,13 +150,6 @@ function liderDesdeAfiliado(liderId: string, lista: Afiliado[]): Lider {
   };
 }
 
-function etiquetaGrupo(tipo: Exclude<GrupoTipo, "todos">) {
-  if (tipo === "sede") return "Sede";
-  if (tipo === "trabajador") return "Empleado";
-  if (tipo === "planilla") return "Planilla";
-  return "Líder";
-}
-
 function normalizarNombre(texto: string) {
   return texto
     .normalize("NFD")
@@ -167,7 +162,72 @@ function compararNombres(a: string, b: string) {
   return normalizarNombre(a).localeCompare(normalizarNombre(b), "es");
 }
 
+/** Anchos fijos (px): No., Nombre, DPI/Padrón, Teléfono, Edad, Ubicación, Líder */
+const ANCHOS_COLUMNAS_TODOS = [56, 250, 170, 140, 90, 230, 250];
+const ANCHO_TABLA_TODOS = ANCHOS_COLUMNAS_TODOS.reduce((a, b) => a + b, 0);
+
 type TamanoPagina = 15 | 30 | 45 | "all";
+
+type OrdenCampoTodos = "nombre" | "ubicacion" | "lider";
+type OrdenDirTodos = "asc" | "desc";
+
+type FilaMiembroTodos = {
+  afiliado: Afiliado;
+  liderNombres: string;
+  liderApellidos: string;
+};
+
+function EncabezadoOrdenable({
+  etiqueta,
+  activo,
+  direccion,
+  onClick,
+  className = "",
+}: {
+  etiqueta: string;
+  activo: boolean;
+  direccion: OrdenDirTodos;
+  onClick: () => void;
+  className?: string;
+}) {
+  const Icono = direccion === "asc" ? ArrowUpAZ : ArrowDownAZ;
+  return (
+    <th
+      onClick={onClick}
+      className={`${className} cursor-pointer select-none transition-colors duration-300 ${
+        activo
+          ? "bg-sky-200/70 text-sky-800 shadow-[inset_0_-2px_0_0_rgb(14,165,233)] dark:bg-sky-800/40 dark:text-sky-200"
+          : "hover:bg-sky-100/70 dark:hover:bg-sky-900/30"
+      }`}
+    >
+      <button
+        type="button"
+        className="inline-flex items-center gap-1.5 uppercase"
+      >
+        {etiqueta}
+        {activo ? (
+          <motion.span
+            key={direccion}
+            initial={{ opacity: 0.4, scale: 0.88 }}
+            animate={{ opacity: 0.9, scale: 1 }}
+            transition={{ duration: 0.28, ease: [0.33, 1, 0.38, 1] }}
+            className="inline-flex"
+            aria-hidden
+          >
+            <Icono className="h-3.5 w-3.5 shrink-0" />
+          </motion.span>
+        ) : null}
+        <span className="sr-only">
+          {activo
+            ? direccion === "asc"
+              ? ", orden A–Z"
+              : ", orden Z–A"
+            : `, ordenar por ${etiqueta.toLowerCase()}`}
+        </span>
+      </button>
+    </th>
+  );
+}
 
 function BtnPaginaMorph({
   direction,
@@ -222,7 +282,7 @@ export default function AfiliadosGeneral({
   lideres,
   searchTerm,
   onSearchChange,
-  placeholder = "Buscar por nombre o DPI...",
+  placeholder = "Buscar por nombre, DPI o padrón...",
   tema = TEMA_MIEMBROS,
   isLoading = false,
 }: Props) {
@@ -236,6 +296,21 @@ export default function AfiliadosGeneral({
     null,
   );
   const [esTelefono, setEsTelefono] = useState(false);
+  const [ordenTodos, setOrdenTodos] = useState<{
+    campo: OrdenCampoTodos;
+    dir: OrdenDirTodos;
+  }>({ campo: "nombre", dir: "asc" });
+
+  const tintCol = (campo: OrdenCampoTodos) =>
+    ordenTodos.campo === campo ? "bg-sky-50 dark:bg-sky-950/30" : "";
+
+  const alternarOrdenTodos = (campo: OrdenCampoTodos) => {
+    setOrdenTodos((prev) =>
+      prev.campo === campo
+        ? { campo, dir: prev.dir === "asc" ? "desc" : "asc" }
+        : { campo, dir: "asc" },
+    );
+  };
 
   useEffect(() => {
     const media = window.matchMedia("(max-width: 639px)");
@@ -254,7 +329,13 @@ export default function AfiliadosGeneral({
       const fullName =
         `${afiliado.nombres} ${afiliado.apellidos}`.toLowerCase();
       const dpi = afiliado.dpi || "";
-      if (searchTerm && !fullName.includes(term) && !dpi.includes(term)) {
+      const padron = afiliado.no_padron || "";
+      if (
+        searchTerm &&
+        !fullName.includes(term) &&
+        !dpi.includes(searchTerm) &&
+        !padron.toLowerCase().includes(term)
+      ) {
         return;
       }
       if (!grouped.has(afiliado.lider_id)) {
@@ -317,27 +398,44 @@ export default function AfiliadosGeneral({
   }, [grupos, categoria]);
 
   const miembrosTodos = useMemo(() => {
-    const rows: Array<{
-      afiliado: Afiliado;
-      liderNombre: string;
-      grupo: string;
-    }> = [];
+    const rows: FilaMiembroTodos[] = [];
 
     grupos.forEach((g) => {
-      const liderNombre = `${g.lider.nombres} ${g.lider.apellidos}`.trim();
-      const grupo = etiquetaGrupo(g.tipo);
       g.afiliados.forEach((a) => {
-        rows.push({ afiliado: a, liderNombre, grupo });
+        rows.push({
+          afiliado: a,
+          liderNombres: g.lider.nombres,
+          liderApellidos: g.lider.apellidos,
+        });
       });
     });
 
-    return rows.sort((a, b) =>
-      compararNombres(
-        `${a.afiliado.nombres} ${a.afiliado.apellidos}`,
-        `${b.afiliado.nombres} ${b.afiliado.apellidos}`,
-      ),
-    );
-  }, [grupos]);
+    const factor = ordenTodos.dir === "asc" ? 1 : -1;
+
+    return rows.sort((a, b) => {
+      const nombreA = `${a.afiliado.nombres} ${a.afiliado.apellidos}`;
+      const nombreB = `${b.afiliado.nombres} ${b.afiliado.apellidos}`;
+      const liderA = `${a.liderNombres} ${a.liderApellidos}`;
+      const liderB = `${b.liderNombres} ${b.liderApellidos}`;
+
+      if (ordenTodos.campo === "ubicacion") {
+        const porLugar = compararNombres(
+          a.afiliado.lugar_nombre || "",
+          b.afiliado.lugar_nombre || "",
+        );
+        if (porLugar !== 0) return porLugar * factor;
+        return compararNombres(nombreA, nombreB);
+      }
+
+      if (ordenTodos.campo === "lider") {
+        const porLider = compararNombres(liderA, liderB);
+        if (porLider !== 0) return porLider * factor;
+        return compararNombres(nombreA, nombreB);
+      }
+
+      return compararNombres(nombreA, nombreB) * factor;
+    });
+  }, [grupos, ordenTodos]);
 
   useEffect(() => {
     setLiderSeleccionadoId(null);
@@ -345,7 +443,7 @@ export default function AfiliadosGeneral({
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, itemsPerPage, categoria]);
+  }, [searchTerm, itemsPerPage, categoria, ordenTodos]);
 
   const effectiveItemsPerPage =
     itemsPerPage === "all" ? miembrosTodos.length : itemsPerPage;
@@ -590,22 +688,34 @@ export default function AfiliadosGeneral({
                 No hay miembros{searchTerm ? " para esta búsqueda" : ""}.
               </div>
             ) : (
-              <table className="min-w-full bg-white text-xs dark:bg-neutral-900">
+              <table
+                className="table-fixed bg-white text-xs dark:bg-neutral-900"
+                style={{ width: ANCHO_TABLA_TODOS, minWidth: ANCHO_TABLA_TODOS }}
+              >
+                <colgroup>
+                  {ANCHOS_COLUMNAS_TODOS.map((ancho, i) => (
+                    <col key={i} style={{ width: ancho }} />
+                  ))}
+                </colgroup>
                 <thead className={theadClass}>
                   <tr>
                     <th
                       className={columnaNoFijaEncabezado(
-                        tema.theadBg,
-                        "px-4 py-2.5 text-left font-bold uppercase",
+                        "bg-sky-50 dark:bg-[#0c1a27]",
+                        "!z-30 px-2 py-2.5 text-center font-bold uppercase",
                       )}
                     >
                       No.
                     </th>
+                    <EncabezadoOrdenable
+                      etiqueta="Nombre"
+                      activo={ordenTodos.campo === "nombre"}
+                      direccion={ordenTodos.dir}
+                      onClick={() => alternarOrdenTodos("nombre")}
+                      className="px-4 py-2.5 text-left font-bold"
+                    />
                     <th className="px-4 py-2.5 text-left font-bold uppercase">
-                      Nombre
-                    </th>
-                    <th className="px-4 py-2.5 text-left font-bold uppercase">
-                      DPI
+                      DPI/Padrón
                     </th>
                     <th className="px-4 py-2.5 text-left font-bold uppercase">
                       Teléfono
@@ -613,57 +723,94 @@ export default function AfiliadosGeneral({
                     <th className="px-4 py-2.5 text-left font-bold uppercase">
                       Edad
                     </th>
-                    <th className="px-4 py-2.5 text-left font-bold uppercase">
-                      Ubicación
-                    </th>
-                    <th className="px-4 py-2.5 text-left font-bold uppercase">
-                      Líder
-                    </th>
-                    <th className="px-4 py-2.5 text-left font-bold uppercase">
-                      Grupo
-                    </th>
+                    <EncabezadoOrdenable
+                      etiqueta="Ubicación"
+                      activo={ordenTodos.campo === "ubicacion"}
+                      direccion={ordenTodos.dir}
+                      onClick={() => alternarOrdenTodos("ubicacion")}
+                      className="px-4 py-2.5 text-left font-bold"
+                    />
+                    <EncabezadoOrdenable
+                      etiqueta="Líder"
+                      activo={ordenTodos.campo === "lider"}
+                      direccion={ordenTodos.dir}
+                      onClick={() => alternarOrdenTodos("lider")}
+                      className="px-4 py-2.5 text-left font-bold"
+                    />
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-200 dark:divide-neutral-700">
-                  {miembrosPagina.map((row, index) => (
-                    <tr
-                      key={row.afiliado.id}
-                      className={`group ${tema.filaHover} uppercase`}
-                    >
+                <tbody
+                  key={`${ordenTodos.campo}-${ordenTodos.dir}-${currentPage}-${itemsPerPage}`}
+                  className="divide-y divide-gray-200 dark:divide-neutral-700"
+                >
+                  {miembrosPagina.map((fila, index) => (
+                      <motion.tr
+                        key={fila.afiliado.id}
+                        initial={{ y: 18 }}
+                        animate={{ y: 0 }}
+                        transition={{
+                          duration: 0.5,
+                          delay: Math.min(index * 0.035, 0.6),
+                          ease: [0.22, 1, 0.36, 1],
+                        }}
+                        className={`group ${tema.filaHover} uppercase`}
+                      >
                       <td
                         className={columnaNoFijaCelda(
-                          tema.filaHoverSticky,
-                          "px-4 py-2 whitespace-nowrap text-gray-500 dark:text-gray-400",
+                          "bg-white dark:bg-neutral-900 group-hover:bg-sky-50 dark:group-hover:bg-[#0c1a27]",
+                          "!z-20 px-2 py-2 text-center whitespace-nowrap text-gray-500 dark:text-gray-400",
                         )}
                       >
                         {startIndex + index + 1}
                       </td>
-                      <td className="px-4 py-2 whitespace-nowrap font-bold text-gray-900 dark:text-gray-100">
-                        {row.afiliado.nombres} {row.afiliado.apellidos}
+                      <td
+                        className={`px-4 py-2 font-bold text-gray-900 transition-colors duration-300 dark:text-gray-100 ${tintCol("nombre")}`}
+                      >
+                        <div className="leading-snug">
+                          <div className="truncate">{fila.afiliado.nombres}</div>
+                          <div className="truncate text-gray-700 dark:text-gray-300">
+                            {fila.afiliado.apellidos}
+                          </div>
+                        </div>
                       </td>
-                      <td className="px-4 py-2 whitespace-nowrap font-mono">
-                        {row.afiliado.dpi
-                          ? formatearDpi(row.afiliado.dpi)
-                          : "—"}
+                      <td className="px-4 py-2 font-mono normal-case">
+                        <div className="leading-snug">
+                          <div className="whitespace-nowrap">
+                            {fila.afiliado.dpi
+                              ? formatearDpi(fila.afiliado.dpi)
+                              : "—"}
+                          </div>
+                          <div className="text-[11px] font-semibold text-sky-700 dark:text-sky-400">
+                            {fila.afiliado.no_padron || "—"}
+                          </div>
+                        </div>
                       </td>
                       <td className="px-4 py-2 whitespace-nowrap font-mono normal-case">
                         <TelefonoInline
-                          telefono={row.afiliado.telefono || ""}
+                          telefono={fila.afiliado.telefono || ""}
                         />
                       </td>
                       <td className="px-4 py-2 whitespace-nowrap font-bold">
-                        {calcularEdadLabel(row.afiliado.nacimiento)}
+                        {calcularEdadLabel(fila.afiliado.nacimiento)}
                       </td>
-                      <td className="px-4 py-2 whitespace-nowrap">
-                        {row.afiliado.lugar_nombre || "—"}
+                      <td
+                        className={`px-4 py-2 transition-colors duration-300 ${tintCol("ubicacion")}`}
+                      >
+                        <div className="line-clamp-2 break-words leading-snug">
+                          {fila.afiliado.lugar_nombre || "—"}
+                        </div>
                       </td>
-                      <td className="px-4 py-2 whitespace-nowrap font-semibold text-sky-700 dark:text-sky-400">
-                        {row.liderNombre}
+                      <td
+                        className={`px-4 py-2 font-semibold text-sky-700 transition-colors duration-300 dark:text-sky-400 ${tintCol("lider")}`}
+                      >
+                        <div className="leading-snug">
+                          <div className="truncate">{fila.liderNombres}</div>
+                          <div className="truncate text-sky-600/90 dark:text-sky-300/90">
+                            {fila.liderApellidos}
+                          </div>
+                        </div>
                       </td>
-                      <td className="px-4 py-2 whitespace-nowrap">
-                        {row.grupo}
-                      </td>
-                    </tr>
+                    </motion.tr>
                   ))}
                 </tbody>
               </table>
@@ -794,7 +941,7 @@ export default function AfiliadosGeneral({
                         Nombre
                       </th>
                       <th className="px-4 py-2.5 text-left font-bold uppercase">
-                        DPI
+                        DPI/Padrón
                       </th>
                       <th className="px-4 py-2.5 text-left font-bold uppercase">
                         Teléfono
@@ -835,11 +982,25 @@ export default function AfiliadosGeneral({
                           >
                             {index + 1}
                           </td>
-                          <td className="px-4 py-2 whitespace-nowrap font-bold text-gray-900 dark:text-gray-100">
-                            {afiliado.nombres} {afiliado.apellidos}
+                          <td className="px-4 py-2 font-bold text-gray-900 dark:text-gray-100">
+                            <div className="leading-snug">
+                              <div>{afiliado.nombres}</div>
+                              <div className="text-gray-700 dark:text-gray-300">
+                                {afiliado.apellidos}
+                              </div>
+                            </div>
                           </td>
-                          <td className="px-4 py-2 whitespace-nowrap font-mono">
-                            {afiliado.dpi ? formatearDpi(afiliado.dpi) : "—"}
+                          <td className="px-4 py-2 font-mono normal-case">
+                            <div className="leading-snug">
+                              <div className="whitespace-nowrap">
+                                {afiliado.dpi
+                                  ? formatearDpi(afiliado.dpi)
+                                  : "—"}
+                              </div>
+                              <div className="text-[11px] font-semibold text-sky-700 dark:text-sky-400">
+                                {afiliado.no_padron || "—"}
+                              </div>
+                            </div>
                           </td>
                           <td className="px-4 py-2 whitespace-nowrap font-mono normal-case">
                             <TelefonoInline

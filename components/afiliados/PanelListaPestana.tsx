@@ -29,10 +29,10 @@ export default function PanelListaPestana({
 }: Props) {
   return (
     <div
-      className={`overflow-hidden rounded-xl border ${tema.borderPanel} bg-white dark:bg-neutral-900 shadow-sm`}
+      className={`overflow-hidden rounded-2xl border ${tema.borderPanel} bg-white/90 shadow-xl shadow-blue-900/5 backdrop-blur-xl dark:bg-neutral-900/90`}
     >
       <div
-        className={`flex flex-col gap-3 p-3 ${tema.theadBg} ${
+        className={`flex flex-col gap-3 border-b border-black/5 p-3 dark:border-white/10 ${tema.theadBg} ${
           acciones
             ? "sm:flex-row sm:items-end sm:pb-3 sm:pt-7"
             : "sm:flex-row sm:items-center"
@@ -46,7 +46,7 @@ export default function PanelListaPestana({
               placeholder={placeholder}
               value={value}
               onChange={(e) => onChange(e.target.value)}
-              className={`h-10 w-full rounded-lg border border-gray-200 bg-white py-2 pl-9 pr-4 text-sm dark:border-neutral-700 dark:bg-neutral-900 focus:outline-none focus:ring-2 ${tema.focusRing}`}
+              className={`h-10 w-full rounded-xl border border-gray-200 bg-white/90 py-2 pl-9 pr-4 text-sm shadow-sm transition-all placeholder:text-gray-400 dark:border-neutral-700 dark:bg-neutral-900/80 focus:outline-none focus:ring-4 focus:ring-sky-500/15 focus-visible:ring-2 ${tema.focusRing}`}
             />
           </div>
           {extra}

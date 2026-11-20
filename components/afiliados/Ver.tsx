@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import HoverMorphIcon from "@/components/ui/HoverMorphIcon";
 import { toast } from "@/lib/toast";
 import { motion } from "framer-motion";
-import { Building2, X } from "lucide-react";
+import { Building2, Search, X } from "lucide-react";
+import BuscarPersonaModal from "./BuscarPersonaModal";
 import {
   Award,
   Briefcase,
@@ -155,10 +156,10 @@ const tabBtnClass = (active: boolean, tab: Tab) => {
 
 const tabPillClass = (active: boolean, tab: Tab) => {
   const theme = TAB_THEMES[tab];
-  return `relative inline-flex w-full max-w-full items-center justify-center gap-1.5 sm:gap-2 md:gap-2.5 px-2 sm:px-3 md:px-3.5 py-2.5 md:py-2 rounded-lg transition-colors duration-300 ${
+  return `relative inline-flex w-full max-w-full items-center justify-center gap-1.5 sm:gap-2 md:gap-2.5 px-2 sm:px-3 md:px-3.5 py-2.5 md:py-2 rounded-xl transition-all duration-300 ${
     active
-      ? `${theme.activeIconBg} ${theme.activeText}`
-      : "bg-gray-100 dark:bg-neutral-800 text-gray-500 dark:text-gray-400"
+      ? `${theme.activeIconBg} ${theme.activeText} shadow-md shadow-black/5 ring-1 ring-black/5 dark:ring-white/10`
+      : "bg-white/70 dark:bg-neutral-800/60 text-gray-500 dark:text-gray-400 ring-1 ring-black/5 dark:ring-white/10 backdrop-blur-sm hover:bg-white hover:shadow-sm dark:hover:bg-neutral-800"
   }`;
 };
 
@@ -279,6 +280,7 @@ export default function Ver() {
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isEstadisticasOpen, setIsEstadisticasOpen] = useState(false);
+  const [isBuscarPersonaOpen, setIsBuscarPersonaOpen] = useState(false);
   const [isSignupModalOpen, setIsSignupModalOpen] = useState(false);
   const [signupFormKey, setSignupFormKey] = useState(0);
   const [modoCrearSede, setModoCrearSede] = useState(false);
@@ -739,7 +741,7 @@ export default function Ver() {
     Lideres: "Buscar por nombre",
     Trabajadores: "Buscar por nombre",
     Planilla: "Buscar por nombre",
-    Afiliados: "Buscar por nombre o DPI",
+    Afiliados: "Buscar por nombre, DPI o padrón",
     Administrativos: "Buscar por nombre",
     Mensajes: "Buscar por nombre",
   };
@@ -923,7 +925,7 @@ export default function Ver() {
           rol={miPerfilGlobal?.rol}
         />
       )}
-      <div className="px-2 md:px-6 max-w-full overflow-x-hidden min-w-0 w-full">
+      <div className="px-2 py-2.5 md:px-6 max-w-full overflow-x-hidden min-w-0 w-full">
         <ConfiguracionSistema />
 
         <div className="mb-4 space-y-3 min-w-0">
@@ -950,6 +952,16 @@ export default function Ver() {
               </div>
             </div>
 
+            <button
+              type="button"
+              onClick={() => setIsBuscarPersonaOpen(true)}
+              aria-label="Buscar persona"
+              title="Buscar persona"
+              className="inline-flex h-10 w-10 shrink-0 items-center justify-center self-end rounded-full border border-sky-200 bg-white/80 text-sky-600 shadow-sm transition-all hover:bg-sky-50 hover:shadow-md dark:border-sky-800 dark:bg-neutral-800/70 dark:text-sky-400 dark:hover:bg-sky-950/40 sm:self-auto md:ml-auto"
+            >
+              <Search className="h-5 w-5" />
+            </button>
+
             {vistaAdminPestanas && (
               <BtnNuevoTab
                 label="Estadísticas"
@@ -968,6 +980,13 @@ export default function Ver() {
             </p>
           )}
         </div>
+
+        <BuscarPersonaModal
+          open={isBuscarPersonaOpen}
+          onClose={() => setIsBuscarPersonaOpen(false)}
+          afiliados={afiliados}
+          lideres={allUsers}
+        />
 
         {isDashboardLoading ? (
           <div className="animate-pulse space-y-4">
